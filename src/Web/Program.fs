@@ -27,7 +27,7 @@ module Views =
     let layout (content: XmlNode list) =
         html [] [
             head [] [
-                title [] [ encodedText "Web" ]
+                title [] [ encodedText "Crappy test site" ]
                 link [ _rel "stylesheet"
                        _type "text/css"
                        _href "/main.css" ]
