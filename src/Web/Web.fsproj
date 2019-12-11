@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <DebugType>portable</DebugType>
+    <AssemblyName>Web</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <LangVersion>preview</LangVersion>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Properties\launchSettings.json">
+      
+    </Content>
+    <Content Include="WebRoot\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>
