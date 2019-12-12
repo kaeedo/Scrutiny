@@ -117,18 +117,26 @@ module Views =
 let homeHandler: HttpHandler =
     fun next ctx ->
         let username = ctx.GetCookieValue "username"
-        htmlView (Views.home username { Message.Header = "Home"; Links = [ "/comment"; "/signin" ] }) next ctx
+        let links =
+            match username with
+            | None -> [ "/comment"; "/signin" ]
+            | Some _ -> [ "/comment" ]
+        htmlView (Views.home username { Message.Header = "Home"; Links = links }) next ctx
 
 let signInHandler: HttpHandler =
     fun next ctx ->
         match ctx.GetCookieValue "username" with
-        | None -> htmlView (Views.signIn { Message.Header = "Sign In"; Links = [ "/comment"; "/home" ] }) next ctx
+        | None -> htmlView (Views.signIn { Message.Header = "Sign In"; Links = [ "/home" ] }) next ctx
         | Some _ -> redirectTo false "/home" next ctx
 
 let commentHandler: HttpHandler =
     fun next ctx ->
         let username = ctx.GetCookieValue "username"
-        htmlView (Views.comment username { Message.Header = "Comments"; Links = [ "/home"; "/signin" ] }) next ctx
+        let links =
+            match username with
+            | None -> [ "/home"; "/signin" ]
+            | Some _ -> [ "/home" ]
+        htmlView (Views.comment username { Message.Header = "Comments"; Links = links }) next ctx
 
 let webApp =
     choose [
