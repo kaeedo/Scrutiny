@@ -15,10 +15,10 @@ module Entry =
             name "Sign In"
             entryCheck (fun _ ->
                 printfn "Checking on page sign in"
-                on "https://localhost:5001/signin"
+                "#header" == "Sign In"
             )
-            
-            navigationLink ("clickHome", fun () -> click "home")
+
+            navigationLink ("clickHome", fun () -> click "#home")
 
             exitFunction (fun _ ->
                 printfn "Exiting sign in"
@@ -30,11 +30,11 @@ module Entry =
             name "Comment"
             entryCheck (fun _ ->
                 printfn "Checking on page comment"
-                on "https://localhost:5001/comment"
+                "#header" == "Comments"
             )
 
-            navigationLink ("clickHome", fun () -> click "home")
-            navigationLink ("clickSignin", fun () -> click "signin")
+            navigationLink ("clickHome", fun () -> click "#home")
+            navigationLink ("clickSignin", fun () -> click "#signin")
 
             exitFunction (fun _ ->
                 printfn "Exiting comment"
@@ -46,11 +46,11 @@ module Entry =
             name "Home"
             entryCheck (fun _ ->
                 printfn "Checking on page home"
-                on "https://localhost:5001/home"
+                "#header" == "Home"
             )
 
-            navigationLink ("clickComment", fun () -> click "comment")
-            navigationLink ("clickSignin", fun () -> click "signin")
+            navigationLink ("clickComment", fun () -> click "#comment")
+            navigationLink ("clickSignin", fun () -> click "#signin")
 
             exitFunction (fun _ ->
                 printfn "Exiting home"
@@ -64,8 +64,8 @@ module Entry =
 
         let ff = new FirefoxDriver(options)
 
-        
-        "Scrutiny" &&&& fun _ -> 
+
+        "Scrutiny" &&& fun _ ->
             clickFlow {
                 //pages [ fun () -> signIn(); comment; home ]
                 entryFunction (fun _ ->
@@ -74,18 +74,18 @@ module Entry =
 
                     home
                 )
-                
+
                 navigation ((home, "clickComment") ==> comment)
                 navigation ((home, "clickSignin") ==> signIn)
-                
+
                 navigation ((comment, "clickHome") ==> home)
                 navigation ((comment, "clickSignin") ==> signIn)
-                
+
                 navigation ((signIn, "clickHome") ==> home)
             } |> scrutinize
-        
+
         switchTo ff
-        
+
         run()
         quit ff
 

@@ -38,12 +38,13 @@ module Views =
     let getLinks links =
         ul []
            (links
-            |> List.map (fun l ->
-                li [] [ a [ _href l ] [ encodedText (l.Substring(1)) ] ]
+            |> List.map (fun (l: string) ->
+                let text = l.Substring(1)
+                li [] [ a [ _href l; _id text ] [ encodedText text ] ]
             ))
 
     let home (username: string option) (model: Message) =
-        [ h1 [] [ encodedText model.Header ]
+        [ h1 [ _id "header" ] [ encodedText model.Header ]
           (match username with
           | None -> div [] []
           | Some u ->
@@ -56,7 +57,7 @@ module Views =
         |> layout
 
     let comment (username: string option) (model: Message) =
-        [ h1 [] [ encodedText model.Header ]
+        [ h1 [ _id "header" ] [ encodedText model.Header ]
           div [ _id "modal"; _class "modal" ] [
               div [ _class "modal-dialog" ] [
                   div [ _class "modal-content" ] [
@@ -96,7 +97,7 @@ module Views =
         |> layout
 
     let signIn (model: Message) =
-        [ h1 [] [ encodedText model.Header ]
+        [ h1 [ _id "header" ] [ encodedText model.Header ]
           div [ _id "ErrorMessage"; _style "display:none;" ] [ encodedText "Form invalid" ]
           form [ _action "javascript:void(0)"; _id "signInForm" ]
                 [ div [] [
