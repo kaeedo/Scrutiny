@@ -1,34 +1,41 @@
 ﻿namespace Scrutiny
+
 open System
 
+[<CustomComparison; CustomEquality>]
 type PageState =
     { Name: string
       EntryCheck: unit -> unit
-      Transitions: (unit -> string) seq
+      Links: Map<string, unit -> unit>
       Exit: unit -> unit }
 
+    interface IComparable<PageState> with
+        member this.CompareTo other =
+            compare this.Name other.Name
+    interface IComparable with
+        member this.CompareTo obj =
+            match obj with
+              | null -> 1
+              | :? PageState as other -> (this :> IComparable<_>).CompareTo other
+              | _ -> invalidArg "obj" "not a Category"
+
+    interface IEquatable<PageState> with
+        member this.Equals other =
+            this.Name = other.Name
+
+    override this.Equals obj =
+        match obj with
+          | :? PageState as other -> (this :> IEquatable<_>).Equals other
+          | _ -> false
+    override this.GetHashCode() =
+        hash this.Name
+
 type PageBuilder() =
-    let random = new Random()
-    let randomTransition (transitions: (unit -> string) seq) =
-        let upper = transitions |> Seq.length
-        let randomIndex = random.Next(upper)
-
-        let transitions = transitions |> Seq.toList
-        transitions.[randomIndex]
-
     member __.Yield(_): PageState =
         { PageState.Name = ""
           EntryCheck = fun _ -> ()
-          Transitions = []
+          Links = [] |> Map.ofList
           Exit = fun _ -> () }
-
-    member __.Run(state: PageState) =
-        if random.NextDouble() >= 0.2
-        then
-            let transition = randomTransition state.Transitions
-            ()
-        else
-            state.Exit()
 
     [<CustomOperation("name")>]
     member __.Name(state, handler): PageState =
@@ -38,66 +45,78 @@ type PageBuilder() =
     member __.EntryCheck(state, handler): PageState =
         { state with EntryCheck = handler }
 
-    [<CustomOperation("transitions")>]
-    member __.Transitions(state, handler): PageState =
-        { state with Transitions = handler }
+    [<CustomOperation("navigationLink")>]
+    member __.Links(state, handler): PageState =
+        { state with Links = state.Links.Add(handler) }
 
     [<CustomOperation("exitFunction")>]
     member __.ExitFunction(state, handler): PageState =
         { state with Exit = handler }
 
-
-
 type ScrutinizeState =
     { Pages: PageState seq
+      CurrentState: PageState
       EntryFunction: unit -> PageState
+      Navigations: Map<PageState, (unit -> PageState) list>
       EntryPage: PageBuilder }
 
-type ScrutinizeBuilder() =
-    let random = new Random()
-    let randomTransition (transitions: (unit -> string) seq) =
-        let upper = transitions |> Seq.length
-        let randomIndex = random.Next(upper)
-
-        let transitions = transitions |> Seq.toList
-        transitions.[randomIndex]()
-        
+type ClickFlowBuilder() =
     member __.Yield(_): ScrutinizeState =
+        let defaultState =
+            { PageState.Name = ""
+              EntryCheck = fun _ -> ()
+              Links = Map.empty
+              Exit = fun _ -> () }
+
         { ScrutinizeState.Pages = []
-          EntryFunction = fun _ ->
-              { PageState.Name = ""
-                EntryCheck = fun _ -> ()
-                Transitions = []
-                Exit = fun _ -> () }
+          Navigations = Map.empty
+          CurrentState = defaultState
+          EntryFunction = fun _ -> defaultState
           EntryPage = new PageBuilder() }
 
     member __.Run(state: ScrutinizeState) =
-        let nextState = state.EntryFunction()
-        nextState.EntryCheck()
-        
-        (*let page =
-            state.Pages
-            |> Seq.find (fun p -> p.Name = nextState)
-        
-        page.EntryCheck()
-        while random.NextDouble() >= 0.2 do
-            let nextState = randomTransition page.Transitions
-            let page =
-                state.Pages
-                |> Seq.find (fun p -> p.Name = nextState)
-            page.EntryCheck()
-            
-        page.Exit()*)
-        
-            
+        state
+
     [<CustomOperation("entryFunction")>]
     member __.EntryFunction(state, handler) =
         { state with EntryFunction = handler }
+
+    [<CustomOperation("navigation")>]
+    member __.Navigation(state, (handler: PageState * (unit -> PageState))) =
+        let fromState, navigation = handler
+        let pageNavigations =
+            match state.Navigations.TryFind fromState with
+            | None -> []
+            | Some n -> n
+        let pageNavigations = navigation :: pageNavigations
+
+        let navigations = state.Navigations.Remove fromState
+
+        { state with Navigations = navigations.Add(fromState, pageNavigations) }
 
     [<CustomOperation("pages")>]
     member __.Pages(state, handler) =
         { state with Pages = handler }
 
 module Scrutiny =
-    let scrutinize = new ScrutinizeBuilder()
-    let page = new PageBuilder()
+    let clickFlow = ClickFlowBuilder()
+    let page = PageBuilder()
+    let scrutinize (state: ScrutinizeState) =
+        let random = new Random()
+        let randomTransition (transitions: (unit -> PageState) list) =
+            let upper = transitions |> Seq.length
+            let randomIndex = random.Next(upper)
+
+            transitions.[randomIndex]()
+            
+        let rec clickAround current next =
+            next.EntryCheck()
+            match random.NextDouble() > 0.9 with
+            | true -> current.Exit()
+            | false ->
+                let possibleTransitions = state.Navigations.[next]
+                let nextState = randomTransition possibleTransitions
+                clickAround current nextState
+
+        let nextState = state.EntryFunction()
+        clickAround nextState nextState

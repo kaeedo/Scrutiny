@@ -4,6 +4,7 @@ open Expecto
 open OpenQA.Selenium.Firefox
 
 open Scrutiny
+open Scrutiny.Operators
 open Scrutiny.Scrutiny
 
 open System
@@ -22,24 +23,15 @@ type Browser() =
             quit ff
 
 module Entry =
-    let signInPage = "Sign In"
-    let commentPage = "Comment"
-    let homePage = "Home"
-
-    let navigateToPage (link: string) (nextStateName: string) =
-        fun () ->
-            click link
-            nextStateName
-
     let signIn =
         page {
-            name signInPage
+            name "Sign In"
             entryCheck (fun _ ->
                 printfn "Checking on page sign in"
                 on "https://localhost:5001/signin"
             )
-
-            transitions [ navigateToPage "home" homePage; navigateToPage "comment" commentPage ]
+            
+            navigationLink ("clickHome", fun () -> click "home")
 
             exitFunction (fun _ ->
                 printfn "Exiting sign in"
@@ -48,13 +40,14 @@ module Entry =
 
     let comment =
         page {
-            name commentPage
+            name "Comment"
             entryCheck (fun _ ->
                 printfn "Checking on page comment"
                 on "https://localhost:5001/comment"
             )
 
-            transitions [ navigateToPage "signin" signInPage; navigateToPage "home" homePage ]
+            navigationLink ("clickHome", fun () -> click "home")
+            navigationLink ("clickSignin", fun () -> click "signin")
 
             exitFunction (fun _ ->
                 printfn "Exiting comment"
@@ -63,13 +56,14 @@ module Entry =
 
     let home =
         page {
-            name homePage
+            name "Home"
             entryCheck (fun _ ->
                 printfn "Checking on page home"
                 on "https://localhost:5001/home"
             )
 
-            transitions [ navigateToPage "signin" signInPage; navigateToPage "comment" commentPage ]
+            navigationLink ("clickComment", fun () -> click "comment")
+            navigationLink ("clickSignin", fun () -> click "signin")
 
             exitFunction (fun _ ->
                 printfn "Exiting home"
@@ -80,7 +74,8 @@ module Entry =
     let allTests =
         testCase "Simple with builder" <| fun () ->
             use ff = new Browser()
-            scrutinize {
+
+            clickFlow {
                 //pages [ fun () -> signIn(); comment; home ]
                 entryFunction (fun _ ->
                     printfn "opening url"
@@ -88,7 +83,15 @@ module Entry =
 
                     home
                 )
-            }
+                
+                navigation ((home, "clickComment") ==> comment)
+                navigation ((home, "clickSignin") ==> signIn)
+                
+                navigation ((comment, "clickHome") ==> home)
+                navigation ((comment, "clickSignin") ==> signIn)
+                
+                navigation ((signIn, "clickHome") ==> home)
+            } |> scrutinize
 
     [<EntryPoint>]
     let main argv =
