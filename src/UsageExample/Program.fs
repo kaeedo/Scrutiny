@@ -1,26 +1,13 @@
 ﻿namespace UsageExample
 
-open Expecto
 open OpenQA.Selenium.Firefox
 
 open Scrutiny
 open Scrutiny.Operators
 open Scrutiny.Scrutiny
 
-open System
 open canopy.classic
-
-type Browser() =
-    let options = new FirefoxOptions()
-    do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
-
-    let ff = new FirefoxDriver(options)
-
-    do switchTo ff
-
-    interface IDisposable with
-        member this.Dispose() =
-            quit ff
+open canopy.runner.classic
 
 module Entry =
     let signIn =
@@ -70,11 +57,15 @@ module Entry =
             )
         }
 
-    [<Tests>]
-    let allTests =
-        testCase "Simple with builder" <| fun () ->
-            use ff = new Browser()
+    [<EntryPoint>]
+    let main argv =
+        let options = new FirefoxOptions()
+        do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
+        let ff = new FirefoxDriver(options)
+
+        
+        "Scrutiny" &&&& fun _ -> 
             clickFlow {
                 //pages [ fun () -> signIn(); comment; home ]
                 entryFunction (fun _ ->
@@ -92,9 +83,10 @@ module Entry =
                 
                 navigation ((signIn, "clickHome") ==> home)
             } |> scrutinize
+        
+        switchTo ff
+        
+        run()
+        quit ff
 
-    [<EntryPoint>]
-    let main argv =
-        let config = { defaultConfig with ``parallel`` = false }
-
-        runTestsWithArgs config argv allTests
+        0
