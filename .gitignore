@@ -18,3 +18,4 @@ key.pem
 devCert.pfx
 devCert.txt
 devCert.crt
+/.vs/Scrutiny

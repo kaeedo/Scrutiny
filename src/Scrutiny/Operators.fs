@@ -1,8 +1,6 @@
 ﻿namespace Scrutiny
 
 module Operators =
-    let (==>) (fromState: PageState, navigationKey: string) (toState: PageState) =
-        fromState, fun () ->
-            fromState.Links.[navigationKey] ()
-            toState
+    let (==>) (usingFn: unit -> unit) (toState: PageState) =
+        usingFn, toState
 

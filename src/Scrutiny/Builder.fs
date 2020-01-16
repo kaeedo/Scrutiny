@@ -6,7 +6,7 @@ open System
 type PageState =
     { Name: string
       EntryCheck: unit -> unit
-      Links: Map<string, unit -> unit>
+      Links: List<((unit -> unit) * PageState)>
       Exit: unit -> unit }
 
     interface IComparable<PageState> with
@@ -34,7 +34,7 @@ type PageBuilder() =
     member __.Yield(_): PageState =
         { PageState.Name = ""
           EntryCheck = fun _ -> ()
-          Links = [] |> Map.ofList
+          Links = []
           Exit = fun _ -> () }
 
     [<CustomOperation("name")>]
@@ -47,7 +47,7 @@ type PageBuilder() =
 
     [<CustomOperation("navigationLink")>]
     member __.Links(state, handler): PageState =
-        { state with Links = state.Links.Add(handler) }
+        { state with Links = handler :: state.Links }
 
     [<CustomOperation("exitFunction")>]
     member __.ExitFunction(state, handler): PageState =
@@ -57,6 +57,7 @@ type ScrutinizeState =
     { Pages: PageState seq
       CurrentState: PageState
       EntryFunction: unit -> PageState
+      // TODO refactor this to new model
       Navigations: Map<PageState, (unit -> PageState) list>
       EntryPage: PageBuilder }
 
@@ -65,10 +66,11 @@ type ClickFlowBuilder() =
         let defaultState =
             { PageState.Name = ""
               EntryCheck = fun _ -> ()
-              Links = Map.empty
+              Links = []
               Exit = fun _ -> () }
 
         { ScrutinizeState.Pages = []
+          // TODO refactor this to new model
           Navigations = Map.empty
           CurrentState = defaultState
           EntryFunction = fun _ -> defaultState
