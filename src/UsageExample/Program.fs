@@ -11,14 +11,14 @@ open canopy.runner.classic
 
 module Entry =
     let rec signIn =
-        page {
+        lazy page {
             name "Sign In"
             entryCheck (fun _ ->
                 printfn "Checking on page sign in"
                 "#header" == "Sign In"
             )
 
-            navigationLink ((fun () -> click "#home") ==> home)
+            transition ((fun () -> click "#home") ==> home)
 
             exitFunction (fun _ ->
                 printfn "Exiting sign in"
@@ -26,15 +26,15 @@ module Entry =
         }
 
     and comment =
-        page {
+        lazy page {
             name "Comment"
             entryCheck (fun _ ->
                 printfn "Checking on page comment"
                 "#header" == "Comments"
             )
 
-            navigationLink ((fun () -> click "#home") ==> home)
-            navigationLink ((fun () -> click "#signin") ==> signIn)
+            transition ((fun () -> click "#home") ==> home)
+            transition ((fun () -> click "#signin") ==> signIn)
             
             exitFunction (fun _ ->
                 printfn "Exiting comment"
@@ -42,15 +42,15 @@ module Entry =
         }
 
     and home =
-        page {
+        lazy page {
             name "Home"
             entryCheck (fun _ ->
                 printfn "Checking on page home"
                 "#header" == "Home"
             )
 
-            navigationLink ((fun () -> click "#comment") ==> comment)
-            navigationLink ((fun () -> click "#signin") ==> signIn)
+            transition ((fun () -> click "#comment") ==> comment)
+            transition ((fun () -> click "#signin") ==> signIn)
 
             exitFunction (fun _ ->
                 printfn "Exiting home"
@@ -71,11 +71,12 @@ module Entry =
                     printfn "opening url"
                     url "https://localhost:5001/home"
 
-                    home
+                    home.Value
                 )
             } |> scrutinize
 
         switchTo ff
+        pin canopy.types.direction.Right
 
         run()
         quit ff

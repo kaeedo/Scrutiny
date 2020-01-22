@@ -6,7 +6,7 @@ open System
 type PageState =
     { Name: string
       EntryCheck: unit -> unit
-      Links: List<((unit -> unit) * PageState)>
+      Transitions: List<((unit -> unit) * Lazy<PageState>)>
       Exit: unit -> unit }
 
     interface IComparable<PageState> with
@@ -34,7 +34,7 @@ type PageBuilder() =
     member __.Yield(_): PageState =
         { PageState.Name = ""
           EntryCheck = fun _ -> ()
-          Links = []
+          Transitions = []
           Exit = fun _ -> () }
 
     [<CustomOperation("name")>]
@@ -45,9 +45,9 @@ type PageBuilder() =
     member __.EntryCheck(state, handler): PageState =
         { state with EntryCheck = handler }
 
-    [<CustomOperation("navigationLink")>]
+    [<CustomOperation("transition")>]
     member __.Links(state, handler): PageState =
-        { state with Links = handler :: state.Links }
+        { state with Transitions = handler :: state.Transitions }
 
     [<CustomOperation("exitFunction")>]
     member __.ExitFunction(state, handler): PageState =
@@ -66,7 +66,7 @@ type ClickFlowBuilder() =
         let defaultState =
             { PageState.Name = ""
               EntryCheck = fun _ -> ()
-              Links = []
+              Transitions = []
               Exit = fun _ -> () }
 
         { ScrutinizeState.Pages = []
@@ -105,18 +105,23 @@ module Scrutiny =
     let page = PageBuilder()
     let scrutinize (state: ScrutinizeState) =
         let random = new Random()
-        let randomTransition (transitions: (unit -> PageState) list) =
+
+        let randomTransition (transitions: List<(unit -> unit) * Lazy<PageState>>) =
             let upper = transitions |> Seq.length
             let randomIndex = random.Next(upper)
 
-            transitions.[randomIndex]()
+            let transition, nextState = transitions.[randomIndex]
+            transition() |> ignore
+            nextState.Value
             
         let rec clickAround current next =
             next.EntryCheck()
-            match random.NextDouble() > 0.9 with
+            let chance = random.NextDouble()
+            printfn "Chance: %f " chance
+            match chance > 0.9 with
             | true -> current.Exit()
             | false ->
-                let possibleTransitions = state.Navigations.[next]
+                let possibleTransitions = next.Transitions //.Navigations.[next]
                 let nextState = randomTransition possibleTransitions
                 clickAround current nextState
 
