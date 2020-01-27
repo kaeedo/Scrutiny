@@ -9,9 +9,9 @@ open Scrutiny.Scrutiny
 open canopy.classic
 open canopy.runner.classic
 
-module Entry =
-    let rec signIn =
-        lazy page {
+module rec Entry =
+    let signIn = fun _ ->
+        page {
             name "Sign In"
             entryCheck (fun _ ->
                 printfn "Checking on page sign in"
@@ -25,8 +25,8 @@ module Entry =
             )
         }
 
-    and comment =
-        lazy page {
+    let comment = fun _ ->
+         page {
             name "Comment"
             entryCheck (fun _ ->
                 printfn "Checking on page comment"
@@ -41,8 +41,8 @@ module Entry =
             )
         }
 
-    and home =
-        lazy page {
+    let home = fun _ ->
+        page {
             name "Home"
             entryCheck (fun _ ->
                 printfn "Checking on page home"
@@ -71,7 +71,7 @@ module Entry =
                     printfn "opening url"
                     url "https://localhost:5001/home"
 
-                    home.Value
+                    home
                 )
             } |> scrutinize
 

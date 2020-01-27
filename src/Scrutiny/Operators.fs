@@ -1,6 +1,6 @@
 ﻿namespace Scrutiny
 
 module Operators =
-    let (==>) (usingFn: unit -> unit) (toState: Lazy<PageState>) =
+    let (==>) (usingFn: unit -> unit) (toState: unit -> PageState) =
         usingFn, toState
 

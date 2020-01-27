@@ -6,7 +6,7 @@ open System
 type PageState =
     { Name: string
       EntryCheck: unit -> unit
-      Transitions: List<((unit -> unit) * Lazy<PageState>)>
+      Transitions: List<((unit -> unit) * (unit -> PageState))>
       Exit: unit -> unit }
 
     interface IComparable<PageState> with
@@ -56,7 +56,7 @@ type PageBuilder() =
 type ScrutinizeState =
     { Pages: PageState seq
       CurrentState: PageState
-      EntryFunction: unit -> PageState
+      EntryFunction: unit -> unit -> PageState
       // TODO refactor this to new model
       Navigations: Map<PageState, (unit -> PageState) list>
       EntryPage: PageBuilder }
@@ -73,7 +73,7 @@ type ClickFlowBuilder() =
           // TODO refactor this to new model
           Navigations = Map.empty
           CurrentState = defaultState
-          EntryFunction = fun _ -> defaultState
+          EntryFunction = fun _ -> fun _ -> defaultState
           EntryPage = new PageBuilder() }
 
     member __.Run(state: ScrutinizeState) =
@@ -106,24 +106,24 @@ module Scrutiny =
     let scrutinize (state: ScrutinizeState) =
         let random = new Random()
 
-        let randomTransition (transitions: List<(unit -> unit) * Lazy<PageState>>) =
+        let randomTransition (transitions: List<(unit -> unit) * (unit -> PageState)>) =
             let upper = transitions |> Seq.length
             let randomIndex = random.Next(upper)
 
             let transition, nextState = transitions.[randomIndex]
             transition() |> ignore
-            nextState.Value
+            nextState()
             
-        let rec clickAround current next =
+        let rec clickAround next =
             next.EntryCheck()
             let chance = random.NextDouble()
             printfn "Chance: %f " chance
             match chance > 0.9 with
-            | true -> current.Exit()
+            | true -> next.Exit()
             | false ->
                 let possibleTransitions = next.Transitions //.Navigations.[next]
                 let nextState = randomTransition possibleTransitions
-                clickAround current nextState
+                clickAround nextState
 
         let nextState = state.EntryFunction()
-        clickAround nextState nextState
+        clickAround (nextState())
