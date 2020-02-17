@@ -2,6 +2,7 @@
 
 open OpenQA.Selenium.Firefox
 
+open System
 open Scrutiny
 open Scrutiny.Operators
 open Scrutiny.Scrutiny
@@ -13,30 +14,85 @@ module rec Entry =
     let signIn = fun _ ->
         page {
             name "Sign In"
-            entryCheck (fun _ ->
+            entryCheck (fun () ->
                 printfn "Checking on page sign in"
                 "#header" == "Sign In"
             )
 
             transition ((fun () -> click "#home") ==> home)
+            transition ((fun () ->
+                "#username" << "MyUsername"
+                "#number" << "42"
+                click "Sign In"
+            ) ==> home)
 
-            exitFunction (fun _ ->
+            action (fun () ->
+                "#username" << "MyUsername"
+                "#username" == "MyUsername"
+            )
+            action (fun () -> 
+                "#number" << "42"
+                "#number" == "42"
+            )
+            action (fun () -> 
+                let username = read "#username"
+                let number = read "#number"
+                if String.IsNullOrWhiteSpace(username) || String.IsNullOrWhiteSpace(number)
+                then click "Sign In"
+
+                let formBorder = (element "#signInForm").GetAttribute("style")
+                formBorder.Contains("border") === true
+            )
+
+            exitFunction (fun () ->
                 printfn "Exiting sign in"
             )
         }
 
+    let loggedInComment = fun _ ->
+        page {
+            name "Logged In Comment"
+
+            entryCheck (fun () ->
+                printfn "Checking comment is logged in"
+                displayed "#openModal"
+            )
+
+            exitFunction (fun () ->
+                printfn "Exiting comment logged in"
+            )
+        }
+
+    let loggedInHome = fun _ ->
+        page {
+            name "Logged in Home"
+
+            entryCheck (fun () ->
+                printfn "Checking on page home logged in"
+                displayed "#welcomeText"
+            )
+        }
+
     let comment = fun _ ->
-         page {
+        page {
             name "Comment"
-            entryCheck (fun _ ->
+            entryCheck (fun () ->
                 printfn "Checking on page comment"
                 "#header" == "Comments"
             )
 
+            (*action (fun () ->
+                if not <| isLoggedIn() 
+                then ()
+                else
+                    click "#openModal"
+                    "#comment" << "I'm very happy about this comment"
+            )*)
+
             transition ((fun () -> click "#home") ==> home)
             transition ((fun () -> click "#signin") ==> signIn)
             
-            exitFunction (fun _ ->
+            exitFunction (fun () ->
                 printfn "Exiting comment"
             )
         }
@@ -64,16 +120,13 @@ module rec Entry =
 
         let ff = new FirefoxDriver(options)
 
-
         "Scrutiny" &&& fun _ ->
-            clickFlow {
-                entryFunction (fun _ ->
-                    printfn "opening url"
-                    url "https://localhost:5001/home"
+            fun _ ->
+                printfn "opening url"
+                url "https://localhost:5001/home"
 
-                    home
-                )
-            } |> scrutinize
+                home
+            |> scrutinize
 
         switchTo ff
         pin canopy.types.direction.Right

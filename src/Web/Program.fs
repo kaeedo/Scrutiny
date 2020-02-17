@@ -49,7 +49,7 @@ module Views =
           | None -> div [] []
           | Some u ->
               div [] [
-                  div [] [ encodedText <| sprintf "Welcome %s" u ]
+                  div [ _id "welcomeText" ] [ encodedText <| sprintf "Welcome %s" u ]
                   div [] [ a [ _href "javascript:void(0);"; _id "logout" ] [ encodedText "Logout" ] ]
               ])
           getLinks model.Links
