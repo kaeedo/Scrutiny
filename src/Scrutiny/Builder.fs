@@ -1,46 +1,17 @@
-﻿namespace rec Scrutiny
+﻿namespace Scrutiny
 
 open System
 
-type ScrutinizeState =
+(*type ScrutinizeState =
     { Pages: PageState seq
       CurrentState: PageState
       EntryFunction: unit -> unit -> PageState
-      EntryPage: PageBuilder }
-
-//[<CustomComparison; CustomEquality>]
-type PageState =
-    { Name: string
-      EntryCheck: unit -> unit
-      Transitions: List<((unit -> unit) * (unit -> PageState))>
-      Actions: List<unit -> unit>
-      // DesiredOutcome: List of actions transition to PageState?
-      Exit: unit -> unit }
-
-    (*interface IComparable<PageState> with
-        member this.CompareTo other =
-            compare this.Name other.Name
-    interface IComparable with
-        member this.CompareTo obj =
-            match obj with
-            | null -> 1
-            | :? PageState as other -> (this :> IComparable<_>).CompareTo other
-            | _ -> invalidArg "obj" "not a PageState"
-
-    interface IEquatable<PageState> with
-        member this.Equals other =
-            this.Name = other.Name
-
-    override this.Equals obj =
-        match obj with
-          | :? PageState as other -> (this :> IEquatable<_>).Equals other
-          | _ -> false
-    override this.GetHashCode() =
-        hash this.Name*)
+      EntryPage: PageBuilder }*)
 
 type PageBuilder() =
     member __.Yield(_): PageState =
-        { PageState.Name = ""
+        { PageState.Id = Guid.NewGuid()
+          Name = ""
           EntryCheck = fun _ -> ()
           Transitions = []
           Actions = []
@@ -66,10 +37,11 @@ type PageBuilder() =
     member __.ExitFunction(state, handler): PageState =
         { state with Exit = handler }
 
-type ClickFlowBuilder() =
+(*type ClickFlowBuilder() =
     member __.Yield(_): ScrutinizeState =
         let defaultState =
-            { PageState.Name = ""
+            { PageState.Id = Guid.NewGuid()
+              Name = ""
               EntryCheck = fun _ -> ()
               Transitions = []
               Actions = []
@@ -86,13 +58,20 @@ type ClickFlowBuilder() =
 
     [<CustomOperation("pages")>]
     member __.Pages(state, handler) =
-        { state with Pages = handler }
+        { state with Pages = handler }*)
 
 module Scrutiny =
+    let adjacencyGraph = [||]
+
     let timer = System.Diagnostics.Stopwatch()
-    let clickFlow = ClickFlowBuilder()
+    //let clickFlow = ClickFlowBuilder()
     let page = PageBuilder()
-    let scrutinize (startFn: unit -> unit -> PageState) =
+
+    let scrutinize (startFn: unit -> PageState) =
+        let startState = startFn()
+        let bar = Navigator.constructAdjacencyGraph startState
+
+
         let random = new Random()
 
         let randomTransition (transitions: List<(unit -> unit) * (unit -> PageState)>) =
@@ -118,5 +97,6 @@ module Scrutiny =
                 printfn "Navigatin to nextstate took: %ims" timer.ElapsedMilliseconds
                 clickAround nextState
 
-        let nextState = startFn()
-        clickAround (nextState())
+        //let nextState = startFn()
+        //clickAround (nextState())
+        ()

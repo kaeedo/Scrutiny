@@ -24,7 +24,7 @@ module rec Entry =
                 "#username" << "MyUsername"
                 "#number" << "42"
                 click "Sign In"
-            ) ==> home)
+            ) ==> loggedInHome)
 
             action (fun () ->
                 "#username" << "MyUsername"
@@ -115,23 +115,21 @@ module rec Entry =
 
     [<EntryPoint>]
     let main argv =
-        let options = new FirefoxOptions()
+        home |> scrutinize
+        (*let options = new FirefoxOptions()
         do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
         let ff = new FirefoxDriver(options)
 
         "Scrutiny" &&& fun _ ->
-            fun _ ->
-                printfn "opening url"
-                url "https://localhost:5001/home"
-
-                home
-            |> scrutinize
+            printfn "opening url"
+            //url "https://localhost:5001/home"
+            home |> scrutinize
 
         switchTo ff
         pin canopy.types.direction.Right
 
         run()
         quit ff
-
+        *)
         0
