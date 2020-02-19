@@ -49,15 +49,18 @@ module internal Navigator =
 
             buildNode node transitions
 
-        let rec buildGraph (current: (PageState * (PageState list)) list) (currentState: PageState) (transitions: PageState list) : (PageState * (PageState list)) list =
-            match transitions with
-            | [] -> current
-            | nextState :: tail ->
-                current
+        let mutable graph: AdjacencyGraph<PageState> = []
 
+        graph <- (startState, getTransitions startState) :: graph
+        for t in startState.Transitions do
+            let transitionedState = (snd t)()
+            if not (graph |> List.exists (fun g -> (fst g).Name = transitionedState.Name))
+            then 
+                graph <- (transitionedState, getTransitions transitionedState) :: graph
 
-        let a = buildGraph [] startState startTransitionNodes
-        a
+        let secondPhase = graph |> List.collect (snd)
+
+        graph
 
     let g: Graph<char> = (['b';'c';'d';'f';'g';'h';'k'],[('b','c');('b','f');('c','f');('f','k');('g','h')])
     let ga: AdjacencyGraph<char> = [('b',['c'; 'f']); ('c',['b'; 'f']); ('d',[]); ('f',['b'; 'c'; 'k']); ('g',['h']); ('h',['g']); ('k',['f'])]

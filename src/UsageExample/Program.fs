@@ -67,6 +67,8 @@ module rec Entry =
         page {
             name "Logged in Home"
 
+            transition ((fun () -> click "#comment") ==> loggedInComment)
+
             entryCheck (fun () ->
                 printfn "Checking on page home logged in"
                 displayed "#welcomeText"
