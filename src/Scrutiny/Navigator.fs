@@ -49,7 +49,7 @@ module internal Navigator =
 
             buildNode node transitions
 
-        let mutable graph: AdjacencyGraph<PageState> = []
+        (*let mutable graph: AdjacencyGraph<PageState> = []
 
         graph <- (startState, getTransitions startState) :: graph
         for t in startState.Transitions do
@@ -58,7 +58,22 @@ module internal Navigator =
             then 
                 graph <- (transitionedState, getTransitions transitionedState) :: graph
 
-        let secondPhase = graph |> List.collect (snd)
+        let secondPhase = graph |> List.collect (snd)*)
+
+        ////////////////////////
+        (*
+        final = []
+        nodes2Visit = some kind of queue
+        while nodes2Visit has any
+            currentNode = nodes2Visit.dequeue
+            finals.push(currentNode, currentNode.neighbors)
+
+            let neighborsNotInFinal = nieghbors not in final
+            nodes2Visit.AddRange(neighborsNotInFinal)
+        *)
+        ////////////////////////
+
+        let mutable graph: Map<PageState, (PageState list)> = Map.empty
 
         graph
 
