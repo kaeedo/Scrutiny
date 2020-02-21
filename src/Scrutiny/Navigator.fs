@@ -1,5 +1,7 @@
 ﻿namespace Scrutiny
 
+open System.Collections.Generic
+
 //http://www.fssnip.net/av/title/NinetyNine-F-Problems-Problems-80-89-Graphs
 
 type Edge<'a> = 'a * 'a
@@ -34,48 +36,22 @@ module internal Navigator =
             node.Transitions
             |> List.map (fun t -> (snd t)())
 
-        let startTransitionNodes = getTransitions startState
+        let mutable final = []
+        let nodes2Visit = Queue<PageState>()
+        nodes2Visit.Enqueue(startState)
 
-        let addTransitions (node: (PageState * (PageState list))) (transitions: PageState list) =
-            let rec buildNode (currentNode: (PageState * (PageState list))) (possibleTransitions: PageState list) =
-                match possibleTransitions with
-                | [] -> currentNode
-                | head :: tail ->
-                    if (snd currentNode) |> List.exists (fun cn -> cn.Name = head.Name)
-                    then buildNode currentNode tail
-                    else 
-                        let (currentPageState, currentTransitions) = currentNode
-                        buildNode (currentPageState, head :: currentTransitions) tail
+        while nodes2Visit.Count > 0 do
+            let currentNode = nodes2Visit.Dequeue()
+            let neighbors = getTransitions currentNode
+            final <- (currentNode, neighbors) :: final
 
-            buildNode node transitions
+            neighbors
+            |> List.except (final |> List.map fst)
+            |> List.iter (fun n ->
+                nodes2Visit.Enqueue(n)
+            )
 
-        (*let mutable graph: AdjacencyGraph<PageState> = []
-
-        graph <- (startState, getTransitions startState) :: graph
-        for t in startState.Transitions do
-            let transitionedState = (snd t)()
-            if not (graph |> List.exists (fun g -> (fst g).Name = transitionedState.Name))
-            then 
-                graph <- (transitionedState, getTransitions transitionedState) :: graph
-
-        let secondPhase = graph |> List.collect (snd)*)
-
-        ////////////////////////
-        (*
-        final = []
-        nodes2Visit = some kind of queue
-        while nodes2Visit has any
-            currentNode = nodes2Visit.dequeue
-            finals.push(currentNode, currentNode.neighbors)
-
-            let neighborsNotInFinal = nieghbors not in final
-            nodes2Visit.AddRange(neighborsNotInFinal)
-        *)
-        ////////////////////////
-
-        let mutable graph: Map<PageState, (PageState list)> = Map.empty
-
-        graph
+        final
 
     let g: Graph<char> = (['b';'c';'d';'f';'g';'h';'k'],[('b','c');('b','f');('c','f');('f','k');('g','h')])
     let ga: AdjacencyGraph<char> = [('b',['c'; 'f']); ('c',['b'; 'f']); ('d',[]); ('f',['b'; 'c'; 'k']); ('g',['h']); ('h',['g']); ('k',['f'])]
