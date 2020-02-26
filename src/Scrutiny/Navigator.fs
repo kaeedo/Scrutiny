@@ -1,6 +1,7 @@
 ﻿namespace Scrutiny
 
 open System.Collections.Generic
+open System
 
 //http://www.fssnip.net/av/title/NinetyNine-F-Problems-Problems-80-89-Graphs
 
@@ -30,9 +31,50 @@ module internal Navigator =
             |> Seq.toList
         (nodes, edges)
 
+    let createPath (graph: AdjacencyGraph<PageState>) from until =
+        let path = Queue<PageState>()
 
-    let constructAdjacencyGraph (startState: PageState) =
-        let getTransitions node : PageState list= 
+        let visitedPageStates = 
+            graph
+            |> List.map (fun n ->
+                (fst n), false
+            )
+            |> dict
+            
+        let rec traverse (pageState: PageState) (visisted: IDictionary<PageState, bool>) =
+            visisted.[pageState] <- true
+            path.Enqueue(pageState)
+            let neighbors = 
+                graph 
+                |> List.find (fun (n, _) -> n = pageState) 
+                |> snd
+            
+            //if pageState = until 
+            //then path
+            //else traverse 
+            1
+        1
+
+    //void DFSUtil(int v, bool[] visited) 
+    //{ 
+    //    // Mark the current node as visited 
+    //    // and print it  
+    //    visited[v] = true; 
+    //    Console.Write(v + " "); 
+  
+    //    // Recur for all the vertices  
+    //    // adjacent to this vertex  
+    //    List<int> vList = adj[v]; 
+    //    foreach (var n in vList) 
+    //    { 
+    //        if (!visited[n]) 
+    //            DFSUtil(n, visited); 
+    //    } 
+    //} 
+
+
+    let constructAdjacencyGraph (startState: PageState) : AdjacencyGraph<PageState> =
+        let getTransitions node : PageState list = 
             node.Transitions
             |> List.map (fun t -> (snd t)())
 
