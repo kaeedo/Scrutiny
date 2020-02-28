@@ -70,6 +70,16 @@ module Scrutiny =
     let scrutinize (startFn: unit -> PageState) =
         let startState = startFn()
         let bar = Navigator.constructAdjacencyGraph startState
+        
+        let home = 
+            bar
+            |> Seq.find (fun n -> (fst n).Name = "Home")
+            |> fst
+        let loggedInComment = 
+            bar
+            |> Seq.find (fun n -> (fst n).Name = "Logged In Comment")
+            |> fst
+        let baz = Navigator.shortestPathFunction bar home loggedInComment
 
 
         let random = new Random()

@@ -31,48 +31,6 @@ module internal Navigator =
             |> Seq.toList
         (nodes, edges)
 
-    let createPath (graph: AdjacencyGraph<PageState>) from until =
-        let path = Queue<PageState>()
-
-        let visitedPageStates = 
-            graph
-            |> List.map (fun n ->
-                (fst n), false
-            )
-            |> dict
-            
-        let rec traverse (pageState: PageState) (visisted: IDictionary<PageState, bool>) =
-            visisted.[pageState] <- true
-            path.Enqueue(pageState)
-            let neighbors = 
-                graph 
-                |> List.find (fun (n, _) -> n = pageState) 
-                |> snd
-            
-            //if pageState = until 
-            //then path
-            //else traverse 
-            1
-        1
-
-    //void DFSUtil(int v, bool[] visited) 
-    //{ 
-    //    // Mark the current node as visited 
-    //    // and print it  
-    //    visited[v] = true; 
-    //    Console.Write(v + " "); 
-  
-    //    // Recur for all the vertices  
-    //    // adjacent to this vertex  
-    //    List<int> vList = adj[v]; 
-    //    foreach (var n in vList) 
-    //    { 
-    //        if (!visited[n]) 
-    //            DFSUtil(n, visited); 
-    //    } 
-    //} 
-
-
     let constructAdjacencyGraph (startState: PageState) : AdjacencyGraph<PageState> =
         let getTransitions node : PageState list = 
             node.Transitions
@@ -95,6 +53,33 @@ module internal Navigator =
 
         final
 
-    let g: Graph<char> = (['b';'c';'d';'f';'g';'h';'k'],[('b','c');('b','f');('c','f');('f','k');('g','h')])
-    let ga: AdjacencyGraph<char> = [('b',['c'; 'f']); ('c',['b'; 'f']); ('d',[]); ('f',['b'; 'c'; 'k']); ('g',['h']); ('h',['g']); ('k',['f'])]
+    let shortestPathFunction (graph: AdjacencyGraph<PageState>) (start: PageState) =
+        let previous = new Dictionary<PageState, PageState>()
+
+        let queue = new Queue<PageState>()
+        queue.Enqueue(start)
+
+        while (queue.Count > 0) do
+            let vertex = queue.Dequeue()
+            let neighbors = 
+                graph
+                |> Seq.find (fun (node, _) -> node = vertex)
+                |> snd
+            for neighbor in neighbors do
+                if not (previous.ContainsKey(neighbor))
+                then 
+                    previous.[neighbor] <- vertex
+                    queue.Enqueue(neighbor)
+
+        let shortestPath (v: PageState) =
+            let mutable path: PageState list = []
+            let mutable current = v
+            while not (current.Equals(start)) do
+                path <- path @ [current]
+                current <- previous.[current]
+
+            path <- path @ [start]
+            path |> List.rev
+
+        shortestPath
 
