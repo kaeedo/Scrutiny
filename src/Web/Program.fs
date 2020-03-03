@@ -1,7 +1,6 @@
 module Web.App
 
 open Giraffe
-open Hangfire
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Cors.Infrastructure
 open Microsoft.AspNetCore.Hosting
@@ -171,7 +170,6 @@ let configureCors (builder: CorsPolicyBuilder) =
 
 let configureApp (app: IApplicationBuilder) =
     let env = app.ApplicationServices.GetService<IWebHostEnvironment>()
-    app.UseHangfireDashboard(pathMatch = "/url/dashboard", options = new DashboardOptions(AppPath = "wefwef")) |> ignore
     (match env.EnvironmentName = "development" with
     | true -> app.UseDeveloperExceptionPage()
     | false -> app.UseGiraffeErrorHandler errorHandler)

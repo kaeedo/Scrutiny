@@ -117,15 +117,15 @@ module rec Entry =
 
     [<EntryPoint>]
     let main argv =
-        home |> scrutinize
-        (*let options = new FirefoxOptions()
+        //home |> scrutinize
+        let options = new FirefoxOptions()
         do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
         let ff = new FirefoxDriver(options)
 
-        "Scrutiny" &&& fun _ ->
+        "Scrutiny" &&&& fun _ ->
             printfn "opening url"
-            //url "https://localhost:5001/home"
+            url "https://localhost:5001/home"
             home |> scrutinize
 
         switchTo ff
@@ -133,5 +133,5 @@ module rec Entry =
 
         run()
         quit ff
-        *)
+        
         0

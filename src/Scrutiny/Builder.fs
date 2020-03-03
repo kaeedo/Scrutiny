@@ -69,43 +69,36 @@ module Scrutiny =
 
     let scrutinize (startFn: unit -> PageState) =
         let startState = startFn()
-        let bar = Navigator.constructAdjacencyGraph startState
-        
-        let home = 
-            bar
-            |> Seq.find (fun n -> (fst n).Name = "Home")
-            |> fst
-        let loggedInComment = 
-            bar
-            |> Seq.find (fun n -> (fst n).Name = "Logged In Comment")
-            |> fst
-        let baz = Navigator.shortestPathFunction bar home loggedInComment
-
+        let allStates =
+            Navigator.constructAdjacencyGraph startState
 
         let random = new Random()
+        let nextNode = 
+            let next = random.Next(allStates |> List.length)
+            fst allStates.[next]
+        
+        let path = Navigator.shortestPathFunction allStates startState nextNode
+        
+        path
+        |> List.iter (fun p ->
+            printf "%s --> " p.Name
+        )
 
-        let randomTransition (transitions: List<(unit -> unit) * (unit -> PageState)>) =
-            let upper = transitions |> Seq.length
-            let randomIndex = random.Next(upper)
 
-            let transition, nextState = transitions.[randomIndex]
-            transition() |> ignore
-            nextState()
-            
-        let rec clickAround next =
-            timer.Restart()
-            next.EntryCheck()
-            printfn "Entry check took: %ims" timer.ElapsedMilliseconds
-            let chance = random.NextDouble()
-            printfn "Chance: %f " chance
-            match chance > 0.9 with
-            | true -> next.Exit()
-            | false ->
-                timer.Restart()
-                let possibleTransitions = next.Transitions 
-                let nextState = randomTransition possibleTransitions
-                printfn "Navigatin to nextstate took: %ims" timer.ElapsedMilliseconds
-                clickAround nextState
+        path
+        |> List.pairwise
+        |> List.iter (fun (current, next) ->
+            current.EntryCheck()
+
+            let nextTransition =
+                current.Transitions
+                |> List.find (fun t ->
+                    let state = (snd t)()
+                    state.Name = next.Name
+                )
+                |> fst
+            nextTransition()
+        )
 
         //let nextState = startFn()
         //clickAround (nextState())
