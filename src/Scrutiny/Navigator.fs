@@ -3,16 +3,6 @@
 open System.Collections.Generic
 open System
 
-//http://www.fssnip.net/av/title/NinetyNine-F-Problems-Problems-80-89-Graphs
-
-type Edge<'a> = 'a * 'a
-
-type Graph<'a> = 'a list * Edge<'a> list
-
-type Node<'a> = 'a * 'a list
-
-type AdjacencyGraph<'a> = 'a Node list
-
 module internal Navigator =
     let graph2AdjacencyGraph ((ns, es) : 'a Graph) : 'a AdjacencyGraph = 
         let nodeMap = ns |> List.map(fun n -> n, []) |> Map.ofList

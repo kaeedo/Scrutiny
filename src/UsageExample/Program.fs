@@ -123,7 +123,7 @@ module rec Entry =
 
         let ff = new FirefoxDriver(options)
 
-        "Scrutiny" &&&& fun _ ->
+        "Scrutiny" &&& fun _ ->
             printfn "opening url"
             url "https://localhost:5001/home"
             home |> scrutinize

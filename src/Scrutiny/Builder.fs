@@ -37,69 +37,67 @@ type PageBuilder() =
     member __.ExitFunction(state, handler): PageState =
         { state with Exit = handler }
 
-(*type ClickFlowBuilder() =
-    member __.Yield(_): ScrutinizeState =
-        let defaultState =
-            { PageState.Id = Guid.NewGuid()
-              Name = ""
-              EntryCheck = fun _ -> ()
-              Transitions = []
-              Actions = []
-              Exit = fun _ -> () }
-
-        { ScrutinizeState.Pages = []
-          CurrentState = defaultState
-          EntryFunction = fun _ -> fun _ -> defaultState
-          EntryPage = new PageBuilder() }
-
-    [<CustomOperation("entryFunction")>]
-    member __.EntryFunction(state, handler) =
-        { state with EntryFunction = handler }
-
-    [<CustomOperation("pages")>]
-    member __.Pages(state, handler) =
-        { state with Pages = handler }*)
-
 module Scrutiny =
     let adjacencyGraph = [||]
 
-    let timer = System.Diagnostics.Stopwatch()
-    //let clickFlow = ClickFlowBuilder()
+    let timer = Diagnostics.Stopwatch()
     let page = PageBuilder()
 
     let scrutinize (startFn: unit -> PageState) =
         let startState = startFn()
         let allStates =
             Navigator.constructAdjacencyGraph startState
+        // seed 11 = Home --> Comment
+        let random = new Random(11) // TODO: get seed from config
+        let findPath = Navigator.shortestPathFunction allStates
 
-        let random = new Random()
-        let nextNode = 
-            let next = random.Next(allStates |> List.length)
-            fst allStates.[next]
-        
-        let path = Navigator.shortestPathFunction allStates startState nextNode
-        
-        path
-        |> List.iter (fun p ->
-            printf "%s --> " p.Name
-        )
+        let rec clickAround (alreadyVisited: string list) (nodes: AdjacencyGraph<PageState>) startNode =
+            let mutable alreadyVisited = alreadyVisited
+            let mutable startNode = startNode
+            let nextNode = 
+                // TODO: Refactor this
+                let unvisitedNodes: AdjacencyGraph<PageState> =
+                    nodes
+                    |> List.map (fun n -> (fst n).Name)
+                    |> List.except alreadyVisited
+                    |> List.map (fun n -> nodes |> List.find (fun ps -> (fst ps).Name = n))
 
+                if unvisitedNodes |> List.isEmpty then
+                    None
+                else
+                    let next = random.Next(unvisitedNodes.Length)
+                    Some (fst unvisitedNodes.[next])
 
-        path
-        |> List.pairwise
-        |> List.iter (fun (current, next) ->
-            current.EntryCheck()
+            match nextNode with
+            | None -> ()
+            | Some nextNode ->
+                let path = findPath startNode nextNode
+                if path.Length = 1 then
+                    ()
+                else
+                    printfn "path: %s"
+                        (path
+                        |> List.map (fun p -> p.Name)
+                        |> String.concat " --> ")
 
-            let nextTransition =
-                current.Transitions
-                |> List.find (fun t ->
-                    let state = (snd t)()
-                    state.Name = next.Name
-                )
-                |> fst
-            nextTransition()
-        )
+                    path
+                    |> List.pairwise
+                    |> List.iter (fun (current, next) ->
+                        alreadyVisited <- current.Name :: alreadyVisited
+                        current.EntryCheck()
 
-        //let nextState = startFn()
-        //clickAround (nextState())
+                        let nextTransition, nextNode =
+                            current.Transitions
+                            |> List.find (fun t ->
+                                let state = (snd t)()
+                                state.Name = next.Name
+                            )
+
+                        startNode <- nextNode()
+                        nextTransition()
+                    )
+                    clickAround alreadyVisited nodes startNode
+
+        clickAround [] allStates startState
+
         ()

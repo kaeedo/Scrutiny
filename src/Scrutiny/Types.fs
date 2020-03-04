@@ -2,6 +2,16 @@
 
 open System
 
+//http://www.fssnip.net/av/title/NinetyNine-F-Problems-Problems-80-89-Graphs
+
+type Edge<'a> = 'a * 'a
+
+type Graph<'a> = 'a list * Edge<'a> list
+
+type Node<'a> = 'a * 'a list
+
+type AdjacencyGraph<'a> = 'a Node list
+
 [<CustomComparison; CustomEquality>]
 type PageState =
     { Id: Guid
