@@ -12,12 +12,16 @@ type Node<'a> = 'a * 'a list
 
 type AdjacencyGraph<'a> = 'a Node list
 
+type Transition =
+    { TransitionFn: unit -> unit
+      ToState: unit -> PageState }
+
 [<CustomComparison; CustomEquality>]
 type PageState =
     { Id: Guid
       Name: string
       EntryCheck: unit -> unit
-      Transitions: List<((unit -> unit) * (unit -> PageState))>
+      Transitions: Transition list
       Actions: List<unit -> unit>
       // DesiredOutcome: List of actions transition to PageState?
       Exit: unit -> unit }

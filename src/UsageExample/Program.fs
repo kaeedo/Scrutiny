@@ -119,7 +119,6 @@ module rec Entry =
 
     [<EntryPoint>]
     let main argv =
-        //home |> scrutinize
         let options = new FirefoxOptions()
         do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
 

@@ -92,17 +92,14 @@ module Scrutiny =
                     current = head
                 )
                 |> fun (current, next) ->
-                    let (nextStateTranstion, _) =
+                    let transition =
                         head.Transitions
                         |> Seq.find (fun t ->
-                            let state = (snd t)()
+                            let state = t.ToState()
                             state.Name = next.Name
                         )
-                    {| nextStateTranstion = nextStateTranstion
-                       currentState = current |}
-                |> fun node ->
-                    runActions node.currentState
-                    node.nextStateTranstion()
+                    runActions current
+                    transition.TransitionFn()
                 
                 clickAround (head :: alreadyVisited) tail
 

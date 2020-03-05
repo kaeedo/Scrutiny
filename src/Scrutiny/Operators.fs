@@ -2,5 +2,4 @@
 
 module Operators =
     let (==>) (usingFn: unit -> unit) (toState: unit -> PageState) =
-        usingFn, toState
-
+        { Transition.TransitionFn = usingFn; ToState = toState }

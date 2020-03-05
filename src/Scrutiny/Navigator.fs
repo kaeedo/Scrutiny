@@ -25,7 +25,7 @@ module internal Navigator =
     let constructAdjacencyGraph (startState: PageState) : AdjacencyGraph<PageState> =
         let getTransitions node : PageState list = 
             node.Transitions
-            |> List.map (fun t -> (snd t)())
+            |> List.map (fun t -> t.ToState())
 
         let mutable final = []
         let nodes2Visit = Queue<PageState>()
