@@ -10,8 +10,13 @@ open Scrutiny.Scrutiny
 open canopy.classic
 open canopy.runner.classic
 
+type GlobalState() =
+    member val IsSignedIn = false with get, set
+    member val Username = "MyUsername" with get
+    member val Number = 42 with get
+
 module rec Entry =
-    let signIn = fun _ ->
+    let signIn = fun (globalState: GlobalState) ->
         page {
             name "Sign In"
             entryCheck (fun () ->
@@ -21,8 +26,11 @@ module rec Entry =
 
             transition ((fun () -> click "#home") ==> home)
             transition ((fun () ->
-                "#username" << "MyUsername"
-                "#number" << "42"
+                "#username" << globalState.Username
+                "#number" << globalState.Number.ToString()
+
+                globalState.IsSignedIn <- true
+
                 click "Sign In"
             ) ==> loggedInHome)
 
@@ -51,9 +59,17 @@ module rec Entry =
             )
         }
 
-    let loggedInComment = fun _ ->
+    let loggedInComment = fun (globalState: GlobalState) ->
         page {
             name "Logged In Comment"
+
+            action (fun () ->
+                click "#openModal"
+                "#comment" << "This is my super comment"
+                click "#modalFooterSave"
+
+                "#commentsUl>li" *= sprintf "%s wrote:%sThis is my super comment" globalState.Username Environment.NewLine
+            )
 
             entryCheck (fun () ->
                 printfn "Checking comment is logged in"
@@ -65,7 +81,7 @@ module rec Entry =
             )
         }
 
-    let loggedInHome = fun _ ->
+    let loggedInHome = fun (globalState: GlobalState) ->
         page {
             name "Logged in Home"
 
@@ -77,21 +93,13 @@ module rec Entry =
             )
         }
 
-    let comment = fun _ ->
+    let comment = fun (globalState: GlobalState) ->
         page {
             name "Comment"
             entryCheck (fun () ->
                 printfn "Checking on page comment"
                 "#header" == "Comments"
             )
-
-            (*action (fun () ->
-                if not <| isLoggedIn() 
-                then ()
-                else
-                    click "#openModal"
-                    "#comment" << "I'm very happy about this comment"
-            )*)
 
             transition ((fun () -> click "#home") ==> home)
             transition ((fun () -> click "#signin") ==> signIn)
@@ -101,7 +109,7 @@ module rec Entry =
             )
         }
 
-    let home = fun _ ->
+    let home = fun (globalState: GlobalState) ->
         page {
             name "Home"
             entryCheck (fun _ ->
@@ -127,7 +135,7 @@ module rec Entry =
         "Scrutiny" &&& fun _ ->
             printfn "opening url"
             url "https://localhost:5001/home"
-            home |> scrutinize
+            home |> scrutinize (new GlobalState()) 
 
         switchTo ff
         pin canopy.types.direction.Right

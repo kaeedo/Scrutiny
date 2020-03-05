@@ -22,13 +22,13 @@ module internal Navigator =
         (nodes, edges)
 
     // TODO: Refactor this to recursion?
-    let constructAdjacencyGraph (startState: PageState) : AdjacencyGraph<PageState> =
-        let getTransitions node : PageState list = 
+    let constructAdjacencyGraph<'a> (startState: PageState<'a>) (globalState: 'a) : AdjacencyGraph<PageState<'a>> =
+        let getTransitions node: PageState<'a> list = 
             node.Transitions
-            |> List.map (fun t -> t.ToState())
+            |> List.map (fun t -> t.ToState globalState)
 
         let mutable final = []
-        let nodes2Visit = Queue<PageState>()
+        let nodes2Visit = Queue<PageState<'a>>()
         nodes2Visit.Enqueue(startState)
 
         while nodes2Visit.Count > 0 do
@@ -44,10 +44,10 @@ module internal Navigator =
 
         final
 
-    let shortestPathFunction (graph: AdjacencyGraph<PageState>) (start: PageState) =
-        let previous = new Dictionary<PageState, PageState>()
+    let shortestPathFunction (graph: AdjacencyGraph<PageState<'a>>) (start: PageState<'a>) =
+        let previous = new Dictionary<PageState<'a>, PageState<'a>>()
 
-        let queue = new Queue<PageState>()
+        let queue = new Queue<PageState<'a>>()
         queue.Enqueue(start)
 
         while (queue.Count > 0) do
@@ -63,8 +63,8 @@ module internal Navigator =
                     queue.Enqueue(neighbor)
 
         // TODO: Refactor this to recursion?
-        let shortestPath (v: PageState) =
-            let mutable path: PageState list = []
+        let shortestPath (v: PageState<'a>) =
+            let mutable path: PageState<'a> list = []
             let mutable current = v
             while not (current.Equals(start)) do
                 path <- path @ [current]

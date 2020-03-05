@@ -12,37 +12,37 @@ type Node<'a> = 'a * 'a list
 
 type AdjacencyGraph<'a> = 'a Node list
 
-type Transition =
+type Transition<'a> =
     { TransitionFn: unit -> unit
-      ToState: unit -> PageState }
+      ToState: 'a -> PageState<'a> }
 
 [<CustomComparison; CustomEquality>]
-type PageState =
+type PageState<'a> =
     { Id: Guid
       Name: string
       EntryCheck: unit -> unit
-      Transitions: Transition list
+      Transitions: Transition<'a> list
       Actions: List<unit -> unit>
       // DesiredOutcome: List of actions transition to PageState?
       Exit: unit -> unit }
 
-    interface IComparable<PageState> with
+    interface IComparable<PageState<'a>> with
         member this.CompareTo other =
             compare this.Name other.Name
     interface IComparable with
         member this.CompareTo obj =
             match obj with
             | null -> 1
-            | :? PageState as other -> (this :> IComparable<_>).CompareTo other
+            | :? PageState<'a> as other -> (this :> IComparable<_>).CompareTo other
             | _ -> invalidArg "obj" "not a PageState"
 
-    interface IEquatable<PageState> with
+    interface IEquatable<PageState<'a>> with
         member this.Equals other =
             this.Name = other.Name
 
     override this.Equals obj =
         match obj with
-          | :? PageState as other -> (this :> IEquatable<_>).Equals other
+          | :? PageState<'a> as other -> (this :> IEquatable<_>).Equals other
           | _ -> false
     override this.GetHashCode() =
         hash this.Name

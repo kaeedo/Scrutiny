@@ -9,7 +9,7 @@ open System
       EntryPage: PageBuilder }*)
 
 type PageBuilder() =
-    member __.Yield(_): PageState =
+    member __.Yield(_): PageState<'a> =
         { PageState.Id = Guid.NewGuid()
           Name = ""
           EntryCheck = fun _ -> ()
@@ -18,23 +18,23 @@ type PageBuilder() =
           Exit = fun _ -> () }
 
     [<CustomOperation("name")>]
-    member __.Name(state, handler): PageState =
+    member __.Name(state, handler): PageState<'a> =
         { state with Name = handler }
 
     [<CustomOperation("entryCheck")>]
-    member __.EntryCheck(state, handler): PageState =
+    member __.EntryCheck(state, handler): PageState<'a> =
         { state with EntryCheck = handler }
 
     [<CustomOperation("transition")>]
-    member __.Transitions(state, handler): PageState =
+    member __.Transitions(state, handler): PageState<'a> =
         { state with Transitions = handler :: state.Transitions }
 
     [<CustomOperation("action")>]
-    member __.Actions(state, handler): PageState = 
+    member __.Actions(state, handler): PageState<'a> = 
         { state with Actions = handler :: state.Actions }
 
     [<CustomOperation("exitFunction")>]
-    member __.ExitFunction(state, handler): PageState =
+    member __.ExitFunction(state, handler): PageState<'a> =
         { state with Exit = handler }
 
 module Scrutiny =
@@ -46,16 +46,16 @@ module Scrutiny =
             |> List.map (fun p -> p.Name)
             |> String.concat " --> ")
 
-    let scrutinize (startFn: unit -> PageState) =
-        let startState = startFn()
+    let scrutinize<'a> (globalState: 'a) (startFn: 'a -> PageState<'a>) =
+        let startState = startFn globalState
         let allStates =
-            Navigator.constructAdjacencyGraph startState
+            Navigator.constructAdjacencyGraph startState globalState
         // seed 11 = Home --> Comment
         let random = new Random(11) // TODO: get seed from config
         let findPath = Navigator.shortestPathFunction allStates
         
         let nextNode alreadyVisited =
-            let unvisitedNodes: AdjacencyGraph<PageState> = 
+            let unvisitedNodes: AdjacencyGraph<PageState<'a>> = 
                 allStates
                 |> Seq.map (fun s -> fst s)
                 |> Seq.except alreadyVisited
@@ -68,11 +68,11 @@ module Scrutiny =
                 let next = random.Next(unvisitedNodes.Length)
                 Some (fst unvisitedNodes.[next])
 
-        let runActions (state: PageState) =
+        let runActions (state: PageState<'a>) =
             state.Actions
             |> Seq.iter (fun a -> a())
 
-        let rec clickAround (alreadyVisited: PageState list) (currentPath: PageState list) =
+        let rec clickAround (alreadyVisited: PageState<'a> list) (currentPath: PageState<'a> list) =
             match currentPath with
             | path when path.Length = 1 ->
                 match nextNode alreadyVisited with
@@ -81,6 +81,7 @@ module Scrutiny =
                     let path = findPath path.Head nextNode
 
                     if path.Length = 1 then
+                        runActions path.Head
                         ()
                     else
                         printPath path
@@ -95,7 +96,7 @@ module Scrutiny =
                     let transition =
                         head.Transitions
                         |> Seq.find (fun t ->
-                            let state = t.ToState()
+                            let state = t.ToState globalState
                             state.Name = next.Name
                         )
                     runActions current
