@@ -38,10 +38,13 @@ type PageBuilder() =
         { state with Exit = handler }
 
 module Scrutiny =
-    let adjacencyGraph = [||]
-
-    let timer = Diagnostics.Stopwatch()
     let page = PageBuilder()
+
+    let private printPath path =
+        printfn "path: %s"
+            (path
+            |> List.map (fun p -> p.Name)
+            |> String.concat " --> ")
 
     let scrutinize (startFn: unit -> PageState) =
         let startState = startFn()
@@ -50,30 +53,26 @@ module Scrutiny =
         // seed 11 = Home --> Comment
         let random = new Random(11) // TODO: get seed from config
         let findPath = Navigator.shortestPathFunction allStates
-        let printPath path =
-            printfn "path: %s"
-                (path
-                |> List.map (fun p -> p.Name)
-                |> String.concat " --> ")
-
-        let getUnvisitedNodes visited =
-            allStates
-            |> Seq.map (fun s -> fst s)
-            |> Seq.except visited
-            |> Seq.map (fun n -> allStates |> List.find (fun ps -> (fst ps) = n))
-            |> List.ofSeq
-
+        
         let nextNode alreadyVisited =
-            let unvisitedNodes: AdjacencyGraph<PageState> = getUnvisitedNodes alreadyVisited
+            let unvisitedNodes: AdjacencyGraph<PageState> = 
+                allStates
+                |> Seq.map (fun s -> fst s)
+                |> Seq.except alreadyVisited
+                |> Seq.map (fun n -> allStates |> List.find (fun ps -> (fst ps) = n))
+                |> List.ofSeq
 
             if unvisitedNodes |> Seq.isEmpty then
                 None
             else
                 let next = random.Next(unvisitedNodes.Length)
                 Some (fst unvisitedNodes.[next])
-            
 
-        let rec clickAround (alreadyVisited: PageState list) (currentPath: PageState list) (startNode: PageState) =
+        let runActions (state: PageState) =
+            state.Actions
+            |> Seq.iter (fun a -> a())
+
+        let rec clickAround (alreadyVisited: PageState list) (currentPath: PageState list) =
             match currentPath with
             | path when path.Length = 1 ->
                 match nextNode alreadyVisited with
@@ -85,30 +84,26 @@ module Scrutiny =
                         ()
                     else
                         printPath path
-                        clickAround alreadyVisited path startNode
+                        clickAround alreadyVisited path
             | head :: tail -> 
                 currentPath
-                |> List.pairwise
-                |> List.find (fun (current, _) ->
+                |> Seq.pairwise
+                |> Seq.find (fun (current, _) ->
                     current = head
                 )
-                |> fun (_, next) ->
-                    head.Transitions
-                    |> List.find (fun t ->
-                        let state = (snd t)()
-                        state.Name = next.Name
-                    )
-                |> fun (n, _) -> n()
+                |> fun (current, next) ->
+                    let (nextStateTranstion, _) =
+                        head.Transitions
+                        |> Seq.find (fun t ->
+                            let state = (snd t)()
+                            state.Name = next.Name
+                        )
+                    {| nextStateTranstion = nextStateTranstion
+                       currentState = current |}
+                |> fun node ->
+                    runActions node.currentState
+                    node.nextStateTranstion()
                 
-                clickAround (head :: alreadyVisited) tail startNode
-            | [] -> 
-                match nextNode alreadyVisited with
-                | None -> ()
-                | Some nextNode ->
-                    let path = findPath startNode nextNode
+                clickAround (head :: alreadyVisited) tail
 
-                    printPath path
-                    clickAround alreadyVisited path startNode
-        clickAround [] [] startState
-
-        ()
+        clickAround [] [startState]

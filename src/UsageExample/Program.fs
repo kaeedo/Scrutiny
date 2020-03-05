@@ -39,9 +39,11 @@ module rec Entry =
                 let number = read "#number"
                 if String.IsNullOrWhiteSpace(username) || String.IsNullOrWhiteSpace(number)
                 then click "Sign In"
+                else
+                    "#username" << ""
+                    click "Sign In"
 
-                let formBorder = (element "#signInForm").GetAttribute("style")
-                formBorder.Contains("border") === true
+                displayed "#ErrorMessage"
             )
 
             exitFunction (fun () ->

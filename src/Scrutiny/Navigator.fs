@@ -21,6 +21,7 @@ module internal Navigator =
             |> Seq.toList
         (nodes, edges)
 
+    // TODO: Refactor this to recursion?
     let constructAdjacencyGraph (startState: PageState) : AdjacencyGraph<PageState> =
         let getTransitions node : PageState list = 
             node.Transitions
@@ -61,6 +62,7 @@ module internal Navigator =
                     previous.[neighbor] <- vertex
                     queue.Enqueue(neighbor)
 
+        // TODO: Refactor this to recursion?
         let shortestPath (v: PageState) =
             let mutable path: PageState list = []
             let mutable current = v
