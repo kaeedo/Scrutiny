@@ -50,54 +50,65 @@ module Scrutiny =
         // seed 11 = Home --> Comment
         let random = new Random(11) // TODO: get seed from config
         let findPath = Navigator.shortestPathFunction allStates
+        let printPath path =
+            printfn "path: %s"
+                (path
+                |> List.map (fun p -> p.Name)
+                |> String.concat " --> ")
 
-        let rec clickAround (alreadyVisited: string list) (nodes: AdjacencyGraph<PageState>) startNode =
-            let mutable alreadyVisited = alreadyVisited
-            let mutable startNode = startNode
-            let nextNode = 
-                // TODO: Refactor this
-                let unvisitedNodes: AdjacencyGraph<PageState> =
-                    nodes
-                    |> List.map (fun n -> (fst n).Name)
-                    |> List.except alreadyVisited
-                    |> List.map (fun n -> nodes |> List.find (fun ps -> (fst ps).Name = n))
+        let getUnvisitedNodes visited =
+            allStates
+            |> Seq.map (fun s -> fst s)
+            |> Seq.except visited
+            |> Seq.map (fun n -> allStates |> List.find (fun ps -> (fst ps) = n))
+            |> List.ofSeq
 
-                if unvisitedNodes |> List.isEmpty then
-                    None
-                else
-                    let next = random.Next(unvisitedNodes.Length)
-                    Some (fst unvisitedNodes.[next])
+        let nextNode alreadyVisited =
+            let unvisitedNodes: AdjacencyGraph<PageState> = getUnvisitedNodes alreadyVisited
 
-            match nextNode with
-            | None -> ()
-            | Some nextNode ->
-                let path = findPath startNode nextNode
-                if path.Length = 1 then
-                    ()
-                else
-                    printfn "path: %s"
-                        (path
-                        |> List.map (fun p -> p.Name)
-                        |> String.concat " --> ")
+            if unvisitedNodes |> Seq.isEmpty then
+                None
+            else
+                let next = random.Next(unvisitedNodes.Length)
+                Some (fst unvisitedNodes.[next])
+            
 
-                    path
-                    |> List.pairwise
-                    |> List.iter (fun (current, next) ->
-                        alreadyVisited <- current.Name :: alreadyVisited
-                        current.EntryCheck()
+        let rec clickAround (alreadyVisited: PageState list) (currentPath: PageState list) (startNode: PageState) =
+            match currentPath with
+            | path when path.Length = 1 ->
+                match nextNode alreadyVisited with
+                | None -> ()
+                | Some nextNode ->
+                    let path = findPath path.Head nextNode
 
-                        let nextTransition, nextNode =
-                            current.Transitions
-                            |> List.find (fun t ->
-                                let state = (snd t)()
-                                state.Name = next.Name
-                            )
-
-                        startNode <- nextNode()
-                        nextTransition()
+                    if path.Length = 1 then
+                        ()
+                    else
+                        printPath path
+                        clickAround alreadyVisited path startNode
+            | head :: tail -> 
+                currentPath
+                |> List.pairwise
+                |> List.find (fun (current, _) ->
+                    current = head
+                )
+                |> fun (_, next) ->
+                    head.Transitions
+                    |> List.find (fun t ->
+                        let state = (snd t)()
+                        state.Name = next.Name
                     )
-                    clickAround alreadyVisited nodes startNode
+                |> fun (n, _) -> n()
+                
+                clickAround (head :: alreadyVisited) tail startNode
+            | [] -> 
+                match nextNode alreadyVisited with
+                | None -> ()
+                | Some nextNode ->
+                    let path = findPath startNode nextNode
 
-        clickAround [] allStates startState
+                    printPath path
+                    clickAround alreadyVisited path startNode
+        clickAround [] [] startState
 
         ()
