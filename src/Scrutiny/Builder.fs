@@ -93,14 +93,28 @@ module Scrutiny =
                     current = head
                 )
                 |> fun (current, next) ->
-                    let transition =
-                        head.Transitions
-                        |> Seq.find (fun t ->
-                            let state = t.ToState globalState
-                            state.Name = next.Name
-                        )
-                    runActions current
-                    transition.TransitionFn()
+                    try
+                        current.EntryCheck()
+                        let transition =
+                            head.Transitions
+                            |> Seq.find (fun t ->
+                                let state = t.ToState globalState
+                                state.Name = next.Name
+                            )
+                        runActions current
+                        transition.TransitionFn()
+                    with
+                    | exn ->
+                        let message = 
+                            sprintf "System under test failed scrutiny.
+To re-run this exact test, specify the seed in the config with the value: %i.
+The error occured in state: %s
+The error that occured is of type: %A%s" 
+                                11 
+                                current.Name
+                                exn 
+                                Environment.NewLine
+                        raise <| ScrutinyException(message, exn)
                 
                 clickAround (head :: alreadyVisited) tail
 

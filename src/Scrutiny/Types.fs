@@ -2,6 +2,8 @@
 
 open System
 
+type ScrutinyException(message, innerException: Exception) = inherit Exception(message, innerException)
+
 //http://www.fssnip.net/av/title/NinetyNine-F-Problems-Problems-80-89-Graphs
 
 type Edge<'a> = 'a * 'a

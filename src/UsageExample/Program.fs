@@ -9,6 +9,10 @@ open Scrutiny.Scrutiny
 
 open canopy.classic
 open canopy.runner.classic
+open canopy
+open configuration
+open reporters
+open canopy.types
 
 type GlobalState() =
     member val IsSignedIn = false with get, set
@@ -114,7 +118,7 @@ module rec Entry =
             name "Home"
             entryCheck (fun _ ->
                 printfn "Checking on page home"
-                "#header" == "Home"
+                "#header" == "Hofme"
             )
 
             transition ((fun () -> click "#comment") ==> comment)
@@ -131,6 +135,8 @@ module rec Entry =
         do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
         let ff = new FirefoxDriver(options)
+
+        reporter <- new JUnitReporter("./TestResults.xml") :> IReporter
 
         "Scrutiny" &&& fun _ ->
             printfn "opening url"
