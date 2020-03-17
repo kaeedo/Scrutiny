@@ -14,10 +14,8 @@ module internal Reporter =
                     for sib in siblings do
                         yield node.Name, sib.Name
             }
-            //|> Seq.rev
             |> Seq.map jsCode
             |> String.concat (",")
 
         let output = html.Replace("{{REPLACE}}", sprintf "window.graphEdges=[%s];" jsFunctionCalls)
         File.WriteAllText("report.html", output)
-        2

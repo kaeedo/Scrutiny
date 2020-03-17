@@ -67,6 +67,8 @@ module rec Entry =
         page {
             name "Logged In Comment"
 
+            transition ((fun () -> click "#home") ==> loggedInHome)
+
             action (fun () ->
                 click "#openModal"
                 "#comment" << "This is my super comment"
@@ -118,7 +120,7 @@ module rec Entry =
             name "Home"
             entryCheck (fun _ ->
                 printfn "Checking on page home"
-                "#header" == "Hofme"
+                "#header" == "Home"
             )
 
             transition ((fun () -> click "#comment") ==> comment)
@@ -134,22 +136,22 @@ module rec Entry =
         let options = new FirefoxOptions()
         do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
-        //let ff = new FirefoxDriver(options)
+        let ff = new FirefoxDriver(options)
 
         let config =
-            { defaultConfig with Seed = 11; MapOnly = true }
+            { defaultConfig with Seed = 11; ComprehensiveActions = false }
 
-        //reporter <- new JUnitReporter("./TestResults.xml") :> IReporter
+        reporter <- new JUnitReporter("./TestResults.xml") :> IReporter
 
-        //"Scrutiny" &&& fun _ ->
-          //  printfn "opening url"
-            //url "https://localhost:5001/home"
-        home |> scrutinize config (new GlobalState()) 
+        "Scrutiny" &&& fun _ ->
+            printfn "opening url"
+            url "https://localhost:5001/home"
+            home |> scrutinize config (new GlobalState()) 
 
-        //switchTo ff
-        //pin canopy.types.direction.Right
+        switchTo ff
+        pin canopy.types.direction.Right
 
-        //run()
-        //quit ff
+        run()
+        quit ff
         
         0

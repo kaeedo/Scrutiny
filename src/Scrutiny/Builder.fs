@@ -42,7 +42,8 @@ module Scrutiny =
 
     let defaultConfig =
         { ScrutinyConfig.Seed = Environment.TickCount
-          MapOnly = false }
+          MapOnly = false
+          ComprehensiveActions = true }
 
     let private printPath path =
         printfn "path: %s"
@@ -50,13 +51,25 @@ module Scrutiny =
             |> List.map (fun p -> p.Name)
             |> String.concat " --> ")
 
+    let private runActions (config: ScrutinyConfig) (state: PageState<'a>) =
+        if config.ComprehensiveActions then
+            state.Actions
+            |> Seq.iter (fun a -> a())
+        else
+            let random = new Random(config.Seed)
+            let amount = random.Next(if state.Actions.Length > 1 then state.Actions.Length else 1)
+            state.Actions
+            |> Seq.sortBy (fun _ -> random.Next())
+            |> Seq.take amount
+            |> Seq.iter (fun a -> a())
+
     let scrutinize<'a> (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a>) =
         let startState = startFn globalState
         let allStates =
             Navigator.constructAdjacencyGraph startState globalState
+        let runConfigureActions = runActions config
 
         if not config.MapOnly then
-            
             let random = new Random(config.Seed)
             let findPath = Navigator.shortestPathFunction allStates
         
@@ -74,10 +87,6 @@ module Scrutiny =
                     let next = random.Next(unvisitedNodes.Length)
                     Some (fst unvisitedNodes.[next])
 
-            let runActions (state: PageState<'a>) =
-                state.Actions
-                |> Seq.iter (fun a -> a())
-
             let rec clickAround (alreadyVisited: PageState<'a> list) (currentPath: PageState<'a> list) =
                 match currentPath with
                 | path when path.Length = 1 ->
@@ -87,7 +96,7 @@ module Scrutiny =
                         let path = findPath path.Head nextNode
 
                         if path.Length = 1 then
-                            runActions path.Head
+                            runConfigureActions path.Head
                             ()
                         else
                             printPath path
@@ -107,7 +116,7 @@ module Scrutiny =
                                     let state = t.ToState globalState
                                     state.Name = next.Name
                                 )
-                            runActions current
+                            runConfigureActions current
                             transition.TransitionFn()
                         with
                         | exn ->
