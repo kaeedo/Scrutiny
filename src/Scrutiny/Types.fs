@@ -14,6 +14,10 @@ type Node<'a> = 'a * 'a list
 
 type AdjacencyGraph<'a> = 'a Node list
 
+type ScrutinyConfig = 
+    { Seed: int
+      MapOnly: bool }
+
 type Transition<'a> =
     { TransitionFn: unit -> unit
       ToState: 'a -> PageState<'a> }

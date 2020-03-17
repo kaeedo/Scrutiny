@@ -5,10 +5,22 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <None Include="wwwroot\app.606e7f97.js">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Include="wwwroot\vendor.11995720.js">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <Content Include="wwwroot\graph.template.html">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
         <Compile Include="Types.fs" />
         <Compile Include="Navigator.fs" />
+        <Compile Include="Reporter.fs" />
         <Compile Include="Builder.fs" />
         <Compile Include="Operators.fs" />
     </ItemGroup>
+
+    <ItemGroup />
 
 </Project>

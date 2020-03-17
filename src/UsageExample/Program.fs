@@ -134,19 +134,22 @@ module rec Entry =
         let options = new FirefoxOptions()
         do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
-        let ff = new FirefoxDriver(options)
+        //let ff = new FirefoxDriver(options)
 
-        reporter <- new JUnitReporter("./TestResults.xml") :> IReporter
+        let config =
+            { defaultConfig with Seed = 11; MapOnly = true }
 
-        "Scrutiny" &&& fun _ ->
-            printfn "opening url"
-            url "https://localhost:5001/home"
-            home |> scrutinize (new GlobalState()) 
+        //reporter <- new JUnitReporter("./TestResults.xml") :> IReporter
 
-        switchTo ff
-        pin canopy.types.direction.Right
+        //"Scrutiny" &&& fun _ ->
+          //  printfn "opening url"
+            //url "https://localhost:5001/home"
+        home |> scrutinize config (new GlobalState()) 
 
-        run()
-        quit ff
+        //switchTo ff
+        //pin canopy.types.direction.Right
+
+        //run()
+        //quit ff
         
         0
