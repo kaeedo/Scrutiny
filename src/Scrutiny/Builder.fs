@@ -2,12 +2,6 @@
 
 open System
 
-(*type ScrutinizeState =
-    { Pages: PageState seq
-      CurrentState: PageState
-      EntryFunction: unit -> unit -> PageState
-      EntryPage: PageBuilder }*)
-
 type PageBuilder() =
     member __.Yield(_): PageState<'a> =
         { PageState.Id = Guid.NewGuid()
@@ -43,7 +37,8 @@ module Scrutiny =
     let defaultConfig =
         { ScrutinyConfig.Seed = Environment.TickCount
           MapOnly = false
-          ComprehensiveActions = true }
+          ComprehensiveActions = true
+          ComprehensiveStates = true }
 
     let private printPath path =
         printfn "path: %s"
@@ -64,6 +59,7 @@ module Scrutiny =
             |> Seq.iter (fun a -> a())
 
     let scrutinize<'a> (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a>) =
+        printfn "Scrutinizing system under test with seed: %i" config.Seed
         let startState = startFn globalState
         let allStates =
             Navigator.constructAdjacencyGraph startState globalState
@@ -81,11 +77,18 @@ module Scrutiny =
                     |> Seq.map (fun n -> allStates |> List.find (fun ps -> (fst ps) = n))
                     |> List.ofSeq
 
-                if unvisitedNodes |> Seq.isEmpty then
-                    None
-                else
+                let shouldContinue =
+                    if config.ComprehensiveStates then
+                        if unvisitedNodes |> Seq.isEmpty then false
+                        else true
+                    else
+                        if unvisitedNodes.Length > (allStates.Length / 2) then true
+                        else false
+
+                if shouldContinue then
                     let next = random.Next(unvisitedNodes.Length)
                     Some (fst unvisitedNodes.[next])
+                else None
 
             let rec clickAround (alreadyVisited: PageState<'a> list) (currentPath: PageState<'a> list) =
                 match currentPath with

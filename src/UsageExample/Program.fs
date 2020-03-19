@@ -16,7 +16,7 @@ open canopy.types
 
 type GlobalState() =
     member val IsSignedIn = false with get, set
-    member val Username = "MyUsername" with get
+    member val Username = "MyUsername" with get, set
     member val Number = 42 with get
 
 module rec Entry =
@@ -30,6 +30,7 @@ module rec Entry =
 
             transition ((fun () -> click "#home") ==> home)
             transition ((fun () ->
+                globalState.Username <- "kaeedo"
                 "#username" << globalState.Username
                 "#number" << globalState.Number.ToString()
 
@@ -92,6 +93,7 @@ module rec Entry =
             name "Logged in Home"
 
             transition ((fun () -> click "#comment") ==> loggedInComment)
+            transition ((fun () -> click "#logout") ==> home)
 
             entryCheck (fun () ->
                 printfn "Checking on page home logged in"
@@ -139,9 +141,17 @@ module rec Entry =
         let ff = new FirefoxDriver(options)
 
         let config =
-            { defaultConfig with Seed = 11; ComprehensiveActions = false }
+            { defaultConfig with 
+                Seed = 553931187
+                ComprehensiveActions = false 
+                ComprehensiveStates = true }
+            // ExitState
 
-        reporter <- new JUnitReporter("./TestResults.xml") :> IReporter
+        // test seeds
+        //  553931187
+        //  11
+
+        //reporter <- new JUnitReporter("./TestResults.xml") :> IReporter
 
         "Scrutiny" &&& fun _ ->
             printfn "opening url"

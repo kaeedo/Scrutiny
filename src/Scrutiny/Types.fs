@@ -17,7 +17,8 @@ type AdjacencyGraph<'a> = 'a Node list
 type ScrutinyConfig = 
     { Seed: int
       MapOnly: bool
-      ComprehensiveActions: bool }
+      ComprehensiveActions: bool
+      ComprehensiveStates: bool }
 
 type Transition<'a> =
     { TransitionFn: unit -> unit

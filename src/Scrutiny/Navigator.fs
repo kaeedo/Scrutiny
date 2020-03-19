@@ -62,16 +62,13 @@ module internal Navigator =
                     previous.[neighbor] <- vertex
                     queue.Enqueue(neighbor)
 
-        // TODO: Refactor this to recursion?
-        let shortestPath (v: PageState<'a>) =
-            let mutable path: PageState<'a> list = []
-            let mutable current = v
-            while not (current.Equals(start)) do
-                path <- path @ [current]
-                current <- previous.[current]
+        let rec shortestPath (path: PageState<'a> list) (current: PageState<'a>)  =
+            if current.Equals(start) then
+                start :: path
+            else
+                if previous.ContainsKey(current) then
+                    shortestPath (current :: path) (previous.[current])
+                else start :: path
 
-            path <- path @ [start]
-            path |> List.rev
-
-        shortestPath
+        shortestPath [] 
 
