@@ -66,10 +66,10 @@ Run:
 To run the UsageExample, you must start the web project.
 
 ## TODO for Alpha release
-[] Finish HTML report
-[] Create and publish NuGet package
+[ ] Finish HTML report
+[ ] Create and publish NuGet package
 
 ## TODO for Beta release
-[] Create nice interface for usage from C#
-[] Use Fable to create a javascript release and npm package for usage from Node.js
-[] Write unit tests 
+[ ] Create nice interface for usage from C#
+[ ] Use Fable to create a javascript release and npm package for usage from Node.js
+[ ] Write unit tests 
