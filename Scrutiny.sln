@@ -1,10 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Web", "src\Web\Web.fsproj", "{4BBA0697-272C-41E4-A5D7-99A7C112687B}"
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29905.134
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Web", "src\Web\Web.fsproj", "{4BBA0697-272C-41E4-A5D7-99A7C112687B}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "UsageExample", "src\UsageExample\UsageExample.fsproj", "{CB3593F9-5F30-4551-8527-3334E525C083}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "UsageExample", "src\UsageExample\UsageExample.fsproj", "{CB3593F9-5F30-4551-8527-3334E525C083}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Scrutiny", "src\Scrutiny\Scrutiny.fsproj", "{0E2193C9-17BD-4C7A-B39A-91383551559C}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Scrutiny", "src\Scrutiny\Scrutiny.fsproj", "{0E2193C9-17BD-4C7A-B39A-91383551559C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A1DF331B-3565-4C27-BFBA-EED4B60AB283}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE.md = LICENSE.md
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +33,11 @@ Global
 		{0E2193C9-17BD-4C7A-B39A-91383551559C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0E2193C9-17BD-4C7A-B39A-91383551559C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0E2193C9-17BD-4C7A-B39A-91383551559C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C3490AE4-56E5-46F6-A604-A510D0BC925B}
 	EndGlobalSection
 EndGlobal

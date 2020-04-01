@@ -101,10 +101,10 @@ module rec Entry =
                 displayed "#welcomeText"
             )
 
-            //exitAction (fun () -> 
-            //    printfn "EXUTUBG !!!!!!!"
-            //    click "#logout"
-            //)
+            exitAction (fun () -> 
+                printfn "EXUTUBG !!!!!!!"
+                click "#logout"
+            )
         }
 
     let comment = fun (globalState: GlobalState) ->

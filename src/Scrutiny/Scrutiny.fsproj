@@ -2,9 +2,22 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
+
+        <PackageId>Scrutiny</PackageId>
+        <Version>0.0.0-prealpha1</Version>
+        <Authors>Kai Ito</Authors>
+        <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+        <PackageTags>F#;UI Test;Testing</PackageTags>
+        <IncludeSymbols>true</IncludeSymbols>
+        <IncludeSource>true</IncludeSource>
+        <RepositoryUrl>https://github.com/kaeedo/Scrutiny</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
+        <None Include="..\..\LICENSE.md">
+          <Pack>True</Pack>
+          <PackagePath></PackagePath>
+        </None>
         <None Include="wwwroot\app.606e7f97.js">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
