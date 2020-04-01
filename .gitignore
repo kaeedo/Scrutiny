@@ -20,3 +20,6 @@ devCert.txt
 devCert.crt
 /.vs/Scrutiny
 /CrappyWeb
+
+.fake
+.ionide

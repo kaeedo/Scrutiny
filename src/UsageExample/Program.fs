@@ -23,7 +23,7 @@ module rec Entry =
     let signIn = fun (globalState: GlobalState) ->
         page {
             name "Sign In"
-            entryCheck (fun () ->
+            onEnter (fun () ->
                 printfn "Checking on page sign in"
                 "#header" == "Sign In"
             )
@@ -47,6 +47,7 @@ module rec Entry =
                 "#number" << "42"
                 "#number" == "42"
             )
+
             action (fun () -> 
                 let username = read "#username"
                 let number = read "#number"
@@ -59,7 +60,7 @@ module rec Entry =
                 displayed "#ErrorMessage"
             )
 
-            exitFunction (fun () ->
+            onExit (fun () ->
                 printfn "Exiting sign in"
             )
         }
@@ -78,12 +79,12 @@ module rec Entry =
                 "#commentsUl>li" *= sprintf "%s wrote:%sThis is my super comment" globalState.Username Environment.NewLine
             )
 
-            entryCheck (fun () ->
+            onEnter (fun () ->
                 printfn "Checking comment is logged in"
                 displayed "#openModal"
             )
 
-            exitFunction (fun () ->
+            onExit (fun () ->
                 printfn "Exiting comment logged in"
             )
         }
@@ -95,16 +96,21 @@ module rec Entry =
             transition ((fun () -> click "#comment") ==> loggedInComment)
             transition ((fun () -> click "#logout") ==> home)
 
-            entryCheck (fun () ->
+            onEnter (fun () ->
                 printfn "Checking on page home logged in"
                 displayed "#welcomeText"
             )
+
+            //exitAction (fun () -> 
+            //    printfn "EXUTUBG !!!!!!!"
+            //    click "#logout"
+            //)
         }
 
     let comment = fun (globalState: GlobalState) ->
         page {
             name "Comment"
-            entryCheck (fun () ->
+            onEnter (fun () ->
                 printfn "Checking on page comment"
                 "#header" == "Comments"
             )
@@ -112,7 +118,7 @@ module rec Entry =
             transition ((fun () -> click "#home") ==> home)
             transition ((fun () -> click "#signin") ==> signIn)
             
-            exitFunction (fun () ->
+            onExit (fun () ->
                 printfn "Exiting comment"
             )
         }
@@ -120,7 +126,7 @@ module rec Entry =
     let home = fun (globalState: GlobalState) ->
         page {
             name "Home"
-            entryCheck (fun _ ->
+            onEnter (fun _ ->
                 printfn "Checking on page home"
                 "#header" == "Home"
             )
@@ -128,7 +134,7 @@ module rec Entry =
             transition ((fun () -> click "#comment") ==> comment)
             transition ((fun () -> click "#signin") ==> signIn)
 
-            exitFunction (fun _ ->
+            onExit (fun _ ->
                 printfn "Exiting home"
             )
         }

@@ -28,11 +28,12 @@ type Transition<'a> =
 type PageState<'a> =
     { Id: Guid
       Name: string
-      EntryCheck: unit -> unit
+      OnEnter: unit -> unit
+      OnExit: unit -> unit
       Transitions: Transition<'a> list
       Actions: List<unit -> unit>
-      // DesiredOutcome: List of actions transition to PageState?
-      Exit: unit -> unit }
+      // OnAction?
+      ExitAction: (unit -> unit) option }
 
     interface IComparable<PageState<'a>> with
         member this.CompareTo other =
