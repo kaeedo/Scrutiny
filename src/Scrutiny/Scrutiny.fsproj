@@ -18,12 +18,8 @@
           <Pack>True</Pack>
           <PackagePath></PackagePath>
         </None>
-        <None Include="wwwroot\app.js">
-          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-        <Content Include="wwwroot\graph.template.html">
-          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </Content>
+        <EmbeddedResource Include="wwwroot\app.js"></EmbeddedResource>
+        <EmbeddedResource Include="wwwroot\graph.template.html"></EmbeddedResource>
         <Compile Include="Types.fs" />
         <Compile Include="Navigator.fs" />
         <Compile Include="Reporter.fs" />

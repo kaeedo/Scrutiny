@@ -67,7 +67,7 @@ Run:
 To run the UsageExample, you must start the web project.
 
 ## TODO for Alpha release
-- [ ] Finish HTML report
+- [ ] Finish initial HTML report
 - [ ] Create and publish NuGet package
 
 ## TODO for Beta release
