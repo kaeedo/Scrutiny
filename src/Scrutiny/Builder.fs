@@ -1,6 +1,7 @@
 ﻿namespace Scrutiny
 
 open System
+open System.IO
 
 type PageBuilder() =
     member __.Yield(_): PageState<'a> =
@@ -44,7 +45,8 @@ module Scrutiny =
         { ScrutinyConfig.Seed = Environment.TickCount
           MapOnly = false
           ComprehensiveActions = true
-          ComprehensiveStates = true }
+          ComprehensiveStates = true
+          ReportPath = Directory.GetCurrentDirectory() }
 
     let private printPath path =
         printfn "path: %s"
@@ -170,6 +172,6 @@ module Scrutiny =
                 exitNode.ExitAction
                 |> Option.iter (fun ea -> ea())
 
-        Reporter.generateMap allStates
+        Reporter.generateMap config allStates
 
     let scrutinizeWithDefaultConfig<'a> = scrutinize<'a> defaultConfig

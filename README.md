@@ -47,7 +47,8 @@ Some things can be configured via `ScrutinyConfig`. The default config is:
     { ScrutinyConfig.Seed = Environment.TickCount
       MapOnly = false
       ComprehensiveActions = true
-      ComprehensiveStates = true }
+      ComprehensiveStates = true
+      ReportPath = Directory.GetCurrentDirectory() }
 
 `Seed` is printed during each test to be able to recreate a specific test run.
 `MapOnly` won't run the test at all, but only generate the HTML Graph report.

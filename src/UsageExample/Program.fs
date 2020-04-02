@@ -13,6 +13,7 @@ open canopy
 open configuration
 open reporters
 open canopy.types
+open System.IO
 
 type GlobalState() =
     member val IsSignedIn = false with get, set
@@ -141,16 +142,18 @@ module rec Entry =
 
     [<EntryPoint>]
     let main argv =
-        let options = new FirefoxOptions()
-        do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
+        //let options = new FirefoxOptions()
+        //do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
-        let ff = new FirefoxDriver(options)
-
+        //let ff = new FirefoxDriver(options)
+        let currentDirectory = DirectoryInfo(Directory.GetCurrentDirectory())
         let config =
             { defaultConfig with 
                 Seed = 553931187
+                MapOnly = true
                 ComprehensiveActions = false 
-                ComprehensiveStates = true }
+                ComprehensiveStates = true
+                ReportPath = currentDirectory.Parent.Parent.Parent.FullName }
             // ExitState
 
         // test seeds
@@ -159,15 +162,15 @@ module rec Entry =
 
         //reporter <- new JUnitReporter("./TestResults.xml") :> IReporter
 
-        "Scrutiny" &&& fun _ ->
-            printfn "opening url"
-            url "https://localhost:5001/home"
-            home |> scrutinize config (new GlobalState()) 
+        //"Scrutiny" &&& fun _ ->
+        //    printfn "opening url"
+        //    url "https://localhost:5001/home"
+        home |> scrutinize config (new GlobalState()) 
 
-        switchTo ff
-        pin canopy.types.direction.Right
+        //switchTo ff
+        //pin canopy.types.direction.Right
 
-        run()
-        quit ff
+        //run()
+        //quit ff
         
         0

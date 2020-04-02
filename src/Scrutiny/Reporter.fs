@@ -1,11 +1,10 @@
 ﻿namespace Scrutiny
 
 open System.IO
-open System
 
 [<RequireQualifiedAccess>]
 module internal Reporter =
-    let generateMap (graph: AdjacencyGraph<PageState<_>>) =
+    let generateMap (config: ScrutinyConfig) (graph: AdjacencyGraph<PageState<_>>) =
         let html = File.ReadAllText("./wwwroot/graph.template.html")
         let jsCode (node, sibling) = sprintf "[\"%s\", \"%s\"]" node sibling
         let jsFunctionCalls =
@@ -17,5 +16,8 @@ module internal Reporter =
             |> Seq.map jsCode
             |> String.concat (",")
 
-        let output = html.Replace("{{REPLACE}}", sprintf "window.graphEdges=[%s];" jsFunctionCalls)
-        File.WriteAllText("report.html", output)
+        let output = html.Replace("{{REPLACE}}", sprintf "[%s]" jsFunctionCalls)
+
+
+        File.Copy("./wwwroot/app.js", sprintf "%s/app.js" config.ReportPath)
+        File.WriteAllText(sprintf "%s/report.html" config.ReportPath, output)

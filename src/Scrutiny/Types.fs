@@ -18,7 +18,8 @@ type ScrutinyConfig =
     { Seed: int
       MapOnly: bool
       ComprehensiveActions: bool
-      ComprehensiveStates: bool }
+      ComprehensiveStates: bool
+      ReportPath: string}
 
 type Transition<'a> =
     { TransitionFn: unit -> unit
