@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
 
         <PackageId>Scrutiny</PackageId>
-        <Version>0.0.0-prealpha1</Version>
+        <Version>0.0.0-alpha1</Version>
         <Authors>Kai Ito</Authors>
         <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
         <PackageTags>F#;UI Test;Testing</PackageTags>
