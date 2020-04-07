@@ -142,10 +142,10 @@ module rec Entry =
 
     [<EntryPoint>]
     let main argv =
-        //let options = new FirefoxOptions()
-        //do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
+        let options = new FirefoxOptions()
+        do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
-        //let ff = new FirefoxDriver(options)
+        let ff = new FirefoxDriver(options)
         let currentDirectory = DirectoryInfo(Directory.GetCurrentDirectory())
         let config =
             { defaultConfig with 
@@ -153,24 +153,17 @@ module rec Entry =
                 MapOnly = true
                 ComprehensiveActions = false 
                 ComprehensiveStates = true
-                ReportPath = currentDirectory.Parent.Parent.Parent.FullName }
-            // ExitState
+                ScrutinyResultFilePath = currentDirectory.Parent.Parent.Parent.FullName + "/myResult.html" }
 
-        // test seeds
-        //  553931187
-        //  11
+        "Scrutiny" &&& fun _ ->
+            printfn "opening url"
+            url "https://localhost:5001/home"
+            home |> scrutinize config (new GlobalState()) 
 
-        //reporter <- new JUnitReporter("./TestResults.xml") :> IReporter
+        switchTo ff
+        pin canopy.types.direction.Right
 
-        //"Scrutiny" &&& fun _ ->
-        //    printfn "opening url"
-        //    url "https://localhost:5001/home"
-        home |> scrutinize config (new GlobalState()) 
-
-        //switchTo ff
-        //pin canopy.types.direction.Right
-
-        //run()
-        //quit ff
+        run()
+        quit ff
         
         0

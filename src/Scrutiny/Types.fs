@@ -19,7 +19,7 @@ type ScrutinyConfig =
       MapOnly: bool
       ComprehensiveActions: bool
       ComprehensiveStates: bool
-      ReportPath: string}
+      ScrutinyResultFilePath: string}
 
 type Transition<'a> =
     { TransitionFn: unit -> unit

@@ -12,8 +12,15 @@ Scrutiny was designed to run UI tests, but using e.g. CanopyUI or Selenium is on
 
 ## Usage
 Check the [UsageExample](/tree/master/src/UsageExample) for a sample test implemented with [CanopyUI](https://github.com/lefthandedgoat/canopy).
+A tiny sample site exists in the [Web directory](/tree/master/src/Web). This is the website that the [UsageExample](/tree/master/src/UsageExample) is testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a comment if they are signed in. 
+The [UsageExample](/tree/master/src/UsageExample) showcases a certain approach a developer can take as to how to model their web site as a state machine. In this case, the home and comment page are each listed twice, once as logged out, and once as logged in.
+This is only one way to handle this case, and the developer could choose to model it in any other way.
 
-### 
+Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s. The [Sample Web site](/tree/master/src/Web) looks like this: 
+
+![SUT sample report](https://raw.githubusercontent.com/kaeedo/Scrutiny/master/images/SampleWebsiteReport.png)
+
+
 Define one `page` object for each state in your UI. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
 A `page` looks like this:
 
@@ -48,16 +55,34 @@ Some things can be configured via `ScrutinyConfig`. The default config is:
       MapOnly = false
       ComprehensiveActions = true
       ComprehensiveStates = true
-      ReportPath = Directory.GetCurrentDirectory() }
+      ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html"}
 
 `Seed` is printed during each test to be able to recreate a specific test run.
 `MapOnly` won't run the test at all, but only generate the HTML Graph report.
 `ComprehensiveActions` will run ALL defined actions anytime it enters a state with actions defined. If false, it will run a random subset of actions.
 `ComprehensiveStates` will visit ALL states in the state machine. If this is false, then it will visit at least half of all states before randomly quitting.
+`ScrutinyResultFilePath` is the directory and specified file name that the generated HTML report will be saved in
 
 To actually run the test, call the `scrutinize` function with your entry state, config, and global state object
 
 `scrutinize config (new GlobalState()) home` or `scrutinizeWithDefaultConfig (new GlobalState()) home`
+
+#### Important note for F# users
+As the transitions ultimately depict a cyclic graph, it is necessary to declare module or namespace as recursive so that pages defined later can be referenced by pages earlier. Note the usage of the `rec` keyword.
+e.g.:
+
+    module rec MyPages =
+        let firstPage = fun (globalState: GlobalState) ->
+            page {
+                name "First Page"
+                transition ((fun () -> click "#second") ==> secondPage)
+            }
+
+        let secondPage = fun (globalState: GlobalState) ->
+            page {
+                name "Second Page"
+                transition ((fun () -> click "#first") ==> firstPage)
+            }
 
 ## Development
 Run:
@@ -68,13 +93,17 @@ To run the UsageExample, you must start the web project.
 
 ## TODO for Alpha release
 - [x] Finish initial HTML report
-- [ ] Create and publish NuGet package
-- [ ] Documentation
+- [x] Create and publish NuGet package
+- [x] Documentation
 
 ## TODO for Beta release
 - [ ] Create nice interface for usage from C#
 - [ ] Documentation
-- [ ] Use Fable to create a javascript release and npm package for usage from Node.js
-- [ ] Documentation
 - [ ] Write unit tests 
+- [ ] Documentation
+
+## TODO General
+- [ ] Documentation
+- [ ] Setup proper build scripts
+- [ ] Use Fable to create a javascript release and npm package for usage from Node.js
 - [ ] Documentation

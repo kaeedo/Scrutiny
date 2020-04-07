@@ -1,10 +1,22 @@
 ﻿namespace Scrutiny
 
+open System
 open System.IO
 
 [<RequireQualifiedAccess>]
 module internal Reporter =
     type internal Marker = interface end
+
+    let file scrutinyResultFilePath =
+        let fileInfo = new FileInfo(scrutinyResultFilePath)
+
+        let fileName = 
+            if fileInfo.Name = String.Empty 
+            then "ScrutinyResult.html" 
+            else fileInfo.Name
+
+        fileInfo.DirectoryName, fileName
+
     let generateMap (config: ScrutinyConfig) (graph: AdjacencyGraph<PageState<_>>) =
 
         let assembly = typeof<Marker>.Assembly
@@ -29,5 +41,7 @@ module internal Reporter =
 
         let output = html.Replace("{{REPLACE}}", sprintf "[%s]" jsFunctionCalls)
 
-        File.WriteAllText(sprintf "%s/app.js" config.ReportPath, js)
-        File.WriteAllText(sprintf "%s/report.html" config.ReportPath, output)
+        let (filePath, fileName) = file config.ScrutinyResultFilePath
+
+        File.WriteAllText(sprintf "%s/app.js" filePath, js)
+        File.WriteAllText(sprintf "%s/%s" filePath fileName, output)

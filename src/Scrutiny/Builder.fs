@@ -46,7 +46,7 @@ module Scrutiny =
           MapOnly = false
           ComprehensiveActions = true
           ComprehensiveStates = true
-          ReportPath = Directory.GetCurrentDirectory() }
+          ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html"}
 
     let private printPath path =
         printfn "path: %s"
@@ -173,5 +173,6 @@ module Scrutiny =
                 |> Option.iter (fun ea -> ea())
 
         Reporter.generateMap config allStates
+        printfn "Scrutiny Result written to: %s" config.ScrutinyResultFilePath
 
     let scrutinizeWithDefaultConfig<'a> = scrutinize<'a> defaultConfig
