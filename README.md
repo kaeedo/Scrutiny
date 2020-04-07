@@ -109,3 +109,4 @@ To run the UsageExample, you must start the web project.
 - [ ] Setup proper build scripts
 - [ ] Use Fable to create a javascript release and npm package for usage from Node.js
 - [ ] Documentation
+- [ ] Detailed result report. Color coded states and transitions showcasing which parts succeeded and failed
