@@ -11,12 +11,12 @@ Scrutiny will then also generate an HTML file which visualizes the State Machine
 Scrutiny was designed to run UI tests, but using e.g. CanopyUI or Selenium is only an implementation detail. In theory, any state machine can be tested with Scrutiny.
 
 ## Usage
-Check the [UsageExample](/tree/master/src/UsageExample) for a sample test implemented with [CanopyUI](https://github.com/lefthandedgoat/canopy).
-A tiny sample site exists in the [Web directory](/tree/master/src/Web). This is the website that the [UsageExample](/tree/master/src/UsageExample) is testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a comment if they are signed in. 
-The [UsageExample](/tree/master/src/UsageExample) showcases a certain approach a developer can take as to how to model their web site as a state machine. In this case, the home and comment page are each listed twice, once as logged out, and once as logged in.
+Check the [UsageExample](src/UsageExample) for a sample test implemented with [CanopyUI](https://github.com/lefthandedgoat/canopy).
+A tiny sample site exists in the [Web directory](src/Web). This is the website that the [UsageExample](src/UsageExample) is testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a comment if they are signed in. 
+The [UsageExample](src/UsageExample) showcases a certain approach a developer can take as to how to model their web site as a state machine. In this case, the home and comment page are each listed twice, once as logged out, and once as logged in.
 This is only one way to handle this case, and the developer could choose to model it in any other way.
 
-Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s. The [Sample Web site](/tree/master/src/Web) looks like this: 
+Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s. The [Sample Web site](src/Web) looks like this: 
 
 ![SUT sample report](https://raw.githubusercontent.com/kaeedo/Scrutiny/master/images/SampleWebsiteReport.png)
 
