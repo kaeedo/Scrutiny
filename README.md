@@ -89,7 +89,7 @@ e.g.:
 ## Development
 Run:
 * `dotnet tool restore`
-* `dotnet tool paket install`
+* `dotnet paket install`
 
 To run the UsageExample, you must start the web project.
 

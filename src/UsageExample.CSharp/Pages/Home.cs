@@ -32,12 +32,14 @@ namespace UsageExample.CSharp.Pages
 
         public override IEnumerable<Action> Actions()
         {
-            throw new NotImplementedException();
+            //transition((fun()->click "#comment") ==> comment)
+            //transition((fun()->click "#signin") ==> signIn)
+            return null;
         }
 
         public override IEnumerable<(Action, PageState<GlobalState>)> Transitions()
         {
-            throw new NotImplementedException();
+            return null;
         }
     }
 }
