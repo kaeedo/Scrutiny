@@ -1,5 +1,7 @@
 # Scrutiny
 
+NuGet | ![Nuget](https://img.shields.io/nuget/vpre/scrutiny?color=blue&label=Scrutiny&style=for-the-badge)
+
 ## Description
 Describe your UI as a state machine, and then use Scrutiny to simulate a "User" that randomly clicks around on your site. 
 Scrutiny will attempt to create a Directed Adjacency Graph of your states, and then randomly choose an unvisited state to navigate to. 
