@@ -1,6 +1,6 @@
 # Scrutiny
 
-NuGet | ![Nuget](https://img.shields.io/nuget/vpre/scrutiny?color=blue&label=Scrutiny&style=for-the-badge)
+[![Nuget](https://img.shields.io/nuget/vpre/scrutiny?color=blue&style=for-the-badge)](https://www.nuget.org/packages/Scrutiny/)
 
 ## Description
 Describe your UI as a state machine, and then use Scrutiny to simulate a "User" that randomly clicks around on your site. 
