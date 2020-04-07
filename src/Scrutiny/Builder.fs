@@ -39,15 +39,6 @@ type PageBuilder() =
 
 
 module Scrutiny =
-    let page = PageBuilder()
-
-    let defaultConfig =
-        { ScrutinyConfig.Seed = Environment.TickCount
-          MapOnly = false
-          ComprehensiveActions = true
-          ComprehensiveStates = true
-          ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html"}
-
     let private printPath path =
         printfn "path: %s"
             (path
@@ -107,6 +98,7 @@ module Scrutiny =
             |> Seq.tryHead
 
         exitNode
+
 
     let scrutinize<'a> (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a>) =
         printfn "Scrutinizing system under test with seed: %i" config.Seed
@@ -174,5 +166,14 @@ module Scrutiny =
 
         Reporter.generateMap config allStates
         printfn "Scrutiny Result written to: %s" config.ScrutinyResultFilePath
+
+    let page = PageBuilder()
+        
+    let defaultConfig =
+        { ScrutinyConfig.Seed = Environment.TickCount
+          MapOnly = false
+          ComprehensiveActions = true
+          ComprehensiveStates = true
+          ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html"}
 
     let scrutinizeWithDefaultConfig<'a> = scrutinize<'a> defaultConfig

@@ -10,10 +10,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Program.fs" />
-    <Content Include="geckodriver.exe">
+    <Content Include="../../webDrivers/geckodriver.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="chromedriver.exe">
+    <Content Include="../../webDrivers/chromedriver.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="paket.references" />

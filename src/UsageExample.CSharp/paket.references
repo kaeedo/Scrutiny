@@ -1,0 +1,4 @@
+Selenium.WebDriver
+xunit
+Microsoft.NET.Test.Sdk
+xunit.runner.visualstudio

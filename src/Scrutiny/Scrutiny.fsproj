@@ -30,8 +30,7 @@
         <Compile Include="Reporter.fs" />
         <Compile Include="Builder.fs" />
         <Compile Include="Operators.fs" />
+        <Compile Include="BuilderCSharp.fs" />
     </ItemGroup>
-
-    <ItemGroup />
 
 </Project>
