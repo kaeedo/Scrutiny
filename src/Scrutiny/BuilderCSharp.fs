@@ -15,7 +15,7 @@ type PageState<'a, 'b>(name: string) =
     default this.OnExit() = ()
     abstract ExitAction: unit -> unit
     default this.ExitAction() = ()
-    abstract Transitions: unit -> IEnumerable<struct (Action * PageState<'a, 'b>)>
+    abstract Transitions: unit -> IEnumerable<Func<PageState<'a, 'b>>>
     default this.Transitions() = Seq.empty
     abstract Actions: unit -> IEnumerable<Action>
     default this.Actions() = Seq.empty

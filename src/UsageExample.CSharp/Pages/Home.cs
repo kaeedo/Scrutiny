@@ -6,7 +6,7 @@ using Xunit;
 
 namespace UsageExample.CSharp.Pages
 {
-    public class Home : PageState<GlobalState>
+    public class Home : PageState<GlobalState, object>
     {
         private readonly RemoteWebDriver _driver;
         private readonly GlobalState _globalState;
@@ -30,16 +30,25 @@ namespace UsageExample.CSharp.Pages
             Console.WriteLine("Exiting Home");
         }
 
-        public override IEnumerable<Action> Actions()
+        public override IEnumerable<Func<PageState<GlobalState, object>>> Transitions()
         {
-            //transition((fun()->click "#comment") ==> comment)
-            //transition((fun()->click "#signin") ==> signIn)
-            return null;
+            Func<Comment> goToComment = () =>
+            {
+                _driver.FindElementById("comment").Click();
+                return new Comment(_driver, _globalState);
+            };
+
+            return new List<Func<PageState<GlobalState, object>>>
+            {
+                goToComment,
+                GoToSignIn
+            };
         }
 
-        public override IEnumerable<(Action, PageState<GlobalState>)> Transitions()
+        private Comment GoToSignIn()
         {
-            return null;
+            _driver.FindElementById("signin").Click();
+            return new Comment(_driver, _globalState);
         }
     }
 }

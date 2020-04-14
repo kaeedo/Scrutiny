@@ -6,12 +6,12 @@ using Xunit;
 
 namespace UsageExample.CSharp.Pages
 {
-    public class Comment : PageState<GlobalState, object>
+    public class SignIn : PageState<GlobalState, object>
     {
         private readonly RemoteWebDriver _driver;
         private readonly GlobalState _globalState;
 
-        public Comment(RemoteWebDriver driver, GlobalState globalState) : base("Comment")
+        public SignIn(RemoteWebDriver driver, GlobalState globalState) : base("Sign In")
         {
             _driver = driver;
             _globalState = globalState;
@@ -19,10 +19,15 @@ namespace UsageExample.CSharp.Pages
 
         public override void OnEnter()
         {
-            Console.WriteLine("Checking on page comment");
+            Console.WriteLine("Checking on page sign in");
             var header = _driver.FindElementById("header");
 
-            Assert.True(header.Text == "Comments");
+            Assert.True(header.Text == "Sign In");
+        }
+
+        public override IEnumerable<Action> Actions()
+        {
+            return null;
         }
 
         public override IEnumerable<Func<PageState<GlobalState, object>>> Transitions()
@@ -48,7 +53,7 @@ namespace UsageExample.CSharp.Pages
 
         public override void OnExit()
         {
-            Console.WriteLine("Exiting Home");
+            Console.WriteLine("Exiting sign in");
         }
     }
 }
