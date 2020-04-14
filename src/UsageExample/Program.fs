@@ -18,152 +18,148 @@ open System.IO
 type GlobalState() =
     member val IsSignedIn = false with get, set
     member val Username = "MyUsername" with get, set
-    member val Number = 42 with get
+    member val Number = 42
+
+type LoggedInComment() =
+    member val Comment = String.Empty with get, set
 
 module rec Entry =
-    let signIn = fun (globalState: GlobalState) ->
-        page {
-            name "Sign In"
-            onEnter (fun () ->
-                printfn "Checking on page sign in"
-                "#header" == "Sign In"
-            )
+    let signIn =
+        fun (globalState: GlobalState) ->
+            page {
+                name "Sign In"
+                onEnter (fun _ ->
+                    printfn "Checking on page sign in"
+                    "#header" == "Sign In")
 
-            transition ((fun () -> click "#home") ==> home)
-            transition ((fun () ->
-                globalState.Username <- "kaeedo"
-                "#username" << globalState.Username
-                "#number" << globalState.Number.ToString()
+                transition ((fun _ -> click "#home") ==> home)
+                transition
+                    ((fun _ ->
+                        globalState.Username <- "kaeedo"
+                        "#username" << globalState.Username
+                        "#number" << globalState.Number.ToString()
 
-                globalState.IsSignedIn <- true
+                        globalState.IsSignedIn <- true
 
-                click "Sign In"
-            ) ==> loggedInHome)
+                        click "Sign In")
+                     ==> loggedInHome)
 
-            action (fun () ->
-                "#username" << "MyUsername"
-                "#username" == "MyUsername"
-            )
-            action (fun () -> 
-                "#number" << "42"
-                "#number" == "42"
-            )
+                action (fun _ ->
+                    "#username" << "MyUsername"
+                    "#username" == "MyUsername")
+                action (fun _ ->
+                    "#number" << "42"
+                    "#number" == "42")
 
-            action (fun () -> 
-                let username = read "#username"
-                let number = read "#number"
-                if String.IsNullOrWhiteSpace(username) || String.IsNullOrWhiteSpace(number)
-                then click "Sign In"
-                else
-                    "#username" << ""
-                    click "Sign In"
+                action (fun _ ->
+                    let username = read "#username"
+                    let number = read "#number"
+                    if String.IsNullOrWhiteSpace(username) || String.IsNullOrWhiteSpace(number) then
+                        click "Sign In"
+                    else
+                        "#username" << ""
+                        click "Sign In"
 
-                displayed "#ErrorMessage"
-            )
+                    displayed "#ErrorMessage")
 
-            onExit (fun () ->
-                printfn "Exiting sign in"
-            )
-        }
+                onExit (fun _ -> printfn "Exiting sign in")
+            }
 
-    let loggedInComment = fun (globalState: GlobalState) ->
-        page {
-            name "Logged In Comment"
+    let loggedInComment =
+        fun (globalState: GlobalState) ->
 
-            transition ((fun () -> click "#home") ==> loggedInHome)
+            page {
+                name "Logged In Comment"
 
-            action (fun () ->
-                click "#openModal"
-                "#comment" << "This is my super comment"
-                click "#modalFooterSave"
+                localState (LoggedInComment())
 
-                "#commentsUl>li" *= sprintf "%s wrote:%sThis is my super comment" globalState.Username Environment.NewLine
-            )
+                transition ((fun _ -> click "#home") ==> loggedInHome)
 
-            onEnter (fun () ->
-                printfn "Checking comment is logged in"
-                displayed "#openModal"
-            )
+                action (fun (Some ls) ->
+                    click "#openModal"
+                    ls.Comment <- "This is my super comment"
+                    "#comment" << ls.Comment
+                    click "#modalFooterSave"
 
-            onExit (fun () ->
-                printfn "Exiting comment logged in"
-            )
-        }
+                    "#commentsUl>li" *= sprintf "%s wrote:%s%s" globalState.Username Environment.NewLine ls.Comment)
 
-    let loggedInHome = fun (globalState: GlobalState) ->
-        page {
-            name "Logged in Home"
+                onEnter (fun _ ->
+                    printfn "Checking comment is logged in"
+                    displayed "#openModal")
 
-            transition ((fun () -> click "#comment") ==> loggedInComment)
-            transition ((fun () -> click "#logout") ==> home)
+                onExit (fun _ -> printfn "Exiting comment logged in")
+            }
 
-            onEnter (fun () ->
-                printfn "Checking on page home logged in"
-                displayed "#welcomeText"
-            )
+    let loggedInHome =
+        fun (globalState: GlobalState) ->
+            page {
+                name "Logged in Home"
 
-            exitAction (fun () -> 
-                printfn "EXUTUBG !!!!!!!"
-                click "#logout"
-            )
-        }
+                transition ((fun _ -> click "#comment") ==> loggedInComment)
+                transition ((fun _ -> click "#logout") ==> home)
 
-    let comment = fun (globalState: GlobalState) ->
-        page {
-            name "Comment"
-            onEnter (fun () ->
-                printfn "Checking on page comment"
-                "#header" == "Comments"
-            )
+                onEnter (fun _ ->
+                    printfn "Checking on page home logged in"
+                    displayed "#welcomeText")
 
-            transition ((fun () -> click "#home") ==> home)
-            transition ((fun () -> click "#signin") ==> signIn)
-            
-            onExit (fun () ->
-                printfn "Exiting comment"
-            )
-        }
+                exitAction (fun _ ->
+                    printfn "EXUTUBG !!!!!!!"
+                    click "#logout")
+            }
 
-    let home = fun (globalState: GlobalState) ->
-        page {
-            name "Home"
-            onEnter (fun _ ->
-                printfn "Checking on page home"
-                "#header" == "Home"
-            )
+    let comment =
+        fun (globalState: GlobalState) ->
+            page {
+                name "Comment"
+                onEnter (fun _ ->
+                    printfn "Checking on page comment"
+                    "#header" == "Comments")
 
-            transition ((fun () -> click "#comment") ==> comment)
-            transition ((fun () -> click "#signin") ==> signIn)
+                transition ((fun _ -> click "#home") ==> home)
+                transition ((fun _ -> click "#signin") ==> signIn)
 
-            onExit (fun _ ->
-                printfn "Exiting home"
-            )
-        }
+                onExit (fun _ -> printfn "Exiting comment")
+            }
+
+    let home =
+        fun (globalState: GlobalState) ->
+            page {
+                name "Home"
+                onEnter (fun _ ->
+                    printfn "Checking on page home"
+                    "#header" == "Home")
+
+                transition ((fun _ -> click "#comment") ==> comment)
+                transition ((fun _ -> click "#signin") ==> signIn)
+
+                onExit (fun _ -> printfn "Exiting home")
+            }
 
     [<EntryPoint>]
     let main argv =
-        let options = new FirefoxOptions()
+        let options = FirefoxOptions()
         do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
-        let ff = new FirefoxDriver(options)
+        use ff = new FirefoxDriver(options)
         let currentDirectory = DirectoryInfo(Directory.GetCurrentDirectory())
+
         let config =
-            { defaultConfig with 
-                Seed = 553931187
-                MapOnly = true
-                ComprehensiveActions = false 
-                ComprehensiveStates = true
-                ScrutinyResultFilePath = currentDirectory.Parent.Parent.Parent.FullName + "/myResult.html" }
+            { defaultConfig with
+                  Seed = 553931187
+                  MapOnly = true
+                  ComprehensiveActions = false
+                  ComprehensiveStates = true
+                  ScrutinyResultFilePath = currentDirectory.Parent.Parent.Parent.FullName + "/myResult.html" }
 
         "Scrutiny" &&& fun _ ->
             printfn "opening url"
             url "https://localhost:5001/home"
-            home |> scrutinize config (new GlobalState()) 
+            scrutinize config (GlobalState()) home
 
         switchTo ff
         pin canopy.types.direction.Right
 
         run()
         quit ff
-        
+
         0

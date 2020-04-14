@@ -4,9 +4,11 @@ open System
 open System.IO
 
 type PageBuilder() =
-    member __.Yield(_): PageState<'a> =
+
+    member __.Yield(_): PageState<'a, 'b> =
         { PageState.Id = Guid.NewGuid()
           Name = ""
+          LocalState = None
           OnEnter = fun _ -> ()
           OnExit = fun _ -> ()
           Transitions = []
@@ -14,84 +16,77 @@ type PageBuilder() =
           ExitAction = None }
 
     [<CustomOperation("name")>]
-    member __.Name(state, handler): PageState<'a> =
-        { state with Name = handler }
+    member __.Name(state, handler): PageState<'a, 'b> = { state with Name = handler }
+
+    [<CustomOperation("localState")>]
+    member __.LocalState(state, handler): PageState<'a, 'b> = { state with LocalState = Some handler }
 
     [<CustomOperation("onEnter")>]
-    member __.OnEnter(state, handler): PageState<'a> =
-        { state with OnEnter = handler }
+    member __.OnEnter(state, handler): PageState<'a, 'b> = { state with OnEnter = handler }
 
     [<CustomOperation("onExit")>]
-    member __.OnExit(state, handler): PageState<'a> =
-        { state with OnExit = handler }
+    member __.OnExit(state, handler): PageState<'a, 'b> = { state with OnExit = handler }
 
     [<CustomOperation("transition")>]
-    member __.Transitions(state, handler): PageState<'a> =
-        { state with Transitions = handler :: state.Transitions }
+    member __.Transitions(state, handler): PageState<'a, 'b> = { state with Transitions = handler :: state.Transitions }
 
     [<CustomOperation("action")>]
-    member __.Actions(state, handler): PageState<'a> = 
-        { state with Actions = handler :: state.Actions }
+    member __.Actions(state, handler): PageState<'a, 'b> = { state with Actions = handler :: state.Actions }
 
     [<CustomOperation("exitAction")>]
-    member __.ExitAction(state, handler): PageState<'a> = 
-        { state with ExitAction = Some handler }
+    member __.ExitAction(state, handler): PageState<'a, 'b> = { state with ExitAction = Some handler }
 
 
 module Scrutiny =
     let private printPath path =
         printfn "path: %s"
             (path
-            |> List.map (fun p -> p.Name)
-            |> String.concat " --> ")
+             |> List.map (fun p -> p.Name)
+             |> String.concat " --> ")
 
-    let private runActions (config: ScrutinyConfig) (state: PageState<'a>) =
+    let private runActions (config: ScrutinyConfig) (state: PageState<'a, 'b>) =
         if config.ComprehensiveActions then
-            state.Actions
-            |> Seq.iter (fun a -> a())
+            state.Actions |> Seq.iter (fun a -> a state.LocalState)
         else
-            let random = new Random(config.Seed)
-            let amount = random.Next(if state.Actions.Length > 1 then state.Actions.Length else 1)
+            let random = Random(config.Seed)
+
+            let amount =
+                random.Next(if state.Actions.Length > 1 then state.Actions.Length else 1)
             state.Actions
             |> Seq.sortBy (fun _ -> random.Next())
             |> Seq.take amount
-            |> Seq.iter (fun a -> a())
+            |> Seq.iter (fun a -> a state.LocalState)
 
-    let private unvisitedNodes allStates alreadyVisited : AdjacencyGraph<PageState<'a>> = 
+    let private unvisitedNodes allStates alreadyVisited: AdjacencyGraph<PageState<'a, 'b>> =
         allStates
-        |> Seq.map (fun s -> fst s)
+        |> Seq.map fst
         |> Seq.except alreadyVisited
         |> Seq.map (fun n -> allStates |> List.find (fun ps -> (fst ps) = n))
         |> List.ofSeq
 
     let private performStateActions config globalState (current, next) =
         try
-            current.OnEnter()
+            current.OnEnter current.LocalState
             let transition =
                 current.Transitions
                 |> Seq.find (fun t ->
                     let state = t.ToState globalState
-                    state.Name = next.Name
-                )
+                    state.Name = next.Name)
             runActions config current
-            current.OnExit()
-            transition.TransitionFn()
-        with
-        | exn ->
-            let message = 
+            current.OnExit current.LocalState
+            transition.TransitionFn current.LocalState
+        with exn ->
+            let message =
                 sprintf "System under test failed scrutiny.
     To re-run this exact test, specify the seed in the config with the value: %i.
-    The error occured in state: %s
-    The error that occured is of type: %A%s" 
-                    config.Seed
-                    current.Name
-                    exn 
-                    Environment.NewLine
+    The error occurred in state: %s
+    The error that occurred is of type: %A%s" config.Seed current.Name exn Environment.NewLine
             raise <| ScrutinyException(message, exn)
 
-    let private findExit (config: ScrutinyConfig) (allStates: AdjacencyGraph<PageState<'a>>) = 
-        let random = new Random(config.Seed)
-        let exitNode =  
+    let private findExit (config: ScrutinyConfig) (allStates: AdjacencyGraph<PageState<'a, 'b>>) =
+        let random = Random(config.Seed)
+
+        let exitNode =
             allStates
             |> Seq.filter (fun (node, _) -> Option.isSome node.ExitAction)
             |> Seq.sortBy (fun _ -> random.Next())
@@ -100,14 +95,13 @@ module Scrutiny =
         exitNode
 
 
-    let scrutinize<'a> (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a>) =
+    let scrutinize<'a, 'b> (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a, 'b>) =
         printfn "Scrutinizing system under test with seed: %i" config.Seed
         let startState = startFn globalState
-        let allStates =
-            Navigator.constructAdjacencyGraph startState globalState
+        let allStates = Navigator.constructAdjacencyGraph startState globalState
 
         if not config.MapOnly then
-            let random = new Random(config.Seed)
+            let random = Random(config.Seed)
             let findPath = Navigator.shortestPathFunction allStates
 
             let nextNode alreadyVisited =
@@ -115,18 +109,23 @@ module Scrutiny =
 
                 let shouldContinue =
                     if config.ComprehensiveStates then
-                        if unvisitedNodes |> Seq.isEmpty then false
-                        else true
+                        unvisitedNodes
+                        |> Seq.isEmpty
+                        |> not
                     else
-                        if unvisitedNodes.Length > (allStates.Length / 2) then true
-                        else false
+                        unvisitedNodes.Length > (allStates.Length / 2)
 
                 if shouldContinue then
                     let next = random.Next(unvisitedNodes.Length)
-                    Some (fst unvisitedNodes.[next])
-                else None
+                    Some(fst unvisitedNodes.[next])
+                else
+                    None
 
-            let rec clickAround (isExitPath: bool) (alreadyVisited: PageState<'a> list) (currentPath: PageState<'a> list) =
+            let rec clickAround
+                    (isExitPath: bool)
+                    (alreadyVisited: PageState<'a, 'b> list)
+                    (currentPath: PageState<'a, 'b> list)
+                =
                 match currentPath with
                 | head :: [] ->
                     match nextNode alreadyVisited with
@@ -139,41 +138,37 @@ module Scrutiny =
                             path.Head
                         else
                             printPath path
-                            if isExitPath then path.Head
-                            else clickAround false alreadyVisited path
-                | head :: tail -> 
+                            if isExitPath then path.Head else clickAround false alreadyVisited path
+                | head :: tail ->
                     currentPath
                     |> Seq.pairwise
-                    |> Seq.find (fun (current, _) ->
-                        current = head
-                    )
+                    |> Seq.find (fun (current, _) -> current = head)
                     |> performStateActions config globalState
-                
+
                     clickAround false (head :: alreadyVisited) tail
 
-            let rec navigateDirectly = clickAround true
+            let navigateDirectly = clickAround true
 
-            let finalNode = clickAround false [] [startState]
-            
+            let finalNode = clickAround false [] [ startState ]
+
             match findExit config allStates with
             | None -> ()
-            | Some (exitNode, _) ->
+            | Some(exitNode, _) ->
                 let path = findPath finalNode exitNode
 
                 let exitNode = navigateDirectly [] path
-                exitNode.ExitAction
-                |> Option.iter (fun ea -> ea())
+                exitNode.ExitAction |> Option.iter (fun ea -> ea exitNode.LocalState)
 
         Reporter.generateMap config allStates
         printfn "Scrutiny Result written to: %s" config.ScrutinyResultFilePath
 
     let page = PageBuilder()
-        
+
     let defaultConfig =
         { ScrutinyConfig.Seed = Environment.TickCount
           MapOnly = false
           ComprehensiveActions = true
           ComprehensiveStates = true
-          ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html"}
+          ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html" }
 
-    let scrutinizeWithDefaultConfig<'a> = scrutinize<'a> defaultConfig
+    let scrutinizeWithDefaultConfig<'a, 'b> = scrutinize<'a, 'b> defaultConfig

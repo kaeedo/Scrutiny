@@ -1,5 +1,6 @@
 ﻿namespace Scrutiny
 
 module Operators =
-    let (==>) (usingFn: unit -> unit) (toState: 'a -> PageState<'a>) =
-        { Transition.TransitionFn = usingFn; ToState = toState }
+    let (==>) (usingFn: 'b option -> unit) (toState: 'a -> PageState<'a, 'b>) =
+        { Transition.TransitionFn = usingFn
+          ToState = toState }

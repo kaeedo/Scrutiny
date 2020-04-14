@@ -3,17 +3,19 @@
 open System
 open System.Collections.Generic
 
+// TODO Pass in localstate
+// TODO Rename this class
 [<AbstractClass>]
-type PageState<'a>(name: string) =
-    member val Name = name with get
+type PageState<'a, 'b>(name: string) =
+    member val Name = name
 
-    abstract member OnEnter: unit -> unit
+    abstract OnEnter: unit -> unit
     default this.OnEnter() = ()
-    abstract member OnExit: unit -> unit
+    abstract OnExit: unit -> unit
     default this.OnExit() = ()
-    abstract member ExitAction: unit -> unit
+    abstract ExitAction: unit -> unit
     default this.ExitAction() = ()
-    abstract member Transitions: unit -> IEnumerable<struct(Action * PageState<'a>)>
+    abstract Transitions: unit -> IEnumerable<struct (Action * PageState<'a, 'b>)>
     default this.Transitions() = Seq.empty
-    abstract member Actions: unit -> IEnumerable<Action>
+    abstract Actions: unit -> IEnumerable<Action>
     default this.Actions() = Seq.empty

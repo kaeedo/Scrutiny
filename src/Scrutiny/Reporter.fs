@@ -5,21 +5,21 @@ open System.IO
 
 [<RequireQualifiedAccess>]
 module internal Reporter =
-    type internal Marker = interface end
+    type internal IMarker =
+        interface
+        end
 
     let file scrutinyResultFilePath =
-        let fileInfo = new FileInfo(scrutinyResultFilePath)
+        let fileInfo = FileInfo(scrutinyResultFilePath)
 
-        let fileName = 
-            if fileInfo.Name = String.Empty 
-            then "ScrutinyResult.html" 
-            else fileInfo.Name
+        let fileName =
+            if fileInfo.Name = String.Empty then "ScrutinyResult.html" else fileInfo.Name
 
         fileInfo.DirectoryName, fileName
 
-    let generateMap (config: ScrutinyConfig) (graph: AdjacencyGraph<PageState<_>>) =
+    let generateMap (config: ScrutinyConfig) (graph: AdjacencyGraph<PageState<_, _>>) =
 
-        let assembly = typeof<Marker>.Assembly
+        let assembly = typeof<IMarker>.Assembly
 
         use jsStream = assembly.GetManifestResourceStream("Scrutiny.wwwroot.app.js")
         use jsReader = new StreamReader(jsStream)
@@ -28,8 +28,9 @@ module internal Reporter =
         use htmlStream = assembly.GetManifestResourceStream("Scrutiny.wwwroot.graph.template.html")
         use htmlReader = new StreamReader(htmlStream)
         let html = htmlReader.ReadToEnd()
-        
+
         let jsCode (node, sibling) = sprintf "[\"%s\", \"%s\"]" node sibling
+
         let jsFunctionCalls =
             seq {
                 for (node, siblings) in graph do

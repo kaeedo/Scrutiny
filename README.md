@@ -3,8 +3,8 @@
 [![Nuget](https://img.shields.io/nuget/vpre/scrutiny?color=blue&style=for-the-badge)](https://www.nuget.org/packages/Scrutiny/)
 
 ## Description
-Describe your UI as a state machine, and then use Scrutiny to simulate a "User" that randomly clicks around on your site. 
-Scrutiny will attempt to create a Directed Adjacency Graph of your states, and then randomly choose an unvisited state to navigate to. 
+Describe your UI as a state machine, and then use Scrutiny to simulate a "User" that randomly clicks around on your site.
+Scrutiny will attempt to create a Directed Adjacency Graph of your states, and then randomly choose an unvisited state to navigate to.
 It will repeat this process untill all states have been visited.
 During each state, Scrutiny will attempt to run any defined actions within that state.
 Once all states have been visited, if an exit action has been defined it will then navigate there and quit.
@@ -12,38 +12,45 @@ Scrutiny will then also generate an HTML file which visualizes the State Machine
 
 Scrutiny was designed to run UI tests, but using e.g. CanopyUI or Selenium is only an implementation detail. In theory, any state machine can be tested with Scrutiny.
 
-## Usage
+---
+
 Check the [UsageExample](src/UsageExample) for a sample test implemented with [CanopyUI](https://github.com/lefthandedgoat/canopy).
-A tiny sample site exists in the [Web directory](src/Web). This is the website that the [UsageExample](src/UsageExample) is testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a comment if they are signed in. 
+A tiny sample site exists in the [Web directory](src/Web). This is the website that the [UsageExample](src/UsageExample) is testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a comment if they are signed in.
 The [UsageExample](src/UsageExample) showcases a certain approach a developer can take as to how to model their web site as a state machine. In this case, the home and comment page are each listed twice, once as logged out, and once as logged in.
 This is only one way to handle this case, and the developer could choose to model it in any other way.
 
-Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s. The [Sample Web site](src/Web) looks like this: 
+Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s. The [Sample Web site](src/Web) looks like this:
 
-![SUT sample report](https://raw.githubusercontent.com/kaeedo/Scrutiny/master/images/SampleWebsiteReport.png)
+![SUT sample report](images/SampleWebsiteReport.png)
 
-
+## Usage
 Define one `page` object for each state in your UI. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
 A `page` looks like this:
 
-    let comment = fun (globalState: GlobalState) ->
+    let loggedInComment = fun (globalState: GlobalState) ->
         page {
-            name "Comment"
-            onEnter (fun () ->
+            name "Logged In Comment"
+
+            localState (/* Any object to set local state properties on */)
+
+            onEnter (fun (Some ls) ->
                 printfn "Checking on page comment"
+                // Do something with LocalState e.g. set the HomeLink property
+                ls.HomeLink <- "#home"
                 "#header" == "Comments"
             )
-            onExit (fun () ->
+
+            onExit (fun _ ->
                 printfn "Exiting comment"
             )
 
-            transition ((fun () -> click "#home") ==> home)
-            transition ((fun () -> click "#signin") ==> signIn)
-            
-            action (fun () -> () /*do something on the page*/)
-            action (fun () -> () /*do something else on the page*/)
+            transition ((fun (Some ls) -> click ls.HomeLink) ==> home)
+            transition ((fun _ -> click "#signin") ==> signIn)
 
-            exitAction (fun () -> () /*final action to perform before exiting the test*/)
+            action (fun _ -> () /*do something on the page*/)
+            action (fun _ -> () /*do something else on the page*/)
+
+            exitAction (fun _ -> () /*final action to perform before exiting the test*/)
         }
 
 The `name` must be unique. Any number of `transition`s and any number of `action`s can be defined.
@@ -51,6 +58,10 @@ The `exitAction` is optional, and multiple `page`s can have an `exitAction`. If 
 
 The `GlobalState` in the example is any type defined in your test that you can use to pass data between states, e.g. `Username` or `IsLoggedIn`
 
+The `LocalState` is specific to a state, and is constructed each time that state is visited. It's optional, but when set, all function will have access to the local state via the function parameter. At this point, it comes into the function as an `Option` but I hope to be able to fix that in the future
+
+
+### Configuration
 Some things can be configured via `ScrutinyConfig`. The default config is:
 
     { ScrutinyConfig.Seed = Environment.TickCount
@@ -101,7 +112,7 @@ To run the UsageExample, you must start the web project.
 ## TODO for Beta release
 - [ ] Create nice interface for usage from C#
 - [ ] Documentation
-- [ ] Write unit tests 
+- [ ] Write unit tests
 - [ ] Documentation
 
 ## TODO General
