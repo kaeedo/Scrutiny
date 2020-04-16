@@ -45,10 +45,10 @@ namespace UsageExample.CSharp.Pages
             };
         }
 
-        private Comment GoToSignIn()
+        private SignIn GoToSignIn()
         {
             _driver.FindElementById("signin").Click();
-            return new Comment(_driver, _globalState);
+            return new SignIn(_driver, _globalState);
         }
     }
 }

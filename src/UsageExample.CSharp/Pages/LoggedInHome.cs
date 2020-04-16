@@ -6,12 +6,12 @@ using Xunit;
 
 namespace UsageExample.CSharp.Pages
 {
-    public class Comment : PageState<GlobalState, object>
+    public class LoggedInHome : PageState<GlobalState, object>
     {
         private readonly RemoteWebDriver _driver;
         private readonly GlobalState _globalState;
 
-        public Comment(RemoteWebDriver driver, GlobalState globalState) : base("Comment")
+        public LoggedInHome(RemoteWebDriver driver, GlobalState globalState) : base("Logged in Home")
         {
             _driver = driver;
             _globalState = globalState;
@@ -19,10 +19,9 @@ namespace UsageExample.CSharp.Pages
 
         public override void OnEnter()
         {
-            Console.WriteLine("Checking on page comment");
-            var header = _driver.FindElementById("header");
+            Console.WriteLine("Checking on page home logged in");
 
-            Assert.True(header.Text == "Comments");
+            Assert.True(_driver.FindElementById("welcomeText").Displayed);
         }
 
         public override IEnumerable<Func<PageState<GlobalState, object>>> Transitions()
@@ -33,22 +32,28 @@ namespace UsageExample.CSharp.Pages
                 return new Home(_driver, _globalState);
             };
 
-            Func<SignIn> goToSignIn = () =>
+            Func<LoggedInComment> goToLoggedInComment = () =>
             {
-                _driver.FindElementById("signin").Click();
-                return new SignIn(_driver, _globalState);
+                _driver.FindElementById("comment").Click();
+                return new LoggedInComment(_driver, _globalState);
             };
 
             return new List<Func<PageState<GlobalState, object>>>
             {
                 goToHome,
-                goToSignIn
+                goToLoggedInComment
             };
         }
 
         public override void OnExit()
         {
-            Console.WriteLine("Exiting Home");
+            Console.WriteLine("Exiting Logged in home");
+        }
+
+        public override void ExitAction()
+        {
+            Console.WriteLine("EXITING!!");
+            _driver.FindElementById("logout").Click();
         }
     }
 }

@@ -3,7 +3,6 @@
 open System
 open System.Collections.Generic
 
-// TODO Pass in localstate
 // TODO Rename this class
 [<AbstractClass>]
 type PageState<'a, 'b>(name: string) =

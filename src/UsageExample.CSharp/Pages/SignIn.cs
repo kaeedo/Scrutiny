@@ -27,7 +27,30 @@ namespace UsageExample.CSharp.Pages
 
         public override IEnumerable<Action> Actions()
         {
-            return null;
+            Action formValidation = () =>
+            {
+                var username = _driver.FindElementById("#username").Text;
+                var number = _driver.FindElementById("#number").Text;
+
+                if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(number))
+                {
+                    _driver.FindElementByLinkText("Sign In").Click();
+                }
+                else
+                {
+                    _driver.FindElementById("#username").Clear();
+                    _driver.FindElementByLinkText("Sign In").Click();
+                }
+
+                Assert.True(_driver.FindElementById("ErrorMessage").Displayed);
+            };
+
+            return new List<Action>
+            {
+                () => WriteAndAssert("#username", "MyUsername"),
+                () => WriteAndAssert("#number", "42"),
+                formValidation
+            };
         }
 
         public override IEnumerable<Func<PageState<GlobalState, object>>> Transitions()
@@ -38,22 +61,38 @@ namespace UsageExample.CSharp.Pages
                 return new Home(_driver, _globalState);
             };
 
-            Func<Home> goToSignIn = () =>
+            Func<LoggedInHome> goToLoggedInHome = () =>
             {
-                _driver.FindElementById("signin").Click();
-                return new Home(_driver, _globalState);
+                _globalState.Username = "kaeedo";
+
+                _driver.FindElementById("#username").SendKeys(_globalState.Username);
+                _driver.FindElementById("#number").SendKeys(_globalState.Number.ToString());
+
+                _globalState.IsSignedIn = true;
+
+                _driver.FindElementByLinkText("Sign In").Click();
+                return new LoggedInHome(_driver, _globalState);
             };
 
             return new List<Func<PageState<GlobalState, object>>>
             {
                 goToHome,
-                goToSignIn
+                goToLoggedInHome
             };
         }
 
         public override void OnExit()
         {
             Console.WriteLine("Exiting sign in");
+        }
+
+        private void WriteAndAssert(string id, string text)
+        {
+            var element = _driver.FindElementById(id);
+
+            element.SendKeys(text);
+
+            Assert.True(element.Text == text);
         }
     }
 }
