@@ -8,7 +8,7 @@ type PageBuilder() =
     member __.Yield(_): PageState<'a, 'b> =
         { PageState.Id = Guid.NewGuid()
           Name = ""
-          LocalState = None
+          LocalState = Unchecked.defaultof<'b>
           OnEnter = fun _ -> ()
           OnExit = fun _ -> ()
           Transitions = []
@@ -19,7 +19,7 @@ type PageBuilder() =
     member __.Name(state, handler): PageState<'a, 'b> = { state with Name = handler }
 
     [<CustomOperation("localState")>]
-    member __.LocalState(state, handler): PageState<'a, 'b> = { state with LocalState = Some handler }
+    member __.LocalState(state, handler): PageState<'a, 'b> = { state with LocalState = handler }
 
     [<CustomOperation("onEnter")>]
     member __.OnEnter(state, handler): PageState<'a, 'b> = { state with OnEnter = handler }
@@ -93,7 +93,6 @@ module Scrutiny =
             |> Seq.tryHead
 
         exitNode
-
 
     let scrutinize<'a, 'b> (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a, 'b>) =
         printfn "Scrutinizing system under test with seed: %i" config.Seed

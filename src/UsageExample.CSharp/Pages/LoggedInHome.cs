@@ -24,6 +24,11 @@ namespace UsageExample.CSharp.Pages
             Assert.True(_driver.FindElementById("welcomeText").Displayed);
         }
 
+        public override IEnumerable<Action> Actions(object _)
+        {
+            throw new NotImplementedException();
+        }
+
         public override IEnumerable<Func<PageState<GlobalState, object>>> Transitions()
         {
             Func<Home> goToHome = () =>
@@ -50,7 +55,7 @@ namespace UsageExample.CSharp.Pages
             Console.WriteLine("Exiting Logged in home");
         }
 
-        public override void ExitAction()
+        public void ExitAction()
         {
             Console.WriteLine("EXITING!!");
             _driver.FindElementById("logout").Click();

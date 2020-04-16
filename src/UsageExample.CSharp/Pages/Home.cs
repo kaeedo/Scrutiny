@@ -30,6 +30,11 @@ namespace UsageExample.CSharp.Pages
             Console.WriteLine("Exiting Home");
         }
 
+        public override IEnumerable<Action> Actions(object _)
+        {
+            throw new NotImplementedException();
+        }
+
         public override IEnumerable<Func<PageState<GlobalState, object>>> Transitions()
         {
             Func<Comment> goToComment = () =>

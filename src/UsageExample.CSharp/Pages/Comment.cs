@@ -25,6 +25,11 @@ namespace UsageExample.CSharp.Pages
             Assert.True(header.Text == "Comments");
         }
 
+        public override IEnumerable<Action> Actions(object _)
+        {
+            throw new NotImplementedException();
+        }
+
         public override IEnumerable<Func<PageState<GlobalState, object>>> Transitions()
         {
             Func<Home> goToHome = () =>

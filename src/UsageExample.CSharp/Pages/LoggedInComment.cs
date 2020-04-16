@@ -26,9 +26,12 @@ namespace UsageExample.CSharp.Pages
             Assert.True(_driver.FindElementById("openModal").Displayed);
         }
 
-        public override IEnumerable<Action> Actions()
+        public override IEnumerable<Action> Actions(LoggedInCommentState localState)
         {
-            return null;
+            return new List<Action>
+            {
+                () => WriteAndAssertModalText(localState)
+            };
         }
 
         public override IEnumerable<Func<PageState<GlobalState, LoggedInCommentState>>> Transitions()

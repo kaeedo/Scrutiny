@@ -23,19 +23,19 @@ type ScrutinyConfig =
       ScrutinyResultFilePath: string }
 
 type Transition<'a, 'b> =
-    { TransitionFn: 'b option -> unit
+    { TransitionFn: 'b -> unit
       ToState: 'a -> PageState<'a, 'b> }
 
 and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
     { Id: Guid
       Name: string
-      LocalState: 'b option // TODO: Figure out a better type, so that the option is not exposed to the end user
-      OnEnter: 'b option -> unit
-      OnExit: 'b option -> unit
+      LocalState: 'b
+      OnEnter: 'b -> unit
+      OnExit: 'b -> unit
       Transitions: Transition<'a, 'b> list
-      Actions: List<'b option -> unit>
+      Actions: List<'b -> unit>
       // OnAction?
-      ExitAction: ('b option -> unit) option }
+      ExitAction: ('b -> unit) option }
 
     interface IComparable<PageState<'a, 'b>> with
         member this.CompareTo other = compare this.Name other.Name

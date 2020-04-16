@@ -75,7 +75,7 @@ module rec Entry =
 
                 transition ((fun _ -> click "#home") ==> loggedInHome)
 
-                action (fun (Some ls) ->
+                action (fun ls ->
                     click "#openModal"
                     ls.Comment <- "This is my super comment"
                     "#comment" << ls.Comment

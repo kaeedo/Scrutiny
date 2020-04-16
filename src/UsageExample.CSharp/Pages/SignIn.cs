@@ -25,7 +25,7 @@ namespace UsageExample.CSharp.Pages
             Assert.True(header.Text == "Sign In");
         }
 
-        public override IEnumerable<Action> Actions()
+        public override IEnumerable<Action> Actions(object _)
         {
             Action formValidation = () =>
             {
