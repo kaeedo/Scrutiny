@@ -8,15 +8,17 @@ using Xunit;
 
 namespace UsageExample.CSharp.Pages
 {
-    public class LoggedInComment : PageState<GlobalState, LoggedInCommentState>
+    public class LoggedInComment : PageState<GlobalState>
     {
         private readonly RemoteWebDriver _driver;
         private readonly GlobalState _globalState;
+        private LoggedInCommentState _localState;
 
         public LoggedInComment(RemoteWebDriver driver, GlobalState globalState) : base("Logged In Comment")
         {
             _driver = driver;
             _globalState = globalState;
+            _localState = new LoggedInCommentState();
         }
 
         public override void OnEnter()
@@ -26,15 +28,15 @@ namespace UsageExample.CSharp.Pages
             Assert.True(_driver.FindElementById("openModal").Displayed);
         }
 
-        public override IEnumerable<Action> Actions(LoggedInCommentState localState)
+        public override IEnumerable<Action> Actions()
         {
             return new List<Action>
             {
-                () => WriteAndAssertModalText(localState)
+                () => WriteAndAssertModalText(_localState)
             };
         }
 
-        public override IEnumerable<Func<PageState<GlobalState, LoggedInCommentState>>> Transitions()
+        public override IEnumerable<Func<PageState<GlobalState>>> Transitions()
         {
             Func<LoggedInHome> goToLoggedInHome = () =>
             {
@@ -42,10 +44,10 @@ namespace UsageExample.CSharp.Pages
                 return new LoggedInHome(_driver, _globalState);
             };
 
-            return new List<Func<PageState<GlobalState, LoggedInCommentState>>>
-            {
-                goToLoggedInHome
-            };
+            return new List<Func<PageState<GlobalState>>>
+             {
+                 goToLoggedInHome
+             };
         }
 
         public override void OnExit()
@@ -63,7 +65,7 @@ namespace UsageExample.CSharp.Pages
             var comments = _driver.FindElementsByCssSelector("#commentsUl>li");
             var expected = $"{_globalState.Username} wrote:{Environment.NewLine}{localState.Comment}";
 
-            Assert.True(comments.Any(c => c.Text == expected));
+            Assert.Contains(comments, c => c.Text == expected);
         }
     }
 }

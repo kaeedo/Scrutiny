@@ -6,7 +6,7 @@ using Xunit;
 
 namespace UsageExample.CSharp.Pages
 {
-    public class SignIn : PageState<GlobalState, object>
+    public class SignIn : PageState<GlobalState>
     {
         private readonly RemoteWebDriver _driver;
         private readonly GlobalState _globalState;
@@ -25,7 +25,7 @@ namespace UsageExample.CSharp.Pages
             Assert.True(header.Text == "Sign In");
         }
 
-        public override IEnumerable<Action> Actions(object _)
+        public override IEnumerable<Action> Actions()
         {
             Action formValidation = () =>
             {
@@ -53,7 +53,7 @@ namespace UsageExample.CSharp.Pages
             };
         }
 
-        public override IEnumerable<Func<PageState<GlobalState, object>>> Transitions()
+        public override IEnumerable<Func<PageState<GlobalState>>> Transitions()
         {
             Func<Home> goToHome = () =>
             {
@@ -74,7 +74,7 @@ namespace UsageExample.CSharp.Pages
                 return new LoggedInHome(_driver, _globalState);
             };
 
-            return new List<Func<PageState<GlobalState, object>>>
+            return new List<Func<PageState<GlobalState>>>
             {
                 goToHome,
                 goToLoggedInHome

@@ -146,8 +146,8 @@ module rec Entry =
         let config =
             { defaultConfig with
                   Seed = 553931187
-                  MapOnly = true
-                  ComprehensiveActions = false
+                  MapOnly = false
+                  ComprehensiveActions = true
                   ComprehensiveStates = true
                   ScrutinyResultFilePath = currentDirectory.Parent.Parent.Parent.FullName + "/myResult.html" }
 

@@ -27,8 +27,7 @@ type Transition<'a, 'b> =
       ToState: 'a -> PageState<'a, 'b> }
 
 and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
-    { Id: Guid
-      Name: string
+    { Name: string
       LocalState: 'b
       OnEnter: 'b -> unit
       OnExit: 'b -> unit
@@ -48,11 +47,11 @@ and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
             | _ -> invalidArg "obj" "not a PageState"
 
     interface IEquatable<PageState<'a, 'b>> with
-        member this.Equals other = this.Id = other.Id
+        member this.Equals other = this.Name = other.Name
 
     override this.Equals obj =
         match obj with
         | :? PageState<'a, 'b> as other -> (this :> IEquatable<_>).Equals other
         | _ -> false
 
-    override this.GetHashCode() = hash this.Id
+    override this.GetHashCode() = hash this.Name

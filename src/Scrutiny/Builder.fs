@@ -6,8 +6,7 @@ open System.IO
 type PageBuilder() =
 
     member __.Yield(_): PageState<'a, 'b> =
-        { PageState.Id = Guid.NewGuid()
-          Name = ""
+        { PageState.Name = ""
           LocalState = Unchecked.defaultof<'b>
           OnEnter = fun _ -> ()
           OnExit = fun _ -> ()
@@ -97,6 +96,7 @@ module Scrutiny =
     let scrutinize<'a, 'b> (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a, 'b>) =
         printfn "Scrutinizing system under test with seed: %i" config.Seed
         let startState = startFn globalState
+        
         let allStates = Navigator.constructAdjacencyGraph startState globalState
 
         if not config.MapOnly then

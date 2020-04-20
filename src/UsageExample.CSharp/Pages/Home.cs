@@ -6,7 +6,7 @@ using Xunit;
 
 namespace UsageExample.CSharp.Pages
 {
-    public class Home : PageState<GlobalState, object>
+    public class Home : PageState<GlobalState>
     {
         private readonly RemoteWebDriver _driver;
         private readonly GlobalState _globalState;
@@ -30,12 +30,12 @@ namespace UsageExample.CSharp.Pages
             Console.WriteLine("Exiting Home");
         }
 
-        public override IEnumerable<Action> Actions(object _)
+        public override IEnumerable<Action> Actions()
         {
             throw new NotImplementedException();
         }
 
-        public override IEnumerable<Func<PageState<GlobalState, object>>> Transitions()
+        public override IEnumerable<Func<PageState<GlobalState>>> Transitions()
         {
             Func<Comment> goToComment = () =>
             {
@@ -43,7 +43,7 @@ namespace UsageExample.CSharp.Pages
                 return new Comment(_driver, _globalState);
             };
 
-            return new List<Func<PageState<GlobalState, object>>>
+            return new List<Func<PageState<GlobalState>>>
             {
                 goToComment,
                 GoToSignIn
