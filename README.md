@@ -1,5 +1,7 @@
 # Scrutiny
 
+F# library for testing state machines by randomly choosing available states and valid transitions. Designed for usage with UI tests
+
 [![Nuget](https://img.shields.io/nuget/vpre/scrutiny?color=blue&style=for-the-badge)](https://www.nuget.org/packages/Scrutiny/)
 
 ## Description
@@ -110,14 +112,14 @@ To run the UsageExample, you must start the web project.
 - [x] Documentation
 
 ## TODO for Beta release
-- [ ] Create nice interface for usage from C#
+- [ ] Documentation
+- [ ] Detailed result report. Color coded states and transitions showcasing which parts succeeded and failed
 - [ ] Documentation
 - [ ] Write unit tests
-- [ ] Documentation
 
 ## TODO General
 - [ ] Documentation
 - [ ] Setup proper build scripts
 - [ ] Use Fable to create a javascript release and npm package for usage from Node.js
 - [ ] Documentation
-- [ ] Detailed result report. Color coded states and transitions showcasing which parts succeeded and failed
+- [ ] Create nice interface for usage from C#
