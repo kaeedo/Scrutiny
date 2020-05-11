@@ -14,7 +14,7 @@
   <ItemGroup>
     <Content Include="paket.references" />
     <Content Include="Properties\launchSettings.json">
-      
+
     </Content>
     <Content Include="WebRoot\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

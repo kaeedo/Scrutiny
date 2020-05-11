@@ -16,12 +16,12 @@ Scrutiny was designed to run UI tests, but using e.g. CanopyUI or Selenium is on
 
 ---
 
-Check the [UsageExample](src/UsageExample) for a sample test implemented with [CanopyUI](https://github.com/lefthandedgoat/canopy).
-A tiny sample site exists in the [Web directory](src/Web). This is the website that the [UsageExample](src/UsageExample) is testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a comment if they are signed in.
-The [UsageExample](src/UsageExample) showcases a certain approach a developer can take as to how to model their web site as a state machine. In this case, the home and comment page are each listed twice, once as logged out, and once as logged in.
+Check the [UsageExample](UsageExample/UsageExample) for a sample test implemented with [CanopyUI](https://github.com/lefthandedgoat/canopy).
+A tiny sample site exists in the [Web directory](UsageExample/Web). This is the website that the [UsageExample](UsageExample/UsageExample) is testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a comment if they are signed in.
+The [UsageExample](UsageExample/UsageExample) showcases a certain approach a developer can take as to how to model their web site as a state machine. In this case, the home and comment page are each listed twice, once as logged out, and once as logged in.
 This is only one way to handle this case, and the developer could choose to model it in any other way.
 
-Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s. The [Sample Web site](src/Web) looks like this:
+Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s. The [Sample Web site](UsageExample/Web) looks like this:
 
 ![SUT sample report](images/SampleWebsiteReport.png)
 
