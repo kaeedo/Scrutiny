@@ -144,7 +144,7 @@ module rec Entry =
         let currentDirectory = DirectoryInfo(Directory.GetCurrentDirectory())
 
         let config =
-            { defaultConfig with
+            { ScrutinyConfig.Default with
                   Seed = 553931187
                   MapOnly = false
                   ComprehensiveActions = true

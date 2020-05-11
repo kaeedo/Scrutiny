@@ -1,6 +1,7 @@
 ﻿namespace Scrutiny
 
 open System
+open System.IO
 
 type ScrutinyException(message, innerException: Exception) =
     inherit Exception(message, innerException)
@@ -22,6 +23,13 @@ type ScrutinyConfig =
       ComprehensiveActions: bool
       ComprehensiveStates: bool
       ScrutinyResultFilePath: string }
+
+      static member Default =
+        { ScrutinyConfig.Seed = Environment.TickCount
+          MapOnly = false
+          ComprehensiveActions = true
+          ComprehensiveStates = true
+          ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html" }
 
 type Transition<'a, 'b> =
     { TransitionFn: 'b -> unit

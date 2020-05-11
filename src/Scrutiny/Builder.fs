@@ -96,7 +96,7 @@ module Scrutiny =
     let scrutinize<'a, 'b> (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a, 'b>) =
         printfn "Scrutinizing system under test with seed: %i" config.Seed
         let startState = startFn globalState
-        
+
         let allStates = Navigator.constructAdjacencyGraph startState globalState
 
         if not config.MapOnly then
@@ -163,11 +163,4 @@ module Scrutiny =
 
     let page = PageBuilder()
 
-    let defaultConfig =
-        { ScrutinyConfig.Seed = Environment.TickCount
-          MapOnly = false
-          ComprehensiveActions = true
-          ComprehensiveStates = true
-          ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html" }
-
-    let scrutinizeWithDefaultConfig<'a, 'b> = scrutinize<'a, 'b> defaultConfig
+    let scrutinizeWithDefaultConfig<'a, 'b> = scrutinize<'a, 'b> ScrutinyConfig.Default
