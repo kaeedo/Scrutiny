@@ -15,7 +15,13 @@ type GraphGen() =
                 let! size = Gen.choose(6, 15)
                 let lowerSize = int <| (float size) * 1.5
                 let upperSize = size * 2
-                let! nodes = Gen.listOfLength size (Gen.choose (1, 99))
+                let! nodes =
+                    let rnd = Random()
+                    gen {
+                        return [0..size]
+                               |> List.map (fun _ -> rnd.Next(1, 99))
+                               |> List.distinct
+                    }
 
                 let! edges =
                     gen {
@@ -57,10 +63,9 @@ let tests =
                 test <@ adjacencyGraph |> Seq.exists (fun ag -> ag = (4, [5; 1])) @>
             }
 
-            // TODO write better generator
-            ptestPropertyWithConfig config "Amount of nodes should be equal" <| fun (g: Graph<int>) ->
+            testPropertyWithConfig config "Nodes in both graphs should be equal" <| fun (g: Graph<int>) ->
                 let adjacencyGraph = Navigator.graph2AdjacencyGraph g
-                test <@ (fst g).Length = adjacencyGraph.Length @>
+                test <@ ((fst g) |> List.sort) = (adjacencyGraph |> List.map fst |> List.sort) @>
 
             testPropertyWithConfig config "Adjacency graph should contain same edge as graph" <| fun (g: Graph<int>) ->
                 let adjacencyGraph: AdjacencyGraph<int> = Navigator.graph2AdjacencyGraph g
