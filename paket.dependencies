@@ -15,5 +15,8 @@ group Tests
     source https://api.nuget.org/v3/index.json
 
     nuget Expecto
+    nuget FsCheck
+    nuget Expecto.FsCheck
+    nuget Unquote
     nuget YoloDev.Expecto.TestSdk
     nuget Microsoft.NET.Test.Sdk

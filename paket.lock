@@ -10,7 +10,13 @@ NUGET
     Expecto (9.0)
       FSharp.Core (>= 4.6) - restriction: || (>= net461) (>= netstandard2.0)
       Mono.Cecil (>= 0.11.2) - restriction: || (>= net461) (>= netstandard2.0)
-    FSharp.Core (4.7.1) - restriction: || (>= net461) (>= netstandard2.0)
+    Expecto.FsCheck (9.0)
+      Expecto (>= 9.0) - restriction: || (>= net461) (>= netstandard2.0)
+      FsCheck (>= 2.14.2) - restriction: || (>= net461) (>= netstandard2.0)
+    FsCheck (2.14.2)
+      FSharp.Core (>= 4.0.0.1) - restriction: && (< net452) (>= netstandard1.0) (< netstandard1.6)
+      FSharp.Core (>= 4.2.3) - restriction: || (>= net452) (>= netstandard1.6)
+    FSharp.Core (4.7.1) - restriction: >= netstandard1.0
     Microsoft.CodeCoverage (16.6.1) - restriction: || (>= net45) (>= netcoreapp2.1)
     Microsoft.CSharp (4.7) - restriction: || (&& (< netstandard1.3) (>= uap10.0)) (&& (< netstandard2.0) (>= uap10.0))
     Microsoft.NET.Test.Sdk (16.6.1)
@@ -244,6 +250,8 @@ NUGET
       System.Text.Encoding (>= 4.3) - restriction: && (< monoandroid) (< monotouch) (< net46) (>= netstandard1.3) (< xamarinios) (< xamarinmac) (< xamarintvos) (< xamarinwatchos)
       System.Threading (>= 4.3) - restriction: && (< monoandroid) (< monotouch) (< net46) (>= netstandard1.3) (< xamarinios) (< xamarinmac) (< xamarintvos) (< xamarinwatchos)
       System.Xml.ReaderWriter (>= 4.3) - restriction: && (< monoandroid) (< monotouch) (< net46) (>= netstandard1.3) (< xamarinios) (< xamarinmac) (< xamarintvos) (< xamarinwatchos)
+    Unquote (5.0)
+      FSharp.Core (>= 4.6.2) - restriction: || (>= net45) (>= netstandard2.0)
     YoloDev.Expecto.TestSdk (0.9.2)
       Expecto (>= 9.0 < 10.0) - restriction: >= netcoreapp2.1
       FSharp.Core (>= 4.6) - restriction: >= netcoreapp2.1

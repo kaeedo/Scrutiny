@@ -1,9 +1,12 @@
 ﻿namespace Scrutiny
 
 open System.Collections.Generic
-open System
+open System.Runtime.CompilerServices;
 
 module internal Navigator =
+    [<assembly: InternalsVisibleTo("Scrutiny.Tests")>]
+    do()
+
     let graph2AdjacencyGraph ((ns, es): 'a Graph): 'a AdjacencyGraph =
         let nodeMap =
             ns

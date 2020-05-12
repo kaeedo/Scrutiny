@@ -16,7 +16,6 @@ type Node<'a> = 'a * 'a list
 
 type AdjacencyGraph<'a> = 'a Node list
 
-[<CLIMutable>]
 type ScrutinyConfig =
     { Seed: int
       MapOnly: bool
