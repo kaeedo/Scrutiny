@@ -7,7 +7,7 @@ F# library for testing state machines by randomly choosing available states and 
 ## Description
 Describe your UI as a state machine, and then use Scrutiny to simulate a "User" that randomly clicks around on your site.
 Scrutiny will attempt to create a Directed Adjacency Graph of your states, and then randomly choose an unvisited state to navigate to.
-It will repeat this process untill all states have been visited.
+It will repeat this process until all states have been visited.
 During each state, Scrutiny will attempt to run any defined actions within that state.
 Once all states have been visited, if an exit action has been defined it will then navigate there and quit.
 Scrutiny will then also generate an HTML file which visualizes the State Machine as a graph.

@@ -55,10 +55,10 @@ module internal Navigator =
 
         final
 
-    let shortestPathFunction (graph: AdjacencyGraph<PageState<'a, 'b>>) (start: PageState<'a, 'b>) =
-        let previous = new Dictionary<PageState<'a, 'b>, PageState<'a, 'b>>()
+    let shortestPathFunction (graph: AdjacencyGraph<'a>) (start: 'a) =
+        let previous = new Dictionary<'a, 'a>()
 
-        let queue = new Queue<PageState<'a, 'b>>()
+        let queue = new Queue<'a>()
         queue.Enqueue(start)
 
         while (queue.Count > 0) do
@@ -73,7 +73,7 @@ module internal Navigator =
                     previous.[neighbor] <- vertex
                     queue.Enqueue(neighbor)
 
-        let rec shortestPath (path: PageState<'a, 'b> list) (current: PageState<'a, 'b>) =
+        let rec shortestPath (path: 'a list) (current: 'a) =
             if current.Equals(start) then start :: path
             else if previous.ContainsKey(current) then shortestPath (current :: path) (previous.[current])
             else start :: path
