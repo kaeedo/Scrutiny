@@ -5,6 +5,8 @@ open Expecto
 open Scrutiny
 open Swensen.Unquote
 open FsCheck
+open Scrutiny.Scrutiny
+open Scrutiny.Operators
 
 let shuffle (r: Random) xs = xs |> Seq.sortBy (fun _ -> r.Next())
 
@@ -84,8 +86,45 @@ let graphGenConfig =
 let adjacencyGraphGenConfig =
     { FsCheckConfig.defaultConfig with
         arbitrary = [typeof<AdjacencyGraphGen>] }
+
+module rec TestPages =
+    let page1 = fun _ ->
+        page {
+            name "Page1"
+            transition (ignore ==> page2)
+        }
+
+    let page2 = fun _ ->
+        page {
+            name "Page2"
+            transition (ignore ==> page1)
+            transition (ignore ==> page3)
+        }
+
+    let page3 = fun _ ->
+        page {
+            name "Page3"
+            transition (ignore ==> page4)
+            transition (ignore ==> page5)
+        }
+
+    let page4 = fun _ ->
+        page {
+            name "Page4"
+            transition (ignore ==> page3)
+            transition (ignore ==> page5)
+        }
+
+    let page5 = fun _ ->
+        page {
+            name "Page5"
+            transition (ignore ==> page2)
+            transition (ignore ==> page3)
+        }
+
 [<Tests>]
 let tests =
+
     testList "Navigator Tests" [
 
         testList "Graph to adjacency graph" [
@@ -146,6 +185,14 @@ let tests =
                         let graphEdges = snd graph
                         let adjacencyGraphEdge = getNodeWithEdge ag
                         graphEdges |> List.contains adjacencyGraphEdge || graphEdges |> List.contains (flippedEdge adjacencyGraphEdge) @>
+        ]
+
+        testList "Construct Adjacency Graph" [
+            Tests.test "Should construct graph" {
+                let ag = Navigator.constructAdjacencyGraph (TestPages.page1 ()) ()
+
+                test <@ ag |> List.length = 5 @>
+            }
         ]
 
         testList "Shortest Path Function" (

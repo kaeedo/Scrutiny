@@ -33,9 +33,9 @@ A `page` looks like this:
         page {
             name "Logged In Comment"
 
-            localState (/* Any object to set local state properties on */)
+            localState (LoggedInComment())
 
-            onEnter (fun (Some ls) ->
+            onEnter (fun ls ->
                 printfn "Checking on page comment"
                 // Do something with LocalState e.g. set the HomeLink property
                 ls.HomeLink <- "#home"
@@ -46,7 +46,7 @@ A `page` looks like this:
                 printfn "Exiting comment"
             )
 
-            transition ((fun (Some ls) -> click ls.HomeLink) ==> home)
+            transition ((fun ls -> click ls.HomeLink) ==> home)
             transition ((fun _ -> click "#signin") ==> signIn)
 
             action (fun _ -> () /*do something on the page*/)
@@ -60,7 +60,10 @@ The `exitAction` is optional, and multiple `page`s can have an `exitAction`. If 
 
 The `GlobalState` in the example is any type defined in your test that you can use to pass data between states, e.g. `Username` or `IsLoggedIn`
 
-The `LocalState` is specific to a state, and is constructed each time that state is visited. It's optional, but when set, all function will have access to the local state via the function parameter. At this point, it comes into the function as an `Option` but I hope to be able to fix that in the future
+The `LocalState` is specific to a state, and is constructed each time that state is visited. It's optional, but when set, all function will have access to the local state via the function parameter. In the above example, `localState` is defined as:
+
+    type LoggedInComment() =
+        member val Comment = String.Empty with get, set
 
 
 ### Configuration
@@ -78,9 +81,50 @@ Some things can be configured via `ScrutinyConfig`. The default config is:
 `ComprehensiveStates` will visit ALL states in the state machine. If this is false, then it will visit at least half of all states before randomly quitting.
 `ScrutinyResultFilePath` is the directory and specified file name that the generated HTML report will be saved in
 
-To actually run the test, call the `scrutinize` function with your entry state, config, and global state object
+To actually run the test, call the `scrutinize` function with your entry state, config, and global state object. e.g.
 
-`scrutinize config (new GlobalState()) home` or `scrutinizeWithDefaultConfig (new GlobalState()) home`
+
+    // Sample Global State. This can be anything, and all
+    type GlobalState() =
+        member val IsSignedIn = false with get, set
+        member val Username = "MyUsername" with get, set
+        member val Number = 42
+
+    [<EntryPoint>]
+    let main argv =
+        let options = FirefoxOptions()
+        do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
+
+        use ff = new FirefoxDriver(options)
+        let currentDirectory = DirectoryInfo(Directory.GetCurrentDirectory())
+
+        let config =
+            { ScrutinyConfig.Default with
+                  Seed = 553931187
+                  MapOnly = false
+                  ComprehensiveActions = true
+                  ComprehensiveStates = true
+                  ScrutinyResultFilePath = currentDirectory.Parent.Parent.Parent.FullName + "/myResult.html" }
+
+        // Start CanopyUI tests
+        "Scrutiny" &&& fun _ ->
+            printfn "opening url"
+            url "https://localhost:5001/home"
+
+            let gs = GlobalState()
+
+            // The call to start Scrutiny, and construct a graph and "click" through all states
+            scrutinize config gs home
+            // or
+            // scrutinizeWithDefaultConfig gs home
+
+        switchTo ff
+        pin canopy.types.direction.Right
+
+        run()
+        quit ff
+
+        0
 
 #### Important note for F# users
 As the transitions ultimately depict a cyclic graph, it is necessary to declare module or namespace as recursive so that pages defined later can be referenced by pages earlier. Note the usage of the `rec` keyword.
@@ -112,7 +156,7 @@ To run the UsageExample, you must start the web project.
 - [x] Documentation
 
 ## TODO for Beta release
-- [ ] Documentation
+- [x] Documentation
 - [ ] Detailed result report. Color coded states and transitions showcasing which parts succeeded and failed
 - [ ] Documentation
 - [ ] Write unit tests
