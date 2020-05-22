@@ -16,12 +16,12 @@ Scrutiny was designed to run UI tests, but using e.g. CanopyUI or Selenium is on
 
 ---
 
-Check the [UsageExample](UsageExample/UsageExample) for a sample test implemented with [CanopyUI](https://github.com/lefthandedgoat/canopy).
-A tiny sample site exists in the [Web directory](UsageExample/Web). This is the website that the [UsageExample](UsageExample/UsageExample) is testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a comment if they are signed in.
-The [UsageExample](UsageExample/UsageExample) showcases a certain approach a developer can take as to how to model their web site as a state machine. In this case, the home and comment page are each listed twice, once as logged out, and once as logged in.
+Check the [UsageExample](tests/UsageExample) for a sample test implemented with [CanopyUI](https://github.com/lefthandedgoat/canopy).
+A tiny sample site exists in the [Web directory](tests/Web). This is the website that the [UsageExample](tests/UsageExample) is testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a comment if they are signed in.
+The [UsageExample](tests/UsageExample) showcases a certain approach a developer can take as to how to model their web site as a state machine. In this case, the home and comment page are each listed twice, once as logged out, and once as logged in.
 This is only one way to handle this case, and the developer could choose to model it in any other way.
 
-Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s. The [Sample Web site](UsageExample/Web) looks like this:
+Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s. The [Sample Web site](tests/Web) looks like this:
 
 ![SUT sample report](images/SampleWebsiteReport.png)
 
@@ -148,7 +148,7 @@ Run:
 * `dotnet tool restore`
 * `dotnet paket install`
 
-To run the UsageExample, you must start the web project.
+To run the [UsageExample](tests/UsageExample), you must start the [web project](tests/Web).
 
 ## TODO for Alpha release
 - [x] Finish initial HTML report
@@ -159,11 +159,11 @@ To run the UsageExample, you must start the web project.
 - [x] Documentation
 - [ ] Detailed result report. Color coded states and transitions showcasing which parts succeeded and failed
 - [ ] Documentation
+- [ ] Setup proper build scripts
 - [ ] Write unit tests
 
 ## TODO General
 - [ ] Documentation
-- [ ] Setup proper build scripts
 - [ ] Use Fable to create a javascript release and npm package for usage from Node.js
 - [ ] Documentation
 - [ ] Create nice interface for usage from C#
