@@ -21,7 +21,28 @@ type internal IReporter<'a, 'b> =
     abstract OnError: string -> unit
     abstract Finish: unit -> State<'a, 'b>
 
-type internal Reporterr<'a, 'b>() =
+[<RequireQualifiedAccess>]
+type internal Reporterr<'a, 'b>(config: ScrutinyConfig) =
+    let assembly = typeof<Reporterr<'a, 'b>>.Assembly
+
+    let js =
+        use jsStream = assembly.GetManifestResourceStream("Scrutiny.wwwroot.app.js")
+        use jsReader = new StreamReader(jsStream)
+        jsReader.ReadToEnd()
+
+    let html =
+        use htmlStream = assembly.GetManifestResourceStream("Scrutiny.wwwroot.graph.template.html")
+        use htmlReader = new StreamReader(htmlStream)
+        htmlReader.ReadToEnd()
+
+    let file =
+        let fileInfo = FileInfo(config.ScrutinyResultFilePath)
+
+        let fileName =
+            if fileInfo.Name = String.Empty then "ScrutinyResult.html" else fileInfo.Name
+
+        fileInfo.DirectoryName, fileName
+
     let mailbox =
         MailboxProcessor.Start (fun inbox ->
             let rec loop (state: State<'a, 'b>) =
