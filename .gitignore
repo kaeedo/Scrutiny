@@ -23,3 +23,5 @@ devCert.crt
 
 .fake
 .ionide
+src/HtmlReport/dist/
+src/HtmlReport/.fusebox/

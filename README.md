@@ -167,3 +167,7 @@ To run the [UsageExample](tests/UsageExample), you must start the [web project](
 - [ ] Use Fable to create a javascript release and npm package for usage from Node.js
 - [ ] Documentation
 - [ ] Create nice interface for usage from C#
+
+
+
+# HTML REPORT DEVELOPMENT WRITE ME

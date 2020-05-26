@@ -63,7 +63,7 @@ module Scrutiny =
         |> Seq.map (fun n -> allStates |> List.find (fun ps -> (fst ps) = n))
         |> List.ofSeq
 
-    let private performStateActions config globalState (current, next) =
+    let private performStateActions (reporter: IReporter<_, _>) config globalState (current, next) =
         try
             current.OnEnter current.LocalState
             let transition =
@@ -73,13 +73,20 @@ module Scrutiny =
                     state.Name = next.Name)
             runActions config current
             current.OnExit current.LocalState
+
+            reporter.PushTransition next
+
             transition.TransitionFn current.LocalState
         with exn ->
+
             let message =
                 sprintf "System under test failed scrutiny.
     To re-run this exact test, specify the seed in the config with the value: %i.
     The error occurred in state: %s
     The error that occurred is of type: %A%s" config.Seed current.Name exn Environment.NewLine
+
+            reporter.OnError message
+
             raise <| ScrutinyException(message, exn)
 
     let private findExit (config: ScrutinyConfig) (allStates: AdjacencyGraph<PageState<'a, 'b>>) =
@@ -93,11 +100,12 @@ module Scrutiny =
 
         exitNode
 
-    let scrutinize<'a, 'b> (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a, 'b>) =
+    let private baseScrutinize<'a, 'b> (reporter: IReporter<'a, 'b>) (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a, 'b>) =
         printfn "Scrutinizing system under test with seed: %i" config.Seed
         let startState = startFn globalState
 
         let allStates = Navigator.constructAdjacencyGraph startState globalState
+        reporter.Start allStates
 
         if not config.MapOnly then
             let random = Random(config.Seed)
@@ -142,7 +150,7 @@ module Scrutiny =
                     currentPath
                     |> Seq.pairwise
                     |> Seq.find (fun (current, _) -> current = head)
-                    |> performStateActions config globalState
+                    |> performStateActions reporter config globalState
 
                     clickAround false (head :: alreadyVisited) tail
 
@@ -158,8 +166,10 @@ module Scrutiny =
                 let exitNode = navigateDirectly [] path
                 exitNode.ExitAction |> Option.iter (fun ea -> ea exitNode.LocalState)
 
-        Reporter.generateMap config allStates
+        reporter.Finish () |> ignore
         printfn "Scrutiny Result written to: %s" config.ScrutinyResultFilePath
+
+    let scrutinize<'a, 'b> config = baseScrutinize<'a, 'b> (Reporter<'a, 'b>(config.ScrutinyResultFilePath)) config
 
     let page = PageBuilder()
 

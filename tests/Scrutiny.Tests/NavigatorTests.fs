@@ -1,4 +1,4 @@
-module Tests
+module NavigatorTests
 
 open System
 open Expecto
@@ -123,7 +123,7 @@ module rec TestPages =
         }
 
 [<Tests>]
-let tests =
+let navigatorTests =
 
     testList "Navigator Tests" [
 

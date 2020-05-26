@@ -22,8 +22,8 @@ type internal IReporter<'a, 'b> =
     abstract Finish: unit -> State<'a, 'b>
 
 [<RequireQualifiedAccess>]
-type internal Reporterr<'a, 'b>(config: ScrutinyConfig) =
-    let assembly = typeof<Reporterr<'a, 'b>>.Assembly
+type internal Reporter<'a, 'b>(filePath: string) =
+    let assembly = typeof<Reporter<'a, 'b>>.Assembly
 
     let js =
         use jsStream = assembly.GetManifestResourceStream("Scrutiny.wwwroot.app.js")
@@ -36,12 +36,31 @@ type internal Reporterr<'a, 'b>(config: ScrutinyConfig) =
         htmlReader.ReadToEnd()
 
     let file =
-        let fileInfo = FileInfo(config.ScrutinyResultFilePath)
+        let fileInfo = FileInfo(filePath)
 
         let fileName =
             if fileInfo.Name = String.Empty then "ScrutinyResult.html" else fileInfo.Name
 
         fileInfo.DirectoryName, fileName
+
+    let generateMap (graph: AdjacencyGraph<PageState<_, _>>) =
+        let jsCode (node, sibling) = sprintf "[\"%s\", \"%s\"]" node sibling
+
+        let jsFunctionCalls =
+            seq {
+                for (node, siblings) in graph do
+                    for sib in siblings do
+                        yield node.Name, sib.Name
+            }
+            |> Seq.map jsCode
+            |> String.concat (",")
+
+        let output = html.Replace("{{REPLACE}}", sprintf "[%s]" jsFunctionCalls)
+
+        let (filePath, fileName) = file
+
+        File.WriteAllText(sprintf "%s/app.js" filePath, js)
+        File.WriteAllText(sprintf "%s/%s" filePath fileName, output)
 
     let mailbox =
         MailboxProcessor.Start (fun inbox ->
@@ -66,48 +85,3 @@ type internal Reporterr<'a, 'b>(config: ScrutinyConfig) =
           member this.PushTransition ps = mailbox.Post (PushTransition ps)
           member this.OnError s = mailbox.Post (OnError s)
           member this.Finish () = mailbox.PostAndReply Finish
-
-[<RequireQualifiedAccess>]
-module internal Reporter =
-    type internal IMarker =
-        interface
-        end
-
-    let private assembly = typeof<IMarker>.Assembly
-
-    let private js =
-        use jsStream = assembly.GetManifestResourceStream("Scrutiny.wwwroot.app.js")
-        use jsReader = new StreamReader(jsStream)
-        jsReader.ReadToEnd()
-
-    let private html =
-        use htmlStream = assembly.GetManifestResourceStream("Scrutiny.wwwroot.graph.template.html")
-        use htmlReader = new StreamReader(htmlStream)
-        htmlReader.ReadToEnd()
-
-    let private file scrutinyResultFilePath =
-        let fileInfo = FileInfo(scrutinyResultFilePath)
-
-        let fileName =
-            if fileInfo.Name = String.Empty then "ScrutinyResult.html" else fileInfo.Name
-
-        fileInfo.DirectoryName, fileName
-
-    let generateMap (config: ScrutinyConfig) (graph: AdjacencyGraph<PageState<_, _>>) =
-        let jsCode (node, sibling) = sprintf "[\"%s\", \"%s\"]" node sibling
-
-        let jsFunctionCalls =
-            seq {
-                for (node, siblings) in graph do
-                    for sib in siblings do
-                        yield node.Name, sib.Name
-            }
-            |> Seq.map jsCode
-            |> String.concat (",")
-
-        let output = html.Replace("{{REPLACE}}", sprintf "[%s]" jsFunctionCalls)
-
-        let (filePath, fileName) = file config.ScrutinyResultFilePath
-
-        File.WriteAllText(sprintf "%s/app.js" filePath, js)
-        File.WriteAllText(sprintf "%s/%s" filePath fileName, output)

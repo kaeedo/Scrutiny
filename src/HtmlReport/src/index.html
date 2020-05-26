@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <style>
+      /* This sets the color for "TK" nodes to a light blue green. */
+      g.type-TK > rect {
+        fill: #00ffd0;
+      }
+
+      text {
+        font-weight: 300;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: 14px;
+      }
+
+      .node rect {
+        stroke: #999;
+        fill: #fff;
+        stroke-width: 1.5px;
+      }
+
+      .edgePath path {
+        stroke: #333;
+        stroke-width: 1.5px;
+      }
+
+      #steps {
+          display: flex;
+          flex-flow: wrap;
+      }
+    </style>
+    $css
+  </head>
+
+  <body>
+    <div id="steps">
+        <span>Steps: </span>
+    </div>
+    <input id="reportRangeSlider" value="0" min="0" max="0" type="range">
+    <div>
+        <svg></svg>
+    </div>
+    $bundles
+  </body>
+  <script type="text/javascript" async defer>
+    var graph = [
+      ["Logged in Comment", "Logged in Home"],
+      ["Logged in Home", "Home"],
+      ["Logged in Home", "Logged in Comment"],
+      ["Comment", "Sign In"],
+      ["Comment", "Home"],
+      ["Sign In", "Logged in Home"],
+      ["Sign In", "Home"],
+      ["Home", "Sign In"],
+      ["Home", "Comment"],
+    ];
+
+    var transitions = [
+      { from: "Home", to: "Sign In" },
+      { from: "Sign In", to: "Logged in Home" },
+      { from: "Logged in Home", to: "Logged in Comment" },
+      { from: "Logged in Comment", to: "Logged in Home" },
+      { from: "Logged in Home", to: "Home", error: "This is error" },
+    ];
+
+    window.scrutiny.init(graph, transitions);
+  </script>
+</html>

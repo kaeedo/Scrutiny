@@ -10,6 +10,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ReporterTests.fs" />
     <Compile Include="NavigatorTests.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
