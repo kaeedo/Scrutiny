@@ -3,22 +3,30 @@
 open System
 open System.IO
 
+type internal ErrorLocation<'a, 'b> =
+| State of string * exn
+| Transition of string * string * exn
+
+type internal PerformedTransition<'a, 'b> =
+    { From: PageState<'a, 'b>
+      To: PageState<'a, 'b> }
+
 type internal State<'a, 'b> =
     { Graph: AdjacencyGraph<PageState<'a, 'b>>
-      Transitions: PageState<'a, 'b> list
-      Error: string }
+      PerformedTransitions: PerformedTransition<'a, 'b> list
+      Error: ErrorLocation<'a, 'b> option }
 
 type private ReporterMessage<'a, 'b> =
 | Start of AdjacencyGraph<PageState<'a, 'b>>
-| PushTransition of PageState<'a, 'b>
-| OnError of string
+| PushTransition of PageState<'a, 'b> * PageState<'a, 'b>
+| OnError of ErrorLocation<'a, 'b>
 | Finish of AsyncReplyChannel<State<'a, 'b>>
 
 [<RequireQualifiedAccess>]
 type internal IReporter<'a, 'b> =
     abstract Start: AdjacencyGraph<PageState<'a, 'b>> -> unit
-    abstract PushTransition: PageState<'a, 'b> -> unit
-    abstract OnError: string -> unit
+    abstract PushTransition: (PageState<'a, 'b> * PageState<'a, 'b>) -> unit
+    abstract OnError: ErrorLocation<'a, 'b> -> unit
     abstract Finish: unit -> State<'a, 'b>
 
 [<RequireQualifiedAccess>]
@@ -68,20 +76,23 @@ type internal Reporter<'a, 'b>(filePath: string) =
                 async {
                     match! inbox.Receive() with
                     | Start ag ->
-                        return! loop { State.Graph = ag; Transitions = []; Error = String.Empty }
-                    | PushTransition ps ->
-                        return! loop { state with Transitions = ps :: state.Transitions }
-                    | OnError s ->
-                        return! loop { state with Error = s }
+                        return! loop { State.Graph = ag; PerformedTransitions = []; Error = None }
+                    | PushTransition (f, t) ->
+                        let transition =
+                            { PerformedTransition.From = f
+                              To = t }
+                        return! loop { state with PerformedTransitions = transition :: state.PerformedTransitions }
+                    | OnError el ->
+                        return! loop { state with Error = Some el }
                     | Finish reply ->
-                        reply.Reply state
+                        reply.Reply { state with PerformedTransitions = state.PerformedTransitions |> List.rev }
                         return ()
                 }
-            loop { State.Graph = []; Transitions = []; Error = String.Empty}
+            loop { State.Graph = []; PerformedTransitions = []; Error = None }
         )
 
     interface IReporter<'a, 'b> with
           member this.Start ag = mailbox.Post (Start ag)
-          member this.PushTransition ps = mailbox.Post (PushTransition ps)
-          member this.OnError s = mailbox.Post (OnError s)
+          member this.PushTransition t = mailbox.Post (PushTransition t)
+          member this.OnError errorLocation = mailbox.Post (OnError errorLocation)
           member this.Finish () = mailbox.PostAndReply Finish

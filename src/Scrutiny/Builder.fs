@@ -64,17 +64,31 @@ module Scrutiny =
         |> List.ofSeq
 
     let private performStateActions (reporter: IReporter<_, _>) config globalState (current, next) =
+        // TODO Wrap functions in try function instead of try catching entire block
         try
             current.OnEnter current.LocalState
+            runActions config current
+            current.OnExit current.LocalState
+        with exn ->
+
+            let message =
+                sprintf "System under test failed scrutiny.
+    To re-run this exact test, specify the seed in the config with the value: %i.
+    The error occurred in state: %s
+    The error that occurred is of type: %A%s" config.Seed current.Name exn Environment.NewLine
+
+            reporter.OnError (State (current.Name, exn))
+
+            raise <| ScrutinyException(message, exn)
+
+        try
             let transition =
                 current.Transitions
                 |> Seq.find (fun t ->
                     let state = t.ToState globalState
                     state.Name = next.Name)
-            runActions config current
-            current.OnExit current.LocalState
 
-            reporter.PushTransition next
+            reporter.PushTransition (current, next)
 
             transition.TransitionFn current.LocalState
         with exn ->
@@ -85,7 +99,7 @@ module Scrutiny =
     The error occurred in state: %s
     The error that occurred is of type: %A%s" config.Seed current.Name exn Environment.NewLine
 
-            reporter.OnError message
+            reporter.OnError (Transition (current.Name, next.Name, exn))
 
             raise <| ScrutinyException(message, exn)
 

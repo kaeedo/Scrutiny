@@ -1,29 +1,44 @@
 import * as d3 from "d3";
 import * as dagreD3 from "dagre-d3";
 
+interface PageState {
+  Name: string;
+}
+
 interface Transition {
-  from: string;
-  to: string;
-  error?: string;
+  From: PageState;
+  To: PageState;
+}
+
+interface Error {
+  Case: string;
+  Fields: [string, string];
+}
+
+interface Report {
+  Graph: [PageState, PageState[]][];
+  PerformedTransitions: Transition[];
+  Error: Error;
 }
 
 declare global {
   interface Window {
     scrutiny: {
-      init(graph: string[][], transitions: Transition[]): void;
+      init(report: Report): void;
       graph: any;
       transitions: Transition[];
+      error: Error;
     };
   }
 }
 
 const onlyUnique = (value, index, self) => self.indexOf(value) === index;
 
-const resetColors = (transitions) => {
+const resetColors = (transitions: Transition[]) => {
   transitions.forEach((t) => {
-    const fromNode = window.scrutiny.graph.node(t.from);
-    const edge = window.scrutiny.graph.edge(t.from, t.to);
-    const toNode = window.scrutiny.graph.node(t.to);
+    const fromNode = window.scrutiny.graph.node(t.From.Name);
+    const edge = window.scrutiny.graph.edge(t.From.Name, t.To.Name);
+    const toNode = window.scrutiny.graph.node(t.To.Name);
 
     fromNode.elem.firstChild.style.fill = "none";
     edge.elem.firstChild.style.stroke = "black";
@@ -32,19 +47,33 @@ const resetColors = (transitions) => {
   });
 };
 
-const setColors = (transitions) => {
+const setColors = (transitions: Transition[]) => {
   transitions.forEach((t) => {
-    const fromNode = window.scrutiny.graph.node(t.from);
-    const edge = window.scrutiny.graph.edge(t.from, t.to);
-    const toNode = window.scrutiny.graph.node(t.to);
+    const error = window.scrutiny.error;
 
-    if (t.error) {
-      edge.elem.firstChild.style.stroke = "red";
-      edge.elem.lastChild.firstChild.style.fill = "red";
-      toNode.elem.firstChild.style.fill = "red";
-    } else {
-      fromNode.elem.firstChild.style.fill = "lightblue";
-      toNode.elem.firstChild.style.fill = "lightblue";
+    // Rethink error
+    switch (error.Case) {
+      case "State":
+        const errorNode = window.scrutiny.graph.node(error.Fields[0]);
+        errorNode.elem.firstChild.style.fill = "red";
+        break;
+      case "Transition":
+        const fromNode = window.scrutiny.graph.node(error.Fields[0]);
+        const edge = window.scrutiny.graph.edge(
+          error.Fields[0],
+          error.Fields[1]
+        );
+        const toNode = window.scrutiny.graph.node(error.Fields[1]);
+        edge.elem.firstChild.style.stroke = "red";
+        edge.elem.lastChild.firstChild.style.fill = "red";
+        fromNode.elem.firstChild.style.fill = "red";
+        toNode.elem.firstChild.style.fill = "red";
+        break;
+      default:
+        const from = window.scrutiny.graph.node(t.From.Name);
+        const to = window.scrutiny.graph.node(t.To.Name);
+        from.elem.firstChild.style.fill = "lightblue";
+        to.elem.firstChild.style.fill = "green";
     }
   });
 };
@@ -57,7 +86,7 @@ const onChangeSlider = (e) => {
 
   subTransitions.forEach((v) => {
     const span = document.createElement("span");
-    span.innerHTML = v.from + " --> " + v.to + ",&nbsp;";
+    span.innerHTML = `${v.From.Name} --> ${v.To.Name},&nbsp;`;
     stepsDiv.appendChild(span);
   });
 
@@ -65,10 +94,25 @@ const onChangeSlider = (e) => {
   setColors(subTransitions);
 };
 
+const getGraph = (graph: [PageState, PageState[]][]): string[][] => {
+  const final = [];
+
+  graph.forEach((g) => {
+    const ps = g[0].Name;
+    g[1].forEach((d) => final.push([ps, d.Name]));
+  });
+
+  return final;
+};
+
 window.scrutiny = {
   graph: undefined,
+  error: { Case: "", Fields: ["", ""] },
   transitions: [],
-  init: (graph, transitions) => {
+  init: (report: Report) => {
+    const graph = getGraph(report.Graph);
+
+    const transitions = report.PerformedTransitions;
     // Create the input graph
     const g = new dagreD3.graphlib.Graph().setGraph({ rankdir: "LR" });
 

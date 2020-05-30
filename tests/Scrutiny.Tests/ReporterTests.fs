@@ -7,102 +7,146 @@ open Swensen.Unquote
 open FsCheck
 open Scrutiny.Scrutiny
 open Scrutiny.Operators
+open System.Text.Json
+
+open Expecto.Logging
+open Expecto.Logging.Message
+
+open System.Text.Json
+open System.Text.Json.Serialization
 
 module rec TestPages =
-    let page1 = fun _ ->
+    let home = fun _ ->
         page {
-            name "Page1"
-            transition (ignore ==> page2)
+            name "Home"
+            transition (ignore ==> comment)
+            transition (ignore ==> signIn)
         }
 
-    let page2 = fun _ ->
+    let comment = fun _ ->
         page {
-            name "Page2"
-            transition (ignore ==> page1)
-            transition (ignore ==> page3)
+            name "Comment"
+            transition (ignore ==> home)
+            transition (ignore ==> signIn)
         }
 
-    let page3 = fun _ ->
+    let signIn = fun _ ->
         page {
-            name "Page3"
-            transition (ignore ==> page4)
-            transition (ignore ==> page5)
+            name "Sign In"
+            transition (ignore ==> home)
+            transition (ignore ==> loggedInHome)
         }
 
-    let page4 = fun _ ->
+    let loggedInComment = fun _ ->
         page {
-            name "Page4"
-            transition (ignore ==> page3)
-            transition (ignore ==> page5)
+            name "Logged in Comment"
+            transition (ignore ==> loggedInHome)
         }
 
-    let page5 = fun _ ->
+    let loggedInHome = fun _ ->
         page {
-            name "Page5"
-            transition (ignore ==> page2)
-            transition (ignore ==> page3)
+            name "Logged in Home"
+            transition (ignore ==> home)
+            transition (ignore ==> loggedInComment)
         }
 
 [<Tests>]
 let reporterTests =
+    let logger = Log.create "MyTests"
     testList "Reporter Tests" [
         Tests.test "Should set graph" {
             let reporter: IReporter<unit, obj> = Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
-            let ag = Navigator.constructAdjacencyGraph (TestPages.page1 ()) ()
+            let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
 
             reporter.Start ag
 
             let final = reporter.Finish ()
 
             test <@ final.Graph = ag @>
-            test <@ final.Error = String.Empty @>
-            test <@ final.Transitions.Length = 0 @>
+            test <@ final.Error = None @>
+            test <@ final.PerformedTransitions.Length = 0 @>
         }
 
         Tests.test "Should add transitions" {
             let reporter: IReporter<unit, obj> = Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
-            let ag = Navigator.constructAdjacencyGraph (TestPages.page1 ()) ()
+            let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
 
             reporter.Start ag
-            reporter.PushTransition <| TestPages.page4()
-            reporter.PushTransition <| TestPages.page5()
-            reporter.PushTransition <| TestPages.page2()
+            reporter.PushTransition <| (TestPages.loggedInComment(), TestPages.signIn())
+            reporter.PushTransition <| (TestPages.loggedInHome(), TestPages.comment())
+            reporter.PushTransition <| (TestPages.comment(), TestPages.home())
 
             let final = reporter.Finish ()
 
-            test <@ final.Error = String.Empty @>
-            test <@ final.Transitions.Length = 3 @>
+            test <@ final.Error = None @>
+            test <@ final.PerformedTransitions.Length = 3 @>
         }
 
         Tests.test "Should set error" {
             let reporter: IReporter<unit, obj> = Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
-            let ag = Navigator.constructAdjacencyGraph (TestPages.page1 ()) ()
+            let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
 
             reporter.Start ag
-            reporter.PushTransition <| TestPages.page4()
-            reporter.PushTransition <| TestPages.page5()
-            reporter.PushTransition <| TestPages.page2()
-            reporter.OnError "Error"
+            reporter.PushTransition <| (TestPages.loggedInComment(), TestPages.signIn())
+            reporter.PushTransition <| (TestPages.loggedInHome(), TestPages.comment())
+            reporter.PushTransition <| (TestPages.comment(), TestPages.home())
+            reporter.OnError (State (TestPages.loggedInComment().Name, Exception("Error")))
 
             let final = reporter.Finish ()
 
-            test <@ final.Error = "Error" @>
-            test <@ final.Transitions.Length = 3 @>
+            test <@ final.Error.IsSome @>
+            test <@ final.PerformedTransitions.Length = 3 @>
         }
 
-        Tests.ftest "Should write results to file" {
+        Tests.test "Should write results to file with state error" {
             let reporter: IReporter<unit, obj> = Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
-            let ag = Navigator.constructAdjacencyGraph (TestPages.page1 ()) ()
+            let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
 
             reporter.Start ag
-            reporter.PushTransition <| TestPages.page4()
-            reporter.PushTransition <| TestPages.page5()
-            reporter.PushTransition <| TestPages.page2()
-            reporter.OnError "Error"
+            reporter.PushTransition <| (TestPages.loggedInComment(), TestPages.signIn())
+            reporter.PushTransition <| (TestPages.loggedInHome(), TestPages.comment())
+            reporter.PushTransition <| (TestPages.comment(), TestPages.home())
+            reporter.OnError (State (TestPages.comment().Name, Exception("Error")))
 
             let final = reporter.Finish ()
 
-            test <@ final.Error = "Error" @>
-            test <@ final.Transitions.Length = 3 @>
+            let options = JsonSerializerOptions()
+            options.Converters.Add(JsonFSharpConverter())
+
+            let a = JsonSerializer.Serialize(final, options)
+
+            logger.info(eventX a)
+
+            test <@ final.Error.IsSome @>
+            test <@ final.PerformedTransitions.Length = 3 @>
         }
+
+        Tests.ftest "Should write results to file with transition error" {
+            let reporter: IReporter<unit, obj> = Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
+            let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
+
+            reporter.Start ag
+            reporter.PushTransition <| (TestPages.home(), TestPages.signIn())
+            reporter.PushTransition <| (TestPages.signIn(), TestPages.loggedInHome())
+            reporter.PushTransition <| (TestPages.loggedInHome(), TestPages.loggedInComment())
+            reporter.PushTransition <| (TestPages.loggedInComment(), TestPages.loggedInHome())
+            reporter.PushTransition <| (TestPages.loggedInHome(), TestPages.home())
+
+            reporter.OnError (Transition (TestPages.loggedInHome().Name, TestPages.home().Name, Exception("Error")))
+
+            let final = reporter.Finish ()
+
+            let options = JsonSerializerOptions()
+            options.Converters.Add(JsonFSharpConverter())
+
+            let a = JsonSerializer.Serialize(final, options)
+
+            //logger.info(eventX a)
+            System.IO.File.WriteAllText("C:\\users\\kait\\desktop\\herp.json", a)
+
+            test <@ final.Error.IsSome @>
+            test <@ final.PerformedTransitions.Length = 5 @>
+        }
+
+        // Write test for specific error transition
     ]

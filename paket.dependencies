@@ -18,5 +18,6 @@ group Tests
     nuget FsCheck
     nuget Expecto.FsCheck
     nuget Unquote
+    nuget FSharp.SystemTextJson
     nuget YoloDev.Expecto.TestSdk
     nuget Microsoft.NET.Test.Sdk
