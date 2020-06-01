@@ -45,7 +45,6 @@ type GraphGen() =
 type AdjacencyGraphGen() =
     static member Graph(): Arbitrary<AdjacencyGraph<int>> =
         let rnd = Random()
-
         let genNodes: Gen<AdjacencyGraph<int>> =
             gen {
                 let! size = Gen.choose(6, 15)
@@ -63,7 +62,7 @@ type AdjacencyGraphGen() =
                                 let edges =
                                     nodes
                                     |> shuffle (rnd)
-                                    |> Seq.take (rnd.Next(size - 1))
+                                    |> Seq.take (rnd.Next(nodes.Length - 1))
                                     |> Seq.except [n]
                                     |> Seq.toList
 
@@ -124,7 +123,6 @@ module rec TestPages =
 
 [<Tests>]
 let navigatorTests =
-
     testList "Navigator Tests" [
 
         testList "Graph to adjacency graph" [
@@ -167,6 +165,7 @@ let navigatorTests =
 
         testList "Adjacency graph tests" [
             testPropertyWithConfig adjacencyGraphGenConfig "Nodes in both graphs should be equal" <| fun (ag: AdjacencyGraph<int>) ->
+
                 let graph = Navigator.adjacencyGraph2Graph ag
                 test <@ ag.Length = (fst graph).Length @>
 

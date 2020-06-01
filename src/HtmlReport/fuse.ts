@@ -1,46 +1,38 @@
-const { src, task, exec, context } = require("fuse-box/sparky");
-const { FuseBox, QuantumPlugin, WebIndexPlugin } = require("fuse-box");
+import { fusebox, sparky } from "fuse-box";
 
-context({
+class Context {
+  isProduction: boolean;
+  runServer: boolean;
   getConfig() {
-    return FuseBox.init({
-      homeDir: "src",
-      target: "browser@es6",
-      sourceMaps: true,
-      output: "dist/$name.js",
-      plugins: [
-        WebIndexPlugin({
-          template: "src/index.html"
-        }),
-        this.isProduction &&
-          QuantumPlugin({
-            uglify: true,
-            bakeApiIntoBundle: "app"
-          })
-      ]
+    return fusebox({
+      target: "browser",
+      entry: "src/index.ts",
+      webIndex: {
+        template: "src/index.html",
+      },
+      cache: {
+        root: ".cache",
+        enabled: true,
+      },
+      env: { NODE_ENV: this.isProduction ? "production" : "development" },
+      //      watch: true,
+      hmr: true,
+      devServer: this.runServer,
+      logging: { level: "succinct" },
     });
   }
+}
+const { task, exec } = sparky<Context>(Context);
+
+task("default", async (ctx) => {
+  ctx.runServer = true;
+  const fuse = ctx.getConfig();
+  await fuse.runDev();
 });
 
-task("default", async context => {
-  const fuse = context.getConfig();
-  fuse
-    .bundle("app")
-    .hmr()
-    .watch()
-    .instructions("> index.ts");
-  fuse.dev();
-  await fuse.run();
-});
-
-task("dist", async context => {
-  await src("./dist")
-    .clean("dist/")
-    .exec();
-
-  context.isProduction = true;
-  const fuse = context.getConfig();
-  fuse.bundle("app").instructions("> index.ts");
-
-  await fuse.run();
+task("dist", async (ctx) => {
+  ctx.runServer = false;
+  ctx.isProduction = true;
+  const fuse = ctx.getConfig();
+  await fuse.runProd({ uglify: true });
 });

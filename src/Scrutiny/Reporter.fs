@@ -9,12 +9,12 @@ type internal ErrorLocation<'a, 'b> =
 
 type internal PerformedTransition<'a, 'b> =
     { From: PageState<'a, 'b>
-      To: PageState<'a, 'b> }
+      To: PageState<'a, 'b>
+      Error: ErrorLocation<'a, 'b> option }
 
 type internal State<'a, 'b> =
     { Graph: AdjacencyGraph<PageState<'a, 'b>>
-      PerformedTransitions: PerformedTransition<'a, 'b> list
-      Error: ErrorLocation<'a, 'b> option }
+      PerformedTransitions: PerformedTransition<'a, 'b> list }
 
 type private ReporterMessage<'a, 'b> =
 | Start of AdjacencyGraph<PageState<'a, 'b>>
@@ -76,19 +76,23 @@ type internal Reporter<'a, 'b>(filePath: string) =
                 async {
                     match! inbox.Receive() with
                     | Start ag ->
-                        return! loop { State.Graph = ag; PerformedTransitions = []; Error = None }
+                        return! loop { State.Graph = ag; PerformedTransitions = [] }
                     | PushTransition (f, t) ->
                         let transition =
                             { PerformedTransition.From = f
-                              To = t }
+                              To = t
+                              Error = None }
                         return! loop { state with PerformedTransitions = transition :: state.PerformedTransitions }
                     | OnError el ->
-                        return! loop { state with Error = Some el }
+                        let performedTransitions = state.PerformedTransitions |> List.tail
+                        let errorNode = state.PerformedTransitions |> List.head
+                        let performedTransitions = { errorNode with Error = Some el } :: performedTransitions
+                        return! loop { state with PerformedTransitions = performedTransitions }
                     | Finish reply ->
                         reply.Reply { state with PerformedTransitions = state.PerformedTransitions |> List.rev }
                         return ()
                 }
-            loop { State.Graph = []; PerformedTransitions = []; Error = None }
+            loop { State.Graph = []; PerformedTransitions = [] }
         )
 
     interface IReporter<'a, 'b> with

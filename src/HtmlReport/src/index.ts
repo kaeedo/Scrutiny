@@ -8,6 +8,7 @@ interface PageState {
 interface Transition {
   From: PageState;
   To: PageState;
+  Error?: Error;
 }
 
 interface Error {
@@ -18,7 +19,6 @@ interface Error {
 interface Report {
   Graph: [PageState, PageState[]][];
   PerformedTransitions: Transition[];
-  Error: Error;
 }
 
 declare global {
@@ -27,7 +27,6 @@ declare global {
       init(report: Report): void;
       graph: any;
       transitions: Transition[];
-      error: Error;
     };
   }
 }
@@ -42,6 +41,7 @@ const resetColors = (transitions: Transition[]) => {
 
     fromNode.elem.firstChild.style.fill = "none";
     edge.elem.firstChild.style.stroke = "black";
+    edge.elem.firstChild.style['stroke-width'] = '2px';
     edge.elem.lastChild.firstChild.style.fill = "black";
     toNode.elem.firstChild.style.fill = "none";
   });
@@ -49,25 +49,23 @@ const resetColors = (transitions: Transition[]) => {
 
 const setColors = (transitions: Transition[]) => {
   transitions.forEach((t) => {
-    const error = window.scrutiny.error;
-
-    // Rethink error
-    switch (error.Case) {
+    switch (t.Error?.Case) {
       case "State":
-        const errorNode = window.scrutiny.graph.node(error.Fields[0]);
+        const errorNode = window.scrutiny.graph.node(t.Error.Fields[0]);
         errorNode.elem.firstChild.style.fill = "red";
         break;
       case "Transition":
-        const fromNode = window.scrutiny.graph.node(error.Fields[0]);
+        const fromNode = window.scrutiny.graph.node(t.Error.Fields[0]);
         const edge = window.scrutiny.graph.edge(
-          error.Fields[0],
-          error.Fields[1]
+          t.Error.Fields[0],
+          t.Error.Fields[1]
         );
-        const toNode = window.scrutiny.graph.node(error.Fields[1]);
+        const toNode = window.scrutiny.graph.node(t.Error.Fields[1]);
         edge.elem.firstChild.style.stroke = "red";
+        edge.elem.firstChild.style['stroke-width'] = "4px";
         edge.elem.lastChild.firstChild.style.fill = "red";
-        fromNode.elem.firstChild.style.fill = "red";
-        toNode.elem.firstChild.style.fill = "red";
+        //fromNode.elem.firstChild.style.fill = "red";
+        //toNode.elem.firstChild.style.fill = "red";
         break;
       default:
         const from = window.scrutiny.graph.node(t.From.Name);
@@ -107,7 +105,6 @@ const getGraph = (graph: [PageState, PageState[]][]): string[][] => {
 
 window.scrutiny = {
   graph: undefined,
-  error: { Case: "", Fields: ["", ""] },
   transitions: [],
   init: (report: Report) => {
     const graph = getGraph(report.Graph);

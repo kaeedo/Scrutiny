@@ -25,3 +25,4 @@ devCert.crt
 .ionide
 src/HtmlReport/dist/
 src/HtmlReport/.fusebox/
+src/HtmlReport/.cache/

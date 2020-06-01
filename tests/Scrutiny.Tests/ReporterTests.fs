@@ -4,15 +4,10 @@ open System
 open Expecto
 open Scrutiny
 open Swensen.Unquote
-open FsCheck
 open Scrutiny.Scrutiny
 open Scrutiny.Operators
 open System.Text.Json
 
-open Expecto.Logging
-open Expecto.Logging.Message
-
-open System.Text.Json
 open System.Text.Json.Serialization
 
 module rec TestPages =
@@ -52,7 +47,6 @@ module rec TestPages =
 
 [<Tests>]
 let reporterTests =
-    let logger = Log.create "MyTests"
     testList "Reporter Tests" [
         Tests.test "Should set graph" {
             let reporter: IReporter<unit, obj> = Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
@@ -62,9 +56,11 @@ let reporterTests =
 
             let final = reporter.Finish ()
 
+            let pt = final.PerformedTransitions
+
             test <@ final.Graph = ag @>
-            test <@ final.Error = None @>
-            test <@ final.PerformedTransitions.Length = 0 @>
+            test <@ pt |> List.exists (fun f -> f.Error.IsSome) |> not @>
+            test <@ pt.Length = 0 @>
         }
 
         Tests.test "Should add transitions" {
@@ -78,8 +74,10 @@ let reporterTests =
 
             let final = reporter.Finish ()
 
-            test <@ final.Error = None @>
-            test <@ final.PerformedTransitions.Length = 3 @>
+            let pt = final.PerformedTransitions
+
+            test <@ pt |> List.exists (fun f -> f.Error.IsSome) |> not @>
+            test <@ pt.Length = 3 @>
         }
 
         Tests.test "Should set error" {
@@ -94,8 +92,10 @@ let reporterTests =
 
             let final = reporter.Finish ()
 
-            test <@ final.Error.IsSome @>
-            test <@ final.PerformedTransitions.Length = 3 @>
+            let pt = final.PerformedTransitions
+
+            test <@ (pt |> List.last).Error.IsSome @>
+            test <@ pt.Length = 3 @>
         }
 
         Tests.test "Should write results to file with state error" {
@@ -113,15 +113,14 @@ let reporterTests =
             let options = JsonSerializerOptions()
             options.Converters.Add(JsonFSharpConverter())
 
-            let a = JsonSerializer.Serialize(final, options)
+            let pt = final.PerformedTransitions
 
-            logger.info(eventX a)
-
-            test <@ final.Error.IsSome @>
-            test <@ final.PerformedTransitions.Length = 3 @>
+            test <@ pt.[0..pt.Length - 2] |> List.forall (fun f -> f.Error.IsNone)  @>
+            test <@ (pt |> List.last).Error.IsSome @>
+            test <@ pt.Length = 3 @>
         }
 
-        Tests.ftest "Should write results to file with transition error" {
+        Tests.test "Should write results to file with transition error" {
             let reporter: IReporter<unit, obj> = Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
             let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
 
@@ -141,11 +140,13 @@ let reporterTests =
 
             let a = JsonSerializer.Serialize(final, options)
 
-            //logger.info(eventX a)
             System.IO.File.WriteAllText("C:\\users\\kait\\desktop\\herp.json", a)
 
-            test <@ final.Error.IsSome @>
-            test <@ final.PerformedTransitions.Length = 5 @>
+            let pt = final.PerformedTransitions
+
+            test <@ pt.[0..pt.Length - 2] |> List.forall (fun f -> f.Error.IsNone)  @>
+            test <@ (pt |> List.last).Error.IsSome @>
+            test <@ pt.Length = 5 @>
         }
 
         // Write test for specific error transition
