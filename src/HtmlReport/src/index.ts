@@ -11,9 +11,14 @@ interface Transition {
   Error?: Error;
 }
 
+interface Exception {
+  Message: string;
+  InnerException?: Exception;
+}
+
 interface Error {
   Case: string;
-  Fields: [string, string];
+  Fields: [string, string, Exception];
 }
 
 interface Report {
@@ -34,6 +39,9 @@ declare global {
 const onlyUnique = (value, index, self) => self.indexOf(value) === index;
 
 const resetColors = (transitions: Transition[]) => {
+  const errorMessage = document.getElementById("errorMessage");
+  errorMessage.style.display = "none";
+  errorMessage.innerHTML = "";
   transitions.forEach((t) => {
     const fromNode = window.scrutiny.graph.node(t.From.Name);
     const edge = window.scrutiny.graph.edge(t.From.Name, t.To.Name);
@@ -41,31 +49,69 @@ const resetColors = (transitions: Transition[]) => {
 
     fromNode.elem.firstChild.style.fill = "none";
     edge.elem.firstChild.style.stroke = "black";
-    edge.elem.firstChild.style['stroke-width'] = '2px';
+    edge.elem.firstChild.style["stroke-width"] = "2px";
     edge.elem.lastChild.firstChild.style.fill = "black";
     toNode.elem.firstChild.style.fill = "none";
   });
 };
 
+const showInnerException = (exception: Exception, parent: HTMLElement) => {
+  const errorTitle = document.createElement("h3");
+  const errorMessage = document.createElement("div");
+
+  errorTitle.innerText = "With inner exception";
+  errorMessage.innerHTML = `<pre>${exception.Message}</pre>`;
+  parent.appendChild(errorTitle);
+  parent.appendChild(errorMessage);
+  if (exception.InnerException) {
+    const inner = document.createElement("div");
+    parent.appendChild(inner);
+    showInnerException(exception.InnerException, inner);
+  }
+};
+
+const showError = (error: Error, parent: HTMLElement) => {
+  parent.style.display = "block";
+  const errorTitle = document.createElement("h3");
+  const errorMessage = document.createElement("div");
+  const exception = error.Fields[2];
+  switch (error.Case) {
+    case "State":
+      errorTitle.innerText = `Error occurred in state: '${error.Fields[0]}' with message:`;
+      break;
+    case "Transition":
+      errorTitle.innerText = `Error occurred in transition from: '${error.Fields[0]}' to: '${error.Fields[1]}' with message:`;
+      break;
+  }
+
+  errorMessage.innerHTML = `<pre>${exception.Message}</pre>`;
+  parent.appendChild(errorTitle);
+  parent.appendChild(errorMessage);
+  if (exception.InnerException) {
+    const inner = document.createElement("div");
+    parent.appendChild(inner);
+    showInnerException(exception.InnerException, inner);
+  }
+};
+
 const setColors = (transitions: Transition[]) => {
+  const errorMessage = document.getElementById("errorMessage");
   transitions.forEach((t) => {
     switch (t.Error?.Case) {
       case "State":
         const errorNode = window.scrutiny.graph.node(t.Error.Fields[0]);
         errorNode.elem.firstChild.style.fill = "red";
+        showError(t.Error, errorMessage);
         break;
       case "Transition":
-        const fromNode = window.scrutiny.graph.node(t.Error.Fields[0]);
         const edge = window.scrutiny.graph.edge(
           t.Error.Fields[0],
           t.Error.Fields[1]
         );
-        const toNode = window.scrutiny.graph.node(t.Error.Fields[1]);
         edge.elem.firstChild.style.stroke = "red";
-        edge.elem.firstChild.style['stroke-width'] = "4px";
+        edge.elem.firstChild.style["stroke-width"] = "4px";
         edge.elem.lastChild.firstChild.style.fill = "red";
-        //fromNode.elem.firstChild.style.fill = "red";
-        //toNode.elem.firstChild.style.fill = "red";
+        showError(t.Error, errorMessage);
         break;
       default:
         const from = window.scrutiny.graph.node(t.From.Name);

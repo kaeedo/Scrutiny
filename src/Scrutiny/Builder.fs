@@ -73,13 +73,15 @@ module Scrutiny =
 
             let message =
                 sprintf "System under test failed scrutiny.
-    To re-run this exact test, specify the seed in the config with the value: %i.
-    The error occurred in state: %s
-    The error that occurred is of type: %A%s" config.Seed current.Name exn Environment.NewLine
+    To re-run this exact test, specify the seed in the config with the value: '%i'.
+    The error occurred in state: '%s'
+    The error that occurred is of type: '%A%s'" config.Seed current.Name exn Environment.NewLine
+
+            let exn = ScrutinyException(message, exn)
 
             reporter.OnError (State (current.Name, exn))
 
-            raise <| ScrutinyException(message, exn)
+            raise <| exn
 
         try
             let transition =
@@ -92,16 +94,17 @@ module Scrutiny =
 
             transition.TransitionFn current.LocalState
         with exn ->
-
             let message =
                 sprintf "System under test failed scrutiny.
-    To re-run this exact test, specify the seed in the config with the value: %i.
-    The error occurred in state: %s
-    The error that occurred is of type: %A%s" config.Seed current.Name exn Environment.NewLine
+    To re-run this exact test, specify the seed in the config with the value: '%i'.
+    The error occurred in state: '%s'
+    The error that occurred is of type: '%A%s'" config.Seed current.Name exn Environment.NewLine
+
+            let exn = ScrutinyException(message, exn)
 
             reporter.OnError (Transition (current.Name, next.Name, exn))
 
-            raise <| ScrutinyException(message, exn)
+            raise <| exn
 
     let private findExit (config: ScrutinyConfig) (allStates: AdjacencyGraph<PageState<'a, 'b>>) =
         let random = Random(config.Seed)

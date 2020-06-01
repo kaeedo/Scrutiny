@@ -120,7 +120,7 @@ let reporterTests =
             test <@ pt.Length = 3 @>
         }
 
-        Tests.test "Should write results to file with transition error" {
+        Tests.ftest "Should write results to file with transition error" {
             let reporter: IReporter<unit, obj> = Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
             let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
 
@@ -131,7 +131,17 @@ let reporterTests =
             reporter.PushTransition <| (TestPages.loggedInComment(), TestPages.loggedInHome())
             reporter.PushTransition <| (TestPages.loggedInHome(), TestPages.home())
 
-            reporter.OnError (Transition (TestPages.loggedInHome().Name, TestPages.home().Name, Exception("Error")))
+            let message =
+                sprintf "System under test failed scrutiny.
+                        To re-run this exact test, specify the seed in the config with the value: %i.
+                        The error occurred in state: %s
+                        The error that occurred is of type: %A%s" 1 (TestPages.loggedInHome().Name) exn Environment.NewLine
+
+            let exn = ScrutinyException(message, Exception("reui fgher gtrhe ghjer "))
+
+            reporter.OnError (Transition (TestPages.loggedInHome().Name, TestPages.home().Name, exn))
+
+            //reporter.OnError (Transition (TestPages.loggedInHome().Name, TestPages.home().Name, Exception("Error")))
 
             let final = reporter.Finish ()
 
