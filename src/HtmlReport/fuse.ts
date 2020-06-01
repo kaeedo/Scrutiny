@@ -15,7 +15,6 @@ class Context {
         enabled: true,
       },
       env: { NODE_ENV: this.isProduction ? "production" : "development" },
-      //      watch: true,
       hmr: true,
       devServer: this.runServer,
       logging: { level: "succinct" },
