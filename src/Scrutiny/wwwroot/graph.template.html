@@ -70,11 +70,14 @@
     const showInnerException = (exception, parent) => {
       const errorTitle = document.createElement("h3");
       const errorMessage = document.createElement("div");
+      const stackTrace = document.createElement("div");
 
       errorTitle.innerText = "With inner exception";
       errorMessage.innerHTML = `<pre>${exception.Message}</pre>`;
+      stackTrace.innerHTML = `<pre>${exception.StackTrace}</pre>`;
       parent.appendChild(errorTitle);
       parent.appendChild(errorMessage);
+      parent.appendChild(stackTrace);
       if (exception.InnerException) {
         const inner = document.createElement("div");
         parent.appendChild(inner);
@@ -152,7 +155,7 @@
 
       graph.forEach((g) => {
         const ps = g[0].Name;
-        g[1].forEach((d) => final.push([ps, d.Name]));
+        g[1].$values.forEach((d) => final.push([ps, d.Name]));
       });
 
       return final;
@@ -162,9 +165,9 @@
       graph: undefined,
       transitions: [],
       init: (report) => {
-        const graph = getGraph(report.Graph);
+        const graph = getGraph(report.Graph.$values);
 
-        const transitions = report.PerformedTransitions;
+        const transitions = report.PerformedTransitions.$values;
         // Create the input graph
         const g = new dagreD3.graphlib.Graph().setGraph({ rankdir: "LR" });
 

@@ -1,35 +1,32 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
-
-        <PackageId>Scrutiny</PackageId>
-        <Version>0.0.0-alpha3</Version>
-        <Authors>Kai Ito</Authors>
-        <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-        <PackageTags>F#;UI Test;Testing</PackageTags>
-        <IncludeSymbols>true</IncludeSymbols>
-        <IncludeSource>true</IncludeSource>
-        <RepositoryUrl>https://github.com/kaeedo/Scrutiny</RepositoryUrl>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <None Include="..\..\LICENSE.md">
-          <Pack>True</Pack>
-          <PackagePath></PackagePath>
-        </None>
-        <EmbeddedResource Include="wwwroot\app.js">
-            <IncludeInPackage>true</IncludeInPackage>
-        </EmbeddedResource>
-        <EmbeddedResource Include="wwwroot\graph.template.html">
-            <IncludeInPackage>true</IncludeInPackage>
-        </EmbeddedResource>
-        <Compile Include="Types.fs" />
-        <Compile Include="Navigator.fs" />
-        <Compile Include="Reporter.fs" />
-        <Compile Include="Builder.fs" />
-        <Compile Include="Operators.fs" />
-    </ItemGroup>
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>Scrutiny</PackageId>
+    <Version>0.0.0-alpha3</Version>
+    <Authors>Kai Ito</Authors>
+    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+    <PackageTags>F#;UI Test;Testing</PackageTags>
+    <IncludeSymbols>true</IncludeSymbols>
+    <IncludeSource>true</IncludeSource>
+    <RepositoryUrl>https://github.com/kaeedo/Scrutiny</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="paket.references" />
+    <None Include="..\..\LICENSE.md">
+      <Pack>True</Pack>
+      <PackagePath>
+      </PackagePath>
+    </None>
+    <EmbeddedResource Include="wwwroot\graph.template.html">
+      <IncludeInPackage>true</IncludeInPackage>
+    </EmbeddedResource>
+    <Compile Include="Types.fs" />
+    <Compile Include="Navigator.fs" />
+    <Compile Include="Reporter.fs" />
+    <Compile Include="Builder.fs" />
+    <Compile Include="Operators.fs" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

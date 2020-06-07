@@ -2,15 +2,23 @@
 
 open System
 open System.IO
+open System.Text.Json
+open System.Text.Json.Serialization
 
-type internal ErrorLocation<'a, 'b> =
-| State of string * exn
-| Transition of string * string * exn
+type internal SerializableException =
+    { Type: string
+      Message: string
+      StackTrace: string
+      InnerException: SerializableException option }
+
+type internal ErrorLocation =
+| State of string * SerializableException
+| Transition of string * string * SerializableException
 
 type internal PerformedTransition<'a, 'b> =
     { From: PageState<'a, 'b>
       To: PageState<'a, 'b>
-      Error: ErrorLocation<'a, 'b> option }
+      Error: ErrorLocation option }
 
 type internal State<'a, 'b> =
     { Graph: AdjacencyGraph<PageState<'a, 'b>>
@@ -19,24 +27,19 @@ type internal State<'a, 'b> =
 type private ReporterMessage<'a, 'b> =
 | Start of AdjacencyGraph<PageState<'a, 'b>>
 | PushTransition of PageState<'a, 'b> * PageState<'a, 'b>
-| OnError of ErrorLocation<'a, 'b>
+| OnError of ErrorLocation
 | Finish of AsyncReplyChannel<State<'a, 'b>>
 
 [<RequireQualifiedAccess>]
 type internal IReporter<'a, 'b> =
     abstract Start: AdjacencyGraph<PageState<'a, 'b>> -> unit
     abstract PushTransition: (PageState<'a, 'b> * PageState<'a, 'b>) -> unit
-    abstract OnError: ErrorLocation<'a, 'b> -> unit
+    abstract OnError: ErrorLocation -> unit
     abstract Finish: unit -> State<'a, 'b>
 
 [<RequireQualifiedAccess>]
 type internal Reporter<'a, 'b>(filePath: string) =
     let assembly = typeof<Reporter<'a, 'b>>.Assembly
-
-    let js =
-        use jsStream = assembly.GetManifestResourceStream("Scrutiny.wwwroot.app.js")
-        use jsReader = new StreamReader(jsStream)
-        jsReader.ReadToEnd()
 
     let html =
         use htmlStream = assembly.GetManifestResourceStream("Scrutiny.wwwroot.graph.template.html")
@@ -51,23 +54,15 @@ type internal Reporter<'a, 'b>(filePath: string) =
 
         fileInfo.DirectoryName, fileName
 
-    let generateMap (graph: AdjacencyGraph<PageState<_, _>>) =
-        let jsCode (node, sibling) = sprintf "[\"%s\", \"%s\"]" node sibling
+    let generateMap (graph: State<_, _>) =
+        let options = JsonSerializerOptions()
+        options.Converters.Add(JsonFSharpConverter())
+        options.ReferenceHandling <- ReferenceHandling.Preserve
 
-        let jsFunctionCalls =
-            seq {
-                for (node, siblings) in graph do
-                    for sib in siblings do
-                        yield node.Name, sib.Name
-            }
-            |> Seq.map jsCode
-            |> String.concat (",")
-
-        let output = html.Replace("{{REPLACE}}", sprintf "[%s]" jsFunctionCalls)
+        let output = html.Replace("\"{{REPORT}}\"", JsonSerializer.Serialize(graph, options))
 
         let (filePath, fileName) = file
 
-        File.WriteAllText(sprintf "%s/app.js" filePath, js)
         File.WriteAllText(sprintf "%s/%s" filePath fileName, output)
 
     let mailbox =
@@ -89,7 +84,9 @@ type internal Reporter<'a, 'b>(filePath: string) =
                         let performedTransitions = { errorNode with Error = Some el } :: performedTransitions
                         return! loop { state with PerformedTransitions = performedTransitions }
                     | Finish reply ->
-                        reply.Reply { state with PerformedTransitions = state.PerformedTransitions |> List.rev }
+                        let finalState = { state with PerformedTransitions = state.PerformedTransitions |> List.rev }
+                        reply.Reply finalState
+                        generateMap finalState
                         return ()
                 }
             loop { State.Graph = []; PerformedTransitions = [] }

@@ -63,6 +63,20 @@ module Scrutiny =
         |> Seq.map (fun n -> allStates |> List.find (fun ps -> (fst ps) = n))
         |> List.ofSeq
 
+    let private convertException (e: exn): SerializableException =
+        let rec convertInner (currentException: exn) =
+            if currentException.InnerException = null 
+            then { SerializableException.Type = currentException.GetType().ToString()
+                   Message = currentException.Message
+                   StackTrace = currentException.StackTrace
+                   InnerException = None }
+            else 
+                { SerializableException.Type = currentException.GetType().ToString()
+                  Message = currentException.Message
+                  StackTrace = currentException.StackTrace
+                  InnerException = Some <| convertInner currentException.InnerException }
+        convertInner e
+
     let private performStateActions (reporter: IReporter<_, _>) config globalState (current, next) =
         // TODO Wrap functions in try function instead of try catching entire block
         try
@@ -79,7 +93,7 @@ module Scrutiny =
 
             let exn = ScrutinyException(message, exn)
 
-            reporter.OnError (State (current.Name, exn))
+            reporter.OnError (State (current.Name, convertException exn))
 
             raise <| exn
 
@@ -102,7 +116,7 @@ module Scrutiny =
 
             let exn = ScrutinyException(message, exn)
 
-            reporter.OnError (Transition (current.Name, next.Name, exn))
+            reporter.OnError (Transition (current.Name, next.Name, convertException exn))
 
             raise <| exn
 
@@ -123,70 +137,74 @@ module Scrutiny =
 
         let allStates = Navigator.constructAdjacencyGraph startState globalState
         reporter.Start allStates
+        
+        try
+            if not config.MapOnly then
+                let random = Random(config.Seed)
+                let findPath = Navigator.shortestPathFunction allStates
 
-        if not config.MapOnly then
-            let random = Random(config.Seed)
-            let findPath = Navigator.shortestPathFunction allStates
+                let nextNode alreadyVisited =
+                    let unvisitedNodes = unvisitedNodes allStates alreadyVisited
 
-            let nextNode alreadyVisited =
-                let unvisitedNodes = unvisitedNodes allStates alreadyVisited
-
-                let shouldContinue =
-                    if config.ComprehensiveStates then
-                        unvisitedNodes
-                        |> Seq.isEmpty
-                        |> not
-                    else
-                        unvisitedNodes.Length > (allStates.Length / 2)
-
-                if shouldContinue then
-                    let next = random.Next(unvisitedNodes.Length)
-                    Some(fst unvisitedNodes.[next])
-                else
-                    None
-
-            let rec clickAround
-                    (isExitPath: bool)
-                    (alreadyVisited: PageState<'a, 'b> list)
-                    (currentPath: PageState<'a, 'b> list)
-                =
-                match currentPath with
-                | head :: [] ->
-                    match nextNode alreadyVisited with
-                    | None -> head
-                    | Some nextNode ->
-                        let path = findPath head nextNode
-
-                        if path.Length = 1 then
-                            runActions config path.Head
-                            path.Head
+                    let shouldContinue =
+                        if config.ComprehensiveStates then
+                            unvisitedNodes
+                            |> Seq.isEmpty
+                            |> not
                         else
-                            printPath path
-                            if isExitPath then path.Head else clickAround false alreadyVisited path
-                | head :: tail ->
-                    currentPath
-                    |> Seq.pairwise
-                    |> Seq.find (fun (current, _) -> current = head)
-                    |> performStateActions reporter config globalState
+                            unvisitedNodes.Length > (allStates.Length / 2)
 
-                    clickAround false (head :: alreadyVisited) tail
+                    if shouldContinue then
+                        let next = random.Next(unvisitedNodes.Length)
+                        Some(fst unvisitedNodes.[next])
+                    else
+                        None
 
-            let navigateDirectly = clickAround true
+                let rec clickAround
+                        (isExitPath: bool)
+                        (alreadyVisited: PageState<'a, 'b> list)
+                        (currentPath: PageState<'a, 'b> list)
+                    =
+                    match currentPath with
+                    | head :: [] ->
+                        match nextNode alreadyVisited with
+                        | None -> head
+                        | Some nextNode ->
+                            let path = findPath head nextNode
 
-            let finalNode = clickAround false [] [ startState ]
+                            if path.Length = 1 then
+                                runActions config path.Head
+                                path.Head
+                            else
+                                printPath path
+                                if isExitPath then path.Head else clickAround false alreadyVisited path
+                    | head :: tail ->
+                        currentPath
+                        |> Seq.pairwise
+                        |> Seq.find (fun (current, _) -> current = head)
+                        |> performStateActions reporter config globalState
 
-            match findExit config allStates with
-            | None -> ()
-            | Some(exitNode, _) ->
-                let path = findPath finalNode exitNode
+                        clickAround false (head :: alreadyVisited) tail
 
-                let exitNode = navigateDirectly [] path
-                exitNode.ExitAction |> Option.iter (fun ea -> ea exitNode.LocalState)
+                let navigateDirectly = clickAround true
 
-        reporter.Finish () |> ignore
-        printfn "Scrutiny Result written to: %s" config.ScrutinyResultFilePath
+                let finalNode = clickAround false [] [ startState ]
 
-    let scrutinize<'a, 'b> config = baseScrutinize<'a, 'b> (Reporter<'a, 'b>(config.ScrutinyResultFilePath)) config
+                match findExit config allStates with
+                | None -> ()
+                | Some(exitNode, _) ->
+                    let path = findPath finalNode exitNode
+
+                    let exitNode = navigateDirectly [] path
+                    exitNode.ExitAction |> Option.iter (fun ea -> ea exitNode.LocalState)
+        finally
+            reporter.Finish() |> ignore
+            
+            printfn "Scrutiny Result written to: %s" config.ScrutinyResultFilePath
+
+    let scrutinize<'a, 'b> config = 
+        let reporter = Reporter<'a, 'b>(config.ScrutinyResultFilePath) :> IReporter<'a, 'b>
+        baseScrutinize<'a, 'b> reporter config
 
     let page = PageBuilder()
 

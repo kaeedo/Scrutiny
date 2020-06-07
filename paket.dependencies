@@ -1,23 +1,23 @@
 source https://api.nuget.org/v3/index.json
 
 storage: none
-framework: netcore3.0, netcore3.1, netstandard2.0, netstandard2.1
+framework: netcoreapp3.1, netstandard2.0
+
 nuget FSharp.Core
+nuget System.Text.Json 5.0.0-preview.4.20251.6 
+nuget FSharp.SystemTextJson
 
 group UsageExample
     source https://api.nuget.org/v3/index.json
-
     nuget Giraffe
     nuget canopy
     nuget Selenium.WebDriver
 
 group Tests
     source https://api.nuget.org/v3/index.json
-
     nuget Expecto
     nuget FsCheck
     nuget Expecto.FsCheck
     nuget Unquote
-    nuget FSharp.SystemTextJson
     nuget YoloDev.Expecto.TestSdk
     nuget Microsoft.NET.Test.Sdk

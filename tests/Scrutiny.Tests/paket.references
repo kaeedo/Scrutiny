@@ -1,10 +1,10 @@
 FSharp.Core
+FSharp.SystemTextJson
 
 group Tests
     Expecto
     FsCheck
     Expecto.FsCheck
     Unquote
-    FSharp.SystemTextJson
     YoloDev.Expecto.TestSdk
     Microsoft.NET.Test.Sdk
