@@ -138,13 +138,15 @@ module rec Entry =
 
     [<EntryPoint>]
     let main argv =
+        //let options = FirefoxOptions()
         let cOptions = ChromeOptions()
+        do cOptions.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
         if System.Environment.GetEnvironmentVariable("CI") = "true"
-        then canopy.configuration.chromeDir <- System.Environment.GetEnvironmentVariable("CHROMEWEBDRIVER ")
+        then
+            chromeDir <- System.Environment.GetEnvironmentVariable("CHROMEWEBDRIVER ")
+            do cOptions.AddArgument "headless"
 
-        //let options = FirefoxOptions()
-        do cOptions.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
         //use ff = new FirefoxDriver(options)
         use chrome = new ChromeDriver(cOptions) // The webdriver that is checked in is for chrome version 83
