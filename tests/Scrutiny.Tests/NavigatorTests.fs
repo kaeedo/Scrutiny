@@ -169,6 +169,7 @@ let navigatorTests =
                 let graph = Navigator.adjacencyGraph2Graph ag
                 test <@ ag.Length = (fst graph).Length @>
 
+            // [(25, []); (65, []); (35, []); (7, []); (85, []); (32, [])]
             testPropertyWithConfig adjacencyGraphGenConfig "Should share an edge" <| fun (ag: AdjacencyGraph<int>) ->
                 let graph = Navigator.adjacencyGraph2Graph ag
 
