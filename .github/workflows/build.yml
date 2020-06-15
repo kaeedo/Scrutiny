@@ -21,6 +21,8 @@ jobs:
       run: dotnet paket restore
     - name: Build solution
       run: dotnet build -c Release
+    - name: Run unit tests
+      run: dotnet test
   sample-web-container:
     needs: build
     runs-on: ubuntu-latest
@@ -33,11 +35,6 @@ jobs:
       volumes:
         - tests/Web/bin/Release/netcoreapp3.1:/
       options: --entrypoint 'dotnet ./Web.dll'
-  test:
-    needs: [build, sample-web-container]
-    runs-on: ubuntu-latest
     steps:
-      - name: Run unit tests
-        run: dotnet test
       - name: Run usage example
         run: dotnet run --project tests/UsageExample/UsageExample.fsproj
