@@ -34,5 +34,6 @@ jobs:
         volumes:
           - tests/Web/bin/Release/netcoreapp3.1:/
         options: --entrypoint 'dotnet ./Web.dll'
+      run: echo 'wef'
     - name: Run usage example
       run: dotnet run --project tests/UsageExample/UsageExample.fsproj
