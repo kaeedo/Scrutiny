@@ -14,6 +14,7 @@ open configuration
 open reporters
 open canopy.types
 open System.IO
+open OpenQA.Selenium.Chrome
 
 type GlobalState() =
     member val IsSignedIn = false with get, set
@@ -137,10 +138,12 @@ module rec Entry =
 
     [<EntryPoint>]
     let main argv =
-        let options = FirefoxOptions()
-        do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
+        let cOptions = ChromeOptions()
+        //let options = FirefoxOptions()
+        do cOptions.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
-        use ff = new FirefoxDriver(options)
+        //use ff = new FirefoxDriver(options)
+        use chrome = new ChromeDriver(cOptions) // The webdriver that is checked in is for chrome version 83
         let currentDirectory = DirectoryInfo(Directory.GetCurrentDirectory())
 
         let config =
@@ -156,10 +159,10 @@ module rec Entry =
             url "https://localhost:5001/home"
             scrutinize config (GlobalState()) home
 
-        switchTo ff
+        switchTo chrome
         pin canopy.types.direction.Right
 
         run()
-        quit ff
+        quit chrome
 
         0

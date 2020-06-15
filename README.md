@@ -151,16 +151,16 @@ Run:
 
 To run the [UsageExample](tests/UsageExample), you must start the [web project](tests/Web).
 
-## TODO for Alpha release
+## TODO for Beta release
 - [x] Finish initial HTML report
 - [x] Create and publish NuGet package
 - [x] Documentation
 
-## TODO for Beta release
+## TODO for initial release
 - [x] Documentation
 - [x] Detailed result report. Color coded states and transitions showcasing which parts succeeded and failed
 - [x] Write unit tests
-- [ ] Documentation
+- [x] Documentation
 - [ ] Setup proper build scripts
 
 
