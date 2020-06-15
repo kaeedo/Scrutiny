@@ -41,7 +41,7 @@ jobs:
         with:
           name: usageExample
       - name: Start usage example
-        run: dotnet run ./usageExample/Web.dll
+        run: dotnet ./usageExample/Web.dll
   usage-example:
     needs: sample-web
     runs-on: ubuntu-latest
