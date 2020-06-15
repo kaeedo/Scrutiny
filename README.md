@@ -23,7 +23,7 @@ This is only one way to handle this case, and the developer could choose to mode
 
 Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s. The [Sample Web site](tests/Web) looks like this:
 
-![SUT sample report](images/SampleWebsiteReport.png)
+![SUT sample report](images/scrutinyDemo.png)
 
 ## Usage
 Define one `page` object for each state in your UI. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
@@ -84,7 +84,7 @@ Some things can be configured via `ScrutinyConfig`. The default config is:
 To actually run the test, call the `scrutinize` function with your entry state, config, and global state object. e.g.
 
 
-    // Sample Global State. This can be anything, and all
+    // Sample Global State. This can be anything, and all page states will receive the same instance
     type GlobalState() =
         member val IsSignedIn = false with get, set
         member val Username = "MyUsername" with get, set
@@ -106,6 +106,7 @@ To actually run the test, call the `scrutinize` function with your entry state, 
                   ComprehensiveStates = true
                   ScrutinyResultFilePath = currentDirectory.Parent.Parent.Parent.FullName + "/myResult.html" }
 
+        // Start tests. In this case we're using CanopyUI, but can be any test runner e.g. XUnit or Expecto
         // Start CanopyUI tests
         "Scrutiny" &&& fun _ ->
             printfn "opening url"
@@ -157,17 +158,20 @@ To run the [UsageExample](tests/UsageExample), you must start the [web project](
 
 ## TODO for Beta release
 - [x] Documentation
-- [ ] Detailed result report. Color coded states and transitions showcasing which parts succeeded and failed
+- [x] Detailed result report. Color coded states and transitions showcasing which parts succeeded and failed
+- [x] Write unit tests
 - [ ] Documentation
 - [ ] Setup proper build scripts
-- [ ] Write unit tests
+
 
 ## TODO General
+- [ ] Implement some kind of Conversion flow
 - [ ] Documentation
+- [ ] More unit/integration tests
 - [ ] Use Fable to create a javascript release and npm package for usage from Node.js
 - [ ] Documentation
 - [ ] Create nice interface for usage from C#
-
+- [ ] Make pretty report page
 
 
 # HTML REPORT DEVELOPMENT WRITE ME
