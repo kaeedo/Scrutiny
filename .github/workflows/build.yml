@@ -28,7 +28,7 @@ jobs:
       with:
         name: usageExample
         path: ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/
-  sample-web-container:
+  sample-web:
     needs: build
     runs-on: ubuntu-latest
 
@@ -40,12 +40,11 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: usageExample
+     - name: Start usage example
+        run: dotnet run ./usageExample/Web.dll
+  usage-example:
+    needs: sample-web
+    runs-on: ubuntu-latest
+    steps:
       - name: debug
-        run: ls -lah
-      - name: debug
-        run: ls -lah ./usageExample
-      - name: debug
-        run: tree -a ./usageExample
-
-    #   - name: Run usage example
-    #     run: dotnet run --project ${{ github.workspace }}/tests/UsageExample/UsageExample.fsproj
+        run: curl https://localhost:5001
