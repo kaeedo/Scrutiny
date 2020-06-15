@@ -27,7 +27,7 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: usageExample
-        path: ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1
+        path: ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/*
   sample-web-container:
     needs: build
     runs-on: ubuntu-latest
@@ -49,14 +49,6 @@ jobs:
     #     uses: actions/download-artifact@v1
     #     with:
     #       name: usageExample
-      - name: debug
-        run: ls -lah ./tests
-      - name: debug
-        run: ls -lah ./tests/Web
-      - name: debug
-        run: ls -lah ./tests/Web/bin
-      - name: debug
-        run: ls -lah ./tests/Web/bin/Release
       - name: debug
         run: ls -lah ./tests/Web/bin/Release/netcoreapp3.1
     #   - name: Run usage example

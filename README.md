@@ -2,7 +2,7 @@
 
 F# library for testing state machines by randomly choosing available states and valid transitions. Designed for usage with UI tests
 
-[![Nuget](https://img.shields.io/nuget/vpre/scrutiny?color=blue&style=for-the-badge)](https://www.nuget.org/packages/Scrutiny/)
+[![Nuget](https://img.shields.io/nuget/vpre/scrutiny?color=blue&style=for-the-badge)](https://www.nuget.org/packages/Scrutiny/) ![Build](https://github.com/kaeedo/Scrutiny/workflows/Build/badge.svg?branch=master)
 
 ## Description
 Describe your UI as a state machine, and then use Scrutiny to simulate a "User" that randomly clicks around on your site.
