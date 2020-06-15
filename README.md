@@ -23,7 +23,7 @@ This is only one way to handle this case, and the developer could choose to mode
 
 Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s. The [Sample Web site](tests/Web) looks like this:
 
-![SUT sample report](images/scrutinyDemo.png)
+![SUT sample report](images/scrutinyDemo.gif)
 
 ## Usage
 Define one `page` object for each state in your UI. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
