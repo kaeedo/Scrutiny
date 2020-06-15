@@ -42,14 +42,16 @@ jobs:
         - ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1:/app
       options: --entrypoint "dotnet ./Web.dll" --workdir "/app"
     steps:
-      - uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '3.1.300'
-      - name: Download Usage example
-        uses: actions/download-artifact@v1
-        with:
-          name: usageExample
+    #   - uses: actions/setup-dotnet@v1
+    #     with:
+    #       dotnet-version: '3.1.300'
+    #   - name: Download Usage example
+    #     uses: actions/download-artifact@v1
+    #     with:
+    #       name: usageExample
       - name: debug
         run: ls -lah
-      - name: Run usage example
-        run: dotnet run --project ${{ github.workspace }}/tests/UsageExample/UsageExample.fsproj
+      - name: debug gain
+        run: ls -lah /app
+    #   - name: Run usage example
+    #     run: dotnet run --project ${{ github.workspace }}/tests/UsageExample/UsageExample.fsproj
