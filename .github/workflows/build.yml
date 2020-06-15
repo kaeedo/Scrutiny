@@ -26,29 +26,27 @@ jobs:
     - name: Upload Usage example
       uses: actions/upload-artifact@v1
       with:
-        name: usageExample
-        path: ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/*
+        path: ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/
   sample-web-container:
     needs: build
     runs-on: ubuntu-latest
 
-    container:
-      image: mcr.microsoft.com/dotnet/core/runtime:3.1-alpine
-      env:
-        ASPNETCORE_ENVIRONMENT: production
-      ports:
-        - 5001:5001
-      volumes:
-        - ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1:/app
-      options: --entrypoint "dotnet ./Web.dll" --workdir "/app"
     steps:
-    #   - uses: actions/setup-dotnet@v1
-    #     with:
-    #       dotnet-version: '3.1.300'
-    #   - name: Download Usage example
-    #     uses: actions/download-artifact@v1
-    #     with:
-    #       name: usageExample
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.300'
+      - name: Download Usage example
+        uses: actions/download-artifact@v1
+      - name: debug
+        run: ls -lah
+      - name: debug
+        run: ls -lah ./tests
+      - name: debug
+        run: ls -lah ./tests/Web
+      - name: debug
+        run: ls -lah ./tests/Web/bin
+      - name: debug
+        run: ls -lah ./tests/Web/bin/Release
       - name: debug
         run: ls -lah ./tests/Web/bin/Release/netcoreapp3.1
     #   - name: Run usage example
