@@ -26,6 +26,7 @@ jobs:
     - name: Upload Usage example
       uses: actions/upload-artifact@v1
       with:
+        name: usageExample
         path: ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/
   sample-web-container:
     needs: build
@@ -37,6 +38,8 @@ jobs:
           dotnet-version: '3.1.300'
       - name: Download Usage example
         uses: actions/download-artifact@v1
+        with:
+          name: usageExample
       - name: debug
         run: ls -lah
       - name: debug
