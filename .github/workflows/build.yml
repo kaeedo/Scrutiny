@@ -36,7 +36,8 @@ jobs:
   test:
     needs: [build, sample-web-container]
     runs-on: ubuntu-latest
-    - name: Run unit tests
-      run: dotnet test
-    - name: Run usage example
-      run: dotnet run --project tests/UsageExample/UsageExample.fsproj
+    steps:
+      - name: Run unit tests
+        run: dotnet test
+      - name: Run usage example
+        run: dotnet run --project tests/UsageExample/UsageExample.fsproj
