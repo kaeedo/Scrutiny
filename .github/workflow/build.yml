@@ -20,7 +20,7 @@ jobs:
     - name: Install packages
       run: dotnet paket restore
     - name: Build solution
-      run: dotnet build
+      run: dotnet build -c Release
     - name: Run unit tests
       run: dotnet test
 
@@ -32,7 +32,7 @@ jobs:
         ports:
           - 5001:5001
         volumes:
-          - /de:/de
-        options: --entrypoint 'dotnet run'
+          - tests/Web/bin/Release/netcoreapp3.1:/
+        options: --entrypoint 'dotnet ./Web.dll'
     - name: Run usage example
       run: dotnet run --project tests/UsageExample/UsageExample.fsproj
