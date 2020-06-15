@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  CI: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,8 +30,8 @@ jobs:
 
     - name: Start usage example
       run: dotnet ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/Web.dll &
-    - name: debug
-      run: curl -k https://localhost:5001
+    - name: Run usage example
+      run: dotnet run --project ${{ github.workspace }}/tests/UsageExample/UsageExample.fsproj
     # - name: Upload Usage example
     #   uses: actions/upload-artifact@v1
     #   with:

@@ -139,6 +139,10 @@ module rec Entry =
     [<EntryPoint>]
     let main argv =
         let cOptions = ChromeOptions()
+
+        if System.Environment.GetEnvironmentVariable("CI") = "true"
+        then canopy.configuration.chromeDir <- System.Environment.GetEnvironmentVariable("CHROMEWEBDRIVER ")
+
         //let options = FirefoxOptions()
         do cOptions.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
