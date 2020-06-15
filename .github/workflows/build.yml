@@ -26,10 +26,7 @@ jobs:
   sample-web-container:
     needs: build
     runs-on: ubuntu-latest
-    - uses: actions/checkout@v1
-    - uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '3.1.300'
+
     container:
       image: mcr.microsoft.com/dotnet/core/runtime:3.1-alpine
       env:
@@ -40,5 +37,9 @@ jobs:
         - ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1:/app
       options: --entrypoint "dotnet ./Web.dll" --workdir "/app"
     steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.300'
       - name: Run usage example
         run: dotnet run --project tests/UsageExample/UsageExample.fsproj
