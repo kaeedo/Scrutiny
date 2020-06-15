@@ -27,7 +27,7 @@ jobs:
     - name: Start usage example
       run: dotnet ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/Web.dll &
     - name: debug
-      run: curl https://localhost:5001
+      run: curl -k https://localhost:5001
     # - name: Upload Usage example
     #   uses: actions/upload-artifact@v1
     #   with:
