@@ -84,11 +84,17 @@ let reporterTests =
             let reporter: IReporter<unit, obj> = Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
             let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
 
+            let serializableException =
+                { SerializableException.Type = "Exception"
+                  Message = "Error message"
+                  StackTrace = "Happened here"
+                  InnerException = None }
+
             reporter.Start ag
             reporter.PushTransition <| (TestPages.loggedInComment(), TestPages.signIn())
             reporter.PushTransition <| (TestPages.loggedInHome(), TestPages.comment())
             reporter.PushTransition <| (TestPages.comment(), TestPages.home())
-            reporter.OnError (State (TestPages.loggedInComment().Name, Exception("Error")))
+            reporter.OnError (State (TestPages.loggedInComment().Name, serializableException))
 
             let final = reporter.Finish ()
 
@@ -102,11 +108,17 @@ let reporterTests =
             let reporter: IReporter<unit, obj> = Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
             let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
 
+            let serializableException =
+                { SerializableException.Type = "Exception"
+                  Message = "Error message"
+                  StackTrace = "Happened here"
+                  InnerException = None }
+
             reporter.Start ag
             reporter.PushTransition <| (TestPages.loggedInComment(), TestPages.signIn())
             reporter.PushTransition <| (TestPages.loggedInHome(), TestPages.comment())
             reporter.PushTransition <| (TestPages.comment(), TestPages.home())
-            reporter.OnError (State (TestPages.comment().Name, Exception("Error")))
+            reporter.OnError (State (TestPages.comment().Name, serializableException))
 
             let final = reporter.Finish ()
 
@@ -119,45 +131,4 @@ let reporterTests =
             test <@ (pt |> List.last).Error.IsSome @>
             test <@ pt.Length = 3 @>
         }
-
-        Tests.ftest "Should write results to file with transition error" {
-            let reporter: IReporter<unit, obj> = Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
-            let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
-
-            reporter.Start ag
-            reporter.PushTransition <| (TestPages.home(), TestPages.signIn())
-            reporter.PushTransition <| (TestPages.signIn(), TestPages.loggedInHome())
-            reporter.PushTransition <| (TestPages.loggedInHome(), TestPages.loggedInComment())
-            reporter.PushTransition <| (TestPages.loggedInComment(), TestPages.loggedInHome())
-            reporter.PushTransition <| (TestPages.loggedInHome(), TestPages.home())
-
-            let message =
-                sprintf "System under test failed scrutiny.
-                        To re-run this exact test, specify the seed in the config with the value: %i.
-                        The error occurred in state: %s
-                        The error that occurred is of type: %A%s" 1 (TestPages.loggedInHome().Name) exn Environment.NewLine
-
-            let exn = ScrutinyException(message, Exception("reui fgher gtrhe ghjer "))
-
-            reporter.OnError (Transition (TestPages.loggedInHome().Name, TestPages.home().Name, exn))
-
-            //reporter.OnError (Transition (TestPages.loggedInHome().Name, TestPages.home().Name, Exception("Error")))
-
-            let final = reporter.Finish ()
-
-            let options = JsonSerializerOptions()
-            options.Converters.Add(JsonFSharpConverter())
-
-            let a = JsonSerializer.Serialize(final, options)
-
-            System.IO.File.WriteAllText("C:\\users\\kait\\desktop\\herp.json", a)
-
-            let pt = final.PerformedTransitions
-
-            test <@ pt.[0..pt.Length - 2] |> List.forall (fun f -> f.Error.IsNone)  @>
-            test <@ (pt |> List.last).Error.IsSome @>
-            test <@ pt.Length = 5 @>
-        }
-
-        // Write test for specific error transition
     ]

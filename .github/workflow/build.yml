@@ -1,0 +1,38 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.301'
+    - name: Restore local tools
+      run: dotnet tool restore
+    - name: Install packages
+      run: dotnet paket restore
+    - name: Build solution
+      run: dotnet build
+    - name: Run unit tests
+      run: dotnet test
+
+    - name: Start sample web project
+      container:
+        image: mcr.microsoft.com/dotnet/core/runtime:3.1-alpine
+        env:
+          ASPNETCORE_ENVIRONMENT: production
+        ports:
+          - 5001:5001
+        volumes:
+          - /de:/de
+        options: --entrypoint 'dotnet run'
+    - name: Run usage example
+      run: dotnet run --project tests/UsageExample/UsageExample.fsproj
