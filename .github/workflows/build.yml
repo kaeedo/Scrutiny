@@ -43,14 +43,9 @@ jobs:
       - name: debug
         run: ls -lah
       - name: debug
-        run: ls -lah ./tests
+        run: ls -lah ./usageExample
       - name: debug
-        run: ls -lah ./tests/Web
-      - name: debug
-        run: ls -lah ./tests/Web/bin
-      - name: debug
-        run: ls -lah ./tests/Web/bin/Release
-      - name: debug
-        run: ls -lah ./tests/Web/bin/Release/netcoreapp3.1
+        run: tree -a ./usageExample
+
     #   - name: Run usage example
     #     run: dotnet run --project ${{ github.workspace }}/tests/UsageExample/UsageExample.fsproj
