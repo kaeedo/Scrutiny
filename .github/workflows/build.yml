@@ -33,7 +33,7 @@ jobs:
       ports:
         - 5001:5001
       volumes:
-        - {{github.workspace}}/tests/Web/bin/Release/netcoreapp3.1:/
+        - ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1:/
       options: --entrypoint "dotnet ./Web.dll"
     steps:
       - name: Run usage example
