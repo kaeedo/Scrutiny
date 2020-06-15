@@ -40,7 +40,7 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: usageExample
-     - name: Start usage example
+      - name: Start usage example
         run: dotnet run ./usageExample/Web.dll
   usage-example:
     needs: sample-web
