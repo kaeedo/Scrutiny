@@ -27,31 +27,10 @@ jobs:
       run: dotnet build -c Release
     - name: Run unit tests
       run: dotnet test
-
+  # This is prolly funky
     - name: Start sample web
       run: dotnet ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/Web.dll &
+
     - name: Run usage example
       run: dotnet run --project ${{ github.workspace }}/tests/UsageExample/UsageExample.fsproj
-    - name: Upload test report
-      uses: actions/upload-artifact@v1
-      with:
-        name: myResult
-        path: ${{ github.workspace }}/myResult.html
-#   sample-web:
-#     needs: build
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - uses: actions/setup-dotnet@v1
-#         with:
-#           dotnet-version: '3.1.300'
-#       - name: Download Usage example
-#         uses: actions/download-artifact@v1
-#         with:
-#           name: usageExample
-#   usage-example:
-#     needs: sample-web
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: debug
-#         run: curl https://localhost:5001
+  # Create publish job

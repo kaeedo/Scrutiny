@@ -142,11 +142,10 @@ module rec Entry =
         let cOptions = ChromeOptions()
         do cOptions.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
-        //if System.Environment.GetEnvironmentVariable("CI") = "true"
-        //then
-        chromeDir <- System.Environment.GetEnvironmentVariable("CHROMEWEBDRIVER")
-        do cOptions.AddArgument "headless"
-
+        if System.Environment.GetEnvironmentVariable("CI") = "true"
+        then
+            chromeDir <- System.Environment.GetEnvironmentVariable("CHROMEWEBDRIVER")
+            do cOptions.AddArgument "headless"
 
         //use ff = new FirefoxDriver(options)
         use chrome = new ChromeDriver(cOptions) // The webdriver that is checked in is for chrome version 83
