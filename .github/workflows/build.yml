@@ -14,26 +14,29 @@ jobs:
     - uses: actions/checkout@v1
     - uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '3.1.301'
+        dotnet-version: '3.1.300'
     - name: Restore local tools
       run: dotnet tool restore
     - name: Install packages
       run: dotnet paket restore
     - name: Build solution
       run: dotnet build -c Release
+  sample-web-container:
+    needs: build
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/dotnet/core/runtime:3.1-alpine
+      env:
+        ASPNETCORE_ENVIRONMENT: production
+      ports:
+        - 5001:5001
+      volumes:
+        - tests/Web/bin/Release/netcoreapp3.1:/
+      options: --entrypoint 'dotnet ./Web.dll'
+  test:
+    needs: [build, sample-web-container]
+    runs-on: ubuntu-latest
     - name: Run unit tests
       run: dotnet test
-
-    - name: Start sample web project
-      container:
-        image: mcr.microsoft.com/dotnet/core/runtime:3.1-alpine
-        env:
-          ASPNETCORE_ENVIRONMENT: production
-        ports:
-          - 5001:5001
-        volumes:
-          - tests/Web/bin/Release/netcoreapp3.1:/
-        options: --entrypoint 'dotnet ./Web.dll'
-      run: echo 'wef'
     - name: Run usage example
       run: dotnet run --project tests/UsageExample/UsageExample.fsproj
