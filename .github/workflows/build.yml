@@ -50,6 +50,6 @@ jobs:
     #     with:
     #       name: usageExample
       - name: debug
-        run: tree -a .
+        run: ls -lah ./tests
     #   - name: Run usage example
     #     run: dotnet run --project ${{ github.workspace }}/tests/UsageExample/UsageExample.fsproj
