@@ -129,6 +129,6 @@ let reporterTests =
 
             test <@ pt.[0..pt.Length - 2] |> List.forall (fun f -> f.Error.IsNone)  @>
             test <@ (pt |> List.last).Error.IsSome @>
-            test <@ pt.Length = 3 @>
+            test <@ pt.Length = 2 @>
         }
     ]
