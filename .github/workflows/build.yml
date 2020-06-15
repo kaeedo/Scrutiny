@@ -23,6 +23,11 @@ jobs:
       run: dotnet build -c Release
     - name: Run unit tests
       run: dotnet test
+    - name: Upload Usage example
+      uses: actions/upload-artifact@v1
+      with:
+        name: usageExample
+        path: ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1
   sample-web-container:
     needs: build
     runs-on: ubuntu-latest
@@ -41,5 +46,11 @@ jobs:
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '3.1.300'
+      - name: Download Usage example
+        uses: actions/download-artifact@v1
+        with:
+          name: usageExample
+      - name: debug
+        run: ls -lah
       - name: Run usage example
-        run: dotnet run --project tests/UsageExample/UsageExample.fsproj
+        run: dotnet run --project ${{ github.workspace }}/tests/UsageExample/UsageExample.fsproj
