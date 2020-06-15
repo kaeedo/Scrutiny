@@ -28,15 +28,15 @@ jobs:
     - name: Run unit tests
       run: dotnet test
 
-    - name: Start usage example
+    - name: Start sample web
       run: dotnet ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/Web.dll &
     - name: Run usage example
       run: dotnet run --project ${{ github.workspace }}/tests/UsageExample/UsageExample.fsproj
-    # - name: Upload Usage example
-    #   uses: actions/upload-artifact@v1
-    #   with:
-    #     name: usageExample
-    #     path: ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/
+    - name: Upload test report
+      uses: actions/upload-artifact@v1
+      with:
+        name: myResult
+        path: ${{ github.workspace }}/myResult.html
 #   sample-web:
 #     needs: build
 #     runs-on: ubuntu-latest

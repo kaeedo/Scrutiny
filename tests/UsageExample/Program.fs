@@ -104,7 +104,7 @@ module rec Entry =
                     displayed "#welcomeText")
 
                 exitAction (fun _ ->
-                    printfn "EXUTUBG !!!!!!!"
+                    printfn "Exiting!"
                     click "#logout")
             }
 
@@ -142,10 +142,10 @@ module rec Entry =
         let cOptions = ChromeOptions()
         do cOptions.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
-        if System.Environment.GetEnvironmentVariable("CI") = "true"
-        then
-            chromeDir <- System.Environment.GetEnvironmentVariable("CHROMEWEBDRIVER ")
-            do cOptions.AddArgument "headless"
+        //if System.Environment.GetEnvironmentVariable("CI") = "true"
+        //then
+        chromeDir <- System.Environment.GetEnvironmentVariable("CHROMEWEBDRIVER")
+        do cOptions.AddArgument "headless"
 
 
         //use ff = new FirefoxDriver(options)
@@ -167,6 +167,12 @@ module rec Entry =
 
         switchTo chrome
         pin canopy.types.direction.Right
+
+
+        onFail (fun _ ->
+            quit chrome
+            raise (exn "Failed")
+        )
 
         run()
         quit chrome
