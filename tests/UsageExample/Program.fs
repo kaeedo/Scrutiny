@@ -147,8 +147,8 @@ module rec Entry =
         then
             chromeDir <- System.Environment.GetEnvironmentVariable("CHROMEWEBDRIVER")
             firefoxDir <- System.Environment.GetEnvironmentVariable("GECKOWEBDRIVER")
-            do cOptions.AddArgument "headless"
-            do options.AddArgument "headless"
+            do cOptions.AddArgument "--headless"
+            do options.AddArgument "-headless"
 
         //use chrome = new ChromeDriver(cOptions) // The webdriver that is checked in is for chrome version 83
         use ff = new FirefoxDriver(options)
