@@ -128,12 +128,16 @@ module rec Entry =
                 name "Home"
                 onEnter (fun _ ->
                     printfn "Checking on page home"
+                    printfn "JS call: %A" <| js "2+2"
                     "#header" == "Home")
 
                 transition ((fun _ -> click "#comment") ==> comment)
                 transition ((fun _ -> click "#signin") ==> signIn)
 
-                onExit (fun _ -> printfn "Exiting home")
+                onExit (fun _ ->
+                    printfn "Exiting home"
+                    printfn "JS call exit: %A" <| js "2+6"
+                )
             }
 
     [<EntryPoint>]
@@ -146,8 +150,8 @@ module rec Entry =
         if System.Environment.GetEnvironmentVariable("CI") = "true"
         then
             chromeDir <- System.Environment.GetEnvironmentVariable("CHROMEWEBDRIVER")
-            firefoxDir <- System.Environment.GetEnvironmentVariable("GECKOWEBDRIVER")
-            do cOptions.AddArgument "--headless"
+            firefoxDriverDir <- System.Environment.GetEnvironmentVariable("GECKOWEBDRIVER")
+            do cOptions.AddArgument "headless"
             do options.AddArgument "-headless"
 
         //use chrome = new ChromeDriver(cOptions) // The webdriver that is checked in is for chrome version 83
@@ -164,7 +168,7 @@ module rec Entry =
 
         "Scrutiny" &&& fun _ ->
             printfn "opening url"
-            url "https://localhost:5001/home"
+            url "https://127.0.0.1:5001/home"
             scrutinize config (GlobalState()) home
 
         switchTo ff
