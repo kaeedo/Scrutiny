@@ -9,7 +9,6 @@
     <PackageTags>F#;UI Test;Testing</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <IncludeSource>true</IncludeSource>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/kaeedo/Scrutiny/master/LICENSE.md</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/kaeedo/Scrutiny/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/kaeedo/Scrutiny</RepositoryUrl>
     <PackageReleaseNotes>https://github.com/kaeedo/Scrutiny/blob/master/CHANGELOG.md</PackageReleaseNotes>
