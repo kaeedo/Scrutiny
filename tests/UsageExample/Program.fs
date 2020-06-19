@@ -138,17 +138,20 @@ module rec Entry =
 
     [<EntryPoint>]
     let main argv =
-        //let options = FirefoxOptions()
+        let options = FirefoxOptions()
         let cOptions = ChromeOptions()
         do cOptions.AddAdditionalCapability("acceptInsecureCerts", true, true)
+        do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
         if System.Environment.GetEnvironmentVariable("CI") = "true"
         then
             chromeDir <- System.Environment.GetEnvironmentVariable("CHROMEWEBDRIVER")
+            firefoxDir <- System.Environment.GetEnvironmentVariable("GECKOWEBDRIVER")
             do cOptions.AddArgument "headless"
+            do options.AddArgument "headless"
 
-        //use ff = new FirefoxDriver(options)
-        use chrome = new ChromeDriver(cOptions) // The webdriver that is checked in is for chrome version 83
+        //use chrome = new ChromeDriver(cOptions) // The webdriver that is checked in is for chrome version 83
+        use ff = new FirefoxDriver(options)
         let currentDirectory = DirectoryInfo(Directory.GetCurrentDirectory())
 
         let config =
@@ -164,7 +167,7 @@ module rec Entry =
             url "https://localhost:5001/home"
             scrutinize config (GlobalState()) home
 
-        switchTo chrome
+        switchTo ff
         pin canopy.types.direction.Right
 
 
