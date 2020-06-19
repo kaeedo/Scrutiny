@@ -23,16 +23,18 @@ jobs:
       run: dotnet tool restore
     - name: Install packages
       run: dotnet paket restore
+    - name: Set version from changelog
+      run: dotnet fsi ./updateVersion.fsx
     - name: Build solution
-      run: dotnet build -c Release
+      run: dotnet build
     - name: Run unit tests
       run: dotnet test
     - name: Start sample web
       run: dotnet  run --project ${{ github.workspace }}/tests/Web/Web.fsproj &
-
-    - name: debug
-      run: curl -k https://localhost:5001/home.js
-
     - name: Run usage example
       run: dotnet run --project ${{ github.workspace }}/tests/UsageExample/UsageExample.fsproj
-  # Create publish job
+
+    - name: Pack nuget package
+      run: dotnet pack ./src/Scrutiny/Scrutiny.fsproj --include-source --include-symbols --output ${{ github.workspace }}/output
+    - name: Push nuget package
+      run: dotnet nuget push ${{ github.workspace }}/output/Scrutiny.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGETAPI }}
