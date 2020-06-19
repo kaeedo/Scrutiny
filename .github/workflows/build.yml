@@ -36,5 +36,9 @@ jobs:
 
     - name: Pack nuget package
       run: dotnet pack ./src/Scrutiny/Scrutiny.fsproj --include-source --include-symbols --output ${{ github.workspace }}/output
-    - name: Push nuget package
-      run: dotnet nuget push ${{ github.workspace }}/output/Scrutiny.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGETAPI }}
+    - name: debug
+      run: ls -lah ${{ github.workspace }}
+    - name: debug
+      run: ls -lah ${{ github.workspace }}/output
+      #- name: Push nuget package
+    #  run: dotnet nuget push ${{ github.workspace }}/output/Scrutiny.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGETAPI }}
