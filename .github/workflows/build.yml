@@ -28,7 +28,7 @@ jobs:
     - name: Run unit tests
       run: dotnet test
     - name: Start sample web
-        run: dotnet ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/Web.dll &
+      run: dotnet ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/Web.dll &
 
     - name: debug
       run: curl -k https://localhost:5001
