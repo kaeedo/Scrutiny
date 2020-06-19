@@ -147,7 +147,7 @@ module rec Entry =
         do cOptions.AddAdditionalCapability("acceptInsecureCerts", true, true)
         do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
-        if (not (System.Environment.GetEnvironmentVariable("CI") = "true"))
+        if ((System.Environment.GetEnvironmentVariable("CI") = "true"))
         then
             chromeDir <- System.Environment.GetEnvironmentVariable("CHROMEWEBDRIVER")
             firefoxDriverDir <- System.Environment.GetEnvironmentVariable("GECKOWEBDRIVER")
