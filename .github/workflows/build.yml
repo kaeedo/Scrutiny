@@ -27,6 +27,9 @@ jobs:
       run: dotnet build -c Release
     - name: Run unit tests
       run: dotnet test
+    - name: Start sample web
+        run: dotnet ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/Web.dll &
+
     - name: debug
       run: curl -k https://localhost:5001
     - name: debug
@@ -36,8 +39,7 @@ jobs:
     - name: debug
       run: curl -k https://localhost:5001/comment
   # This is prolly funky
-    - name: Start sample web
-      run: dotnet ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/Web.dll &
+
 
     - name: Run usage example
       run: dotnet run --project ${{ github.workspace }}/tests/UsageExample/UsageExample.fsproj
