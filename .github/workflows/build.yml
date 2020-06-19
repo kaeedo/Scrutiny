@@ -27,6 +27,14 @@ jobs:
       run: dotnet build -c Release
     - name: Run unit tests
       run: dotnet test
+    - name: debug
+      run: curl -k https://localhost:5001
+    - name: debug
+      run: curl -k https://localhost:5001/home
+    - name: debug
+      run: curl -k https://localhost:5001/signin
+    - name: debug
+      run: curl -k https://localhost:5001/comment
   # This is prolly funky
     - name: Start sample web
       run: dotnet ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/Web.dll &
