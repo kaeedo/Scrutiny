@@ -128,7 +128,7 @@ module rec Entry =
                 name "Home"
                 onEnter (fun _ ->
                     printfn "Checking on page home"
-                    printfn "JS call: %A" <| js "2+2"
+                    printfn "JS call: %A" <| js "return 2+2"
                     "#header" == "Home")
 
                 transition ((fun _ -> click "#comment") ==> comment)
@@ -136,7 +136,7 @@ module rec Entry =
 
                 onExit (fun _ ->
                     printfn "Exiting home"
-                    printfn "JS call exit: %A" <| js "2+6"
+                    printfn "JS call exit: %A" <| js "return 2+6"
                 )
             }
 
@@ -147,15 +147,16 @@ module rec Entry =
         do cOptions.AddAdditionalCapability("acceptInsecureCerts", true, true)
         do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
-        if System.Environment.GetEnvironmentVariable("CI") = "true"
+        if (not (System.Environment.GetEnvironmentVariable("CI") = "true"))
         then
             chromeDir <- System.Environment.GetEnvironmentVariable("CHROMEWEBDRIVER")
             firefoxDriverDir <- System.Environment.GetEnvironmentVariable("GECKOWEBDRIVER")
             do cOptions.AddArgument "headless"
+            do cOptions.AddArgument "no-sandbox"
             do options.AddArgument "-headless"
 
-        //use chrome = new ChromeDriver(cOptions) // The webdriver that is checked in is for chrome version 83
-        use ff = new FirefoxDriver(options)
+        use chrome = new ChromeDriver(cOptions) // The webdriver that is checked in is for chrome version 83
+        //use ff = new FirefoxDriver(options)
         let currentDirectory = DirectoryInfo(Directory.GetCurrentDirectory())
 
         let config =
@@ -171,8 +172,7 @@ module rec Entry =
             url "https://127.0.0.1:5001/home"
             scrutinize config (GlobalState()) home
 
-        switchTo ff
-        pin canopy.types.direction.Right
+        switchTo chrome
 
 
         onFail (fun _ ->
