@@ -31,15 +31,7 @@ jobs:
       run: dotnet ${{ github.workspace }}/tests/Web/bin/Release/netcoreapp3.1/Web.dll &
 
     - name: debug
-      run: curl -k https://localhost:5001
-    - name: debug
-      run: curl -k https://localhost:5001/home
-    - name: debug
-      run: curl -k https://localhost:5001/signin
-    - name: debug
-      run: curl -k https://localhost:5001/comment
-  # This is prolly funky
-
+      run: curl -k https://localhost:5001/home.js
 
     - name: Run usage example
       run: dotnet run --project ${{ github.workspace }}/tests/UsageExample/UsageExample.fsproj

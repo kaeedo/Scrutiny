@@ -128,7 +128,6 @@ module rec Entry =
                 name "Home"
                 onEnter (fun _ ->
                     printfn "Checking on page home"
-                    printfn "JS call: %A" <| js "return 2+2"
                     "#header" == "Home")
 
                 transition ((fun _ -> click "#comment") ==> comment)
@@ -136,7 +135,6 @@ module rec Entry =
 
                 onExit (fun _ ->
                     printfn "Exiting home"
-                    printfn "JS call exit: %A" <| js "return 2+6"
                 )
             }
 
@@ -147,7 +145,7 @@ module rec Entry =
         do cOptions.AddAdditionalCapability("acceptInsecureCerts", true, true)
         do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
-        if ((System.Environment.GetEnvironmentVariable("CI") = "true"))
+        if System.Environment.GetEnvironmentVariable("CI") = "true"
         then
             chromeDir <- System.Environment.GetEnvironmentVariable("CHROMEWEBDRIVER")
             firefoxDriverDir <- System.Environment.GetEnvironmentVariable("GECKOWEBDRIVER")
