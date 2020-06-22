@@ -3,8 +3,8 @@ name: Build
 on:
   branches:
     - master
-      paths:
-        - '${{ github.workspace }}/CHANGELOG.md'
+  paths:
+    - '${{ github.workspace }}/CHANGELOG.md'
 
 env:
   CI: true
