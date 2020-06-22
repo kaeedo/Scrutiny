@@ -25,6 +25,12 @@ jobs:
       run: dotnet paket restore
     - name: Set version from changelog
       run: echo ::set-env name=RELEASE_VERSION::$(dotnet fsi ./updateVersion.fsx)
+    - name: Debug
+      run: echo $RELEASE_VERSION
+    - name: Debug
+      env:
+        TAG: ${{ $RELEASE_VERSION }}
+      run: echo $TAG
     - name: Build solution
       run: dotnet build
     - name: Run unit tests
@@ -35,8 +41,8 @@ jobs:
       run: dotnet run --project ${{ github.workspace }}/tests/UsageExample/UsageExample.fsproj
     - name: Pack nuget package
       run: dotnet pack ./src/Scrutiny/Scrutiny.fsproj --include-source --include-symbols --output ${{ github.workspace }}/output
-    - name: Push nuget package
-      run: dotnet nuget push ${{ github.workspace }}/output/Scrutiny.*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGETAPI }}
+    #- name: Push nuget package
+    #  run: dotnet nuget push ${{ github.workspace }}/output/Scrutiny.*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGETAPI }}
     - uses: hole19/git-tag-action@master
       env:
         TAG: $RELEASE_VERSION
