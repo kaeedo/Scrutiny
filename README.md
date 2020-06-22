@@ -151,6 +151,8 @@ Run:
 
 To run the [UsageExample](tests/UsageExample), you must start the [web project](tests/Web).
 
+The HTML report is a single file with all javascript written inline
+
 ## TODO for Beta release
 - [x] Finish initial HTML report
 - [x] Create and publish NuGet package
@@ -161,7 +163,7 @@ To run the [UsageExample](tests/UsageExample), you must start the [web project](
 - [x] Detailed result report. Color coded states and transitions showcasing which parts succeeded and failed
 - [x] Write unit tests
 - [x] Documentation
-- [ ] Setup proper build scripts
+- [x] Setup proper build scripts
 
 
 ## TODO General
@@ -172,6 +174,3 @@ To run the [UsageExample](tests/UsageExample), you must start the [web project](
 - [ ] Documentation
 - [ ] Create nice interface for usage from C#
 - [ ] Make pretty report page
-
-
-# HTML REPORT DEVELOPMENT WRITE ME
