@@ -29,7 +29,7 @@ jobs:
       run: echo $RELEASE_VERSION
     - name: Debug
       env:
-        TAG: ${{ $(echo $RELEASE_VERSION) }}
+        TAG: ${{ env.RELEASE_VERSION }}
       run: echo $TAG
     - name: Build solution
       run: dotnet build
