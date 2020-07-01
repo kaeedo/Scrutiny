@@ -60,7 +60,7 @@ The `exitAction` is optional, and multiple `page`s can have an `exitAction`. If 
 
 The `GlobalState` in the example is any type defined in your test that you can use to pass data between states, e.g. `Username` or `IsLoggedIn`
 
-The `LocalState` is specific to a state, and is constructed each time that state is visited. It's optional, but when set, all function will have access to the local state via the function parameter. In the above example, `localState` is defined as:
+The `LocalState` is specific to a state, and is constructed each time that state is visited. It's optional, but when set, all functions will have access to the local state via the function parameter. In the above example, `localState` is defined as:
 
     type LoggedInComment() =
         member val Comment = String.Empty with get, set
