@@ -165,10 +165,11 @@ The HTML report is a single file with all javascript written inline
 - [x] Documentation
 - [x] Setup proper build scripts
 
-
 ## TODO General
 - [ ] Implement some kind of Conversion flow
+- [ ] Implement some kind of parameterised input data
 - [ ] Documentation
+- [ ] More code examples
 - [ ] More unit/integration tests
 - [ ] Use Fable to create a javascript release and npm package for usage from Node.js
 - [ ] Documentation
