@@ -168,6 +168,7 @@ The HTML report is a single file with all javascript written inline
 ## TODO General
 - [ ] Implement some kind of Conversion flow
 - [ ] Implement some kind of parameterised input data
+- [ ] Add a concept of Personas
 - [ ] Documentation
 - [ ] More code examples
 - [ ] More unit/integration tests
