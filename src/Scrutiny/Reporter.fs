@@ -57,7 +57,7 @@ type internal Reporter<'a, 'b>(filePath: string) =
     let generateMap (graph: State<_, _>) =
         let options = JsonSerializerOptions()
         options.Converters.Add(JsonFSharpConverter())
-        options.ReferenceHandling <- ReferenceHandling.Preserve
+        //options.ReferenceHandling <- ReferenceHandling.Preserve
 
         let output = html.Replace("\"{{REPORT}}\"", JsonSerializer.Serialize(graph, options))
 
