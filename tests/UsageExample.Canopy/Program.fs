@@ -11,10 +11,14 @@ open canopy.classic
 open canopy.runner.classic
 open canopy
 open configuration
-open reporters
-open canopy.types
+//open reporters
+//open canopy.types
 open System.IO
 open OpenQA.Selenium.Chrome
+open OpenQA.Selenium
+open OpenQA.Selenium.Chrome
+open WebDriverManager
+open WebDriverManager.DriverConfigs.Impl
 
 type GlobalState() =
     member val IsSignedIn = false with get, set
@@ -140,6 +144,9 @@ module rec Entry =
 
     [<EntryPoint>]
     let main argv =
+        do DriverManager().SetUpDriver(new ChromeConfig())
+        //do DriverManager().SetUpDriver(new FirefoxConfig())
+
         let options = FirefoxOptions()
         let cOptions = ChromeOptions()
         do cOptions.AddAdditionalCapability("acceptInsecureCerts", true, true)
@@ -147,13 +154,11 @@ module rec Entry =
 
         if System.Environment.GetEnvironmentVariable("CI") = "true"
         then
-            chromeDir <- System.Environment.GetEnvironmentVariable("CHROMEWEBDRIVER")
-            firefoxDriverDir <- System.Environment.GetEnvironmentVariable("GECKOWEBDRIVER")
             do cOptions.AddArgument "headless"
             do cOptions.AddArgument "no-sandbox"
             do options.AddArgument "-headless"
 
-        use chrome = new ChromeDriver(cOptions) // The webdriver that is checked in is for chrome version 83
+        use chrome = new ChromeDriver(cOptions) 
         //use ff = new FirefoxDriver(options)
         let currentDirectory = DirectoryInfo(Directory.GetCurrentDirectory())
 
@@ -171,7 +176,6 @@ module rec Entry =
             scrutinize config (GlobalState()) home
 
         switchTo chrome
-
 
         onFail (fun _ ->
             quit chrome

@@ -7,9 +7,9 @@ nuget FSharp.Core
 nuget System.Text.Json 5.0.0-preview.4.20251.6 
 nuget FSharp.SystemTextJson
 
-group UsageExample
+group UsageExample.Canopy
     source https://api.nuget.org/v3/index.json
-    nuget Giraffe
+    nuget WebDriverManager
     nuget canopy
     nuget Selenium.WebDriver
 
@@ -21,3 +21,7 @@ group Tests
     nuget Unquote
     nuget YoloDev.Expecto.TestSdk
     nuget Microsoft.NET.Test.Sdk
+
+group Web
+    source https://api.nuget.org/v3/index.json
+    nuget Giraffe
