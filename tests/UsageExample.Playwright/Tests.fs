@@ -1,4 +1,6 @@
-module PlaywrightTests
+namespace UsageExample.Playwright
+
+
 
 open System
 open Xunit
@@ -8,30 +10,36 @@ open Scrutiny
 open Scrutiny.Scrutiny
 open UsageExample.Playwright
 open System.IO
+open Xunit.Abstractions
 
-[<Fact(Timeout = Playwright.DefaultTimeout)>]
-let ``Run Scrutiny Test`` () =
-    Playwright.InstallAsync() |> Async.AwaitTask |> Async.RunSynchronously
-    use playwright = Playwright.CreateAsync() |> Async.AwaitTask |> Async.RunSynchronously
+type PlaywrightTests(outputHelper: ITestOutputHelper) =
+    let logger msg = outputHelper.WriteLine(msg)
+    [<Fact(Timeout = Playwright.DefaultTimeout)>]
+    let ``Run Scrutiny Test`` () =
+        //System.Environment.SetEnvironmentVariable("DEBUG", "pw:api")
+        logger "Setting up browser drivers. This might take awhile"
+        Playwright.InstallAsync() |> Async.AwaitTask |> Async.RunSynchronously
+        use playwright = Playwright.CreateAsync(debug = "pw:api") |> Async.AwaitTask |> Async.RunSynchronously
+        logger "Finished setting up browser drivers"
 
-    let page =
-        task {
-            let! browser = playwright.Firefox.LaunchAsync(headless = false, slowMo = 1000)
-            let! context = browser.NewContextAsync(ignoreHTTPSErrors = true)
-            let! page = context.NewPageAsync()
+        let page =
+            task {
+                let! browser = playwright.Firefox.LaunchAsync(headless = false, slowMo = 1000)
+                let! context = browser.NewContextAsync(ignoreHTTPSErrors = true)
+                let! page = context.NewPageAsync()
 
-            let! _ = page.GoToAsync("https://127.0.0.1:5001/home")
-            return page
-        }
-        |> Async.AwaitTask
-        |> Async.RunSynchronously
+                let! _ = page.GoToAsync("https://127.0.0.1:5001/home")
+                return page
+            }
+            |> Async.AwaitTask
+            |> Async.RunSynchronously
 
-    let config =
-        { ScrutinyConfig.Default with
-              Seed = 553931187
-              MapOnly = false
-              ComprehensiveActions = true
-              ComprehensiveStates = true
-              ScrutinyResultFilePath = DirectoryInfo(Directory.GetCurrentDirectory()).Parent.Parent.Parent.FullName + "/myResult.html" }
+        let config =
+            { ScrutinyConfig.Default with
+                  Seed = 553931187
+                  MapOnly = false
+                  ComprehensiveActions = true
+                  ComprehensiveStates = true
+                  ScrutinyResultFilePath = DirectoryInfo(Directory.GetCurrentDirectory()).Parent.Parent.Parent.FullName + "/myResult.html" }
 
-    scrutinize config (GlobalState(page)) ScrutinyStateMachine.home
+        scrutinize config (GlobalState(page, logger)) ScrutinyStateMachine.home
