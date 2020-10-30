@@ -14,17 +14,20 @@ open Xunit.Abstractions
 
 type PlaywrightTests(outputHelper: ITestOutputHelper) =
     let logger msg = outputHelper.WriteLine(msg)
+
     [<Fact(Timeout = Playwright.DefaultTimeout)>]
     let ``Run Scrutiny Test`` () =
         //System.Environment.SetEnvironmentVariable("DEBUG", "pw:api")
         logger "Setting up browser drivers. This might take awhile"
         Playwright.InstallAsync() |> Async.AwaitTask |> Async.RunSynchronously
-        use playwright = Playwright.CreateAsync(debug = "pw:api") |> Async.AwaitTask |> Async.RunSynchronously
+        System.Environment.SetEnvironmentVariable("PWDEBUG", "1")
+        System.Environment.SetEnvironmentVariable("DEBUG", "pw:api")
+        use playwright = Playwright.CreateAsync() |> Async.AwaitTask |> Async.RunSynchronously
         logger "Finished setting up browser drivers"
 
         let page =
             task {
-                let! browser = playwright.Firefox.LaunchAsync(headless = false, slowMo = 1000)
+                let! browser = playwright.Firefox.LaunchAsync(headless = false)
                 let! context = browser.NewContextAsync(ignoreHTTPSErrors = true)
                 let! page = context.NewPageAsync()
 

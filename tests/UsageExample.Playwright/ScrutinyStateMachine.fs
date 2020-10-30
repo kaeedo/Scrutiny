@@ -17,6 +17,13 @@ type GlobalState(page: IPage, logger: string -> unit) =
     member val Username = "MyUsername" with get, set
     member val Number = 42
 
+    member x.GetInputValueAsync (selector: string) =
+        task {
+            let! element = x.Page.QuerySelectorAsync(selector)
+            let! value = element.EvaluateAsync("e => e.value")
+            return value.ToString()
+        }
+
 type LoggedInComment() =
     member val Comment = String.Empty with get, set
 
@@ -30,7 +37,7 @@ module rec ScrutinyStateMachine =
                     task {
                         globalState.Logger "Sign in: Looking for header text"
                         let! headerText = globalState.Page.GetInnerTextAsync("#header")
-                        Assert.Equal(headerText, "Sign In")
+                        Assert.Equal("Sign In", headerText)
                     }
                     |> Async.AwaitTask
                     |> Async.RunSynchronously
@@ -58,7 +65,7 @@ module rec ScrutinyStateMachine =
                             globalState.IsSignedIn <- true
 
                             globalState.Logger "Sign in: clicking text=sign in"
-                            do! globalState.Page.ClickAsync("text=Sign In")
+                            do! globalState.Page.ClickAsync("css=button >> text=Sign In")
                         }
                         |> Async.AwaitTask
                         |> Async.RunSynchronously
@@ -70,8 +77,9 @@ module rec ScrutinyStateMachine =
                         do! globalState.Page.FillAsync("#username", "MyUsername")
 
                         globalState.Logger "Sign in: getting username"
-                        let! username = globalState.Page.GetInnerTextAsync("#username")
-                        Assert.Equal(username, "MyUsername")
+                        
+                        let! username = globalState.GetInputValueAsync("#username")
+                        Assert.Equal("MyUsername", username)
                     }
                     |> Async.AwaitTask
                     |> Async.RunSynchronously
@@ -82,8 +90,8 @@ module rec ScrutinyStateMachine =
                         do! globalState.Page.FillAsync("#number", "42")
 
                         globalState.Logger "Sign in: getting number"
-                        let! number = globalState.Page.GetInnerTextAsync("#number")
-                        Assert.Equal(number, "42")
+                        let! number = globalState.GetInputValueAsync("#number")
+                        Assert.Equal("42", number)
                     }
                     |> Async.AwaitTask
                     |> Async.RunSynchronously
@@ -91,18 +99,20 @@ module rec ScrutinyStateMachine =
 
                 action (fun _ ->
                     task {
-                        let! username = globalState.Page.GetInnerTextAsync("#username")
-                        let! number = globalState.Page.GetInnerTextAsync("#number")
+                        let! username = globalState.GetInputValueAsync("#username")
+                        let! number = globalState.GetInputValueAsync("#number")
+
+                        let signInButtonSelector = "css=button >> text=Sign In"
 
                         if String.IsNullOrWhiteSpace(username) || String.IsNullOrWhiteSpace(number) then
-                            do! globalState.Page.ClickAsync("text=Sign In")
+                            do! globalState.Page.ClickAsync(signInButtonSelector)
                         else
                             do! globalState.Page.FillAsync("#username", String.Empty)
-                            do! globalState.Page.ClickAsync("text=Sign In")
-
-                        let! errorMessage = globalState.Page.QuerySelectorAsync("ErrorMessage")
+                            do! globalState.Page.ClickAsync(signInButtonSelector)
+                        
+                        let! errorMessage = globalState.Page.QuerySelectorAsync("#ErrorMessage")
+                        Assert.NotNull(errorMessage)
                         let! displayState = errorMessage.EvaluateAsync("e => e.style.display")
-                        //let! isVisible = errorMessage.WaitForElementStateAsync(ElementState.Visible)
 
                         Assert.False(displayState.ToString() = "none")
                     }
@@ -146,7 +156,7 @@ module rec ScrutinyStateMachine =
                             |> List.tryFind(fun c ->
                                 task {
                                     let! text = c.GetInnerTextAsync()
-                                    return text = sprintf "%s wrote:%s%s" globalState.Username Environment.NewLine ls.Comment
+                                    return text = sprintf "%s wrote:\n%s" globalState.Username ls.Comment
                                 }
                                 |> Async.AwaitTask
                                 |> Async.RunSynchronously
@@ -161,7 +171,8 @@ module rec ScrutinyStateMachine =
                 onEnter (fun _ ->
                     globalState.Logger "Checking comment is logged in"
                     task {
-                        let! openModal = globalState.Page.QuerySelectorAsync("openModal")
+                        let! openModal = globalState.Page.QuerySelectorAsync("#openModal")
+                        Assert.NotNull(openModal)
                         let! displayState = openModal.EvaluateAsync("e => e.style.display")
 
                         Assert.False(displayState.ToString() = "none")
@@ -197,7 +208,8 @@ module rec ScrutinyStateMachine =
                     globalState.Logger "Checking on page home logged in"
 
                     task {
-                        let! welcomeText = globalState.Page.QuerySelectorAsync("welcomeText")
+                        let! welcomeText = globalState.Page.QuerySelectorAsync("#welcomeText")
+                        Assert.NotNull(welcomeText)
                         let! displayState = welcomeText.EvaluateAsync("e => e.style.display")
 
                         Assert.False(displayState.ToString() = "none")
@@ -225,7 +237,7 @@ module rec ScrutinyStateMachine =
 
                     task {
                         let! headerText = globalState.Page.GetInnerTextAsync("#header")
-                        Assert.Equal(headerText, "Comments")
+                        Assert.Equal("Comments", headerText)
                     }
                     |> Async.AwaitTask
                     |> Async.RunSynchronously
@@ -258,7 +270,7 @@ module rec ScrutinyStateMachine =
 
                     task {
                         let! headerText = globalState.Page.GetInnerTextAsync("#header")
-                        Assert.Equal(headerText, "Home")
+                        Assert.Equal("Home", headerText)
                     }
                     |> Async.AwaitTask
                     |> Async.RunSynchronously
