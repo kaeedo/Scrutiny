@@ -13,6 +13,14 @@ group UsageExample.Canopy
     nuget canopy
     nuget Selenium.WebDriver
 
+group UsageExample.Playwright
+    source https://api.nuget.org/v3/index.json
+    nuget Microsoft.NET.Test.Sdk
+    nuget xunit
+    nuget xunit.runner.visualstudio
+    nuget PlaywrightSharp
+    nuget TaskBuilder.fs
+
 group Tests
     source https://api.nuget.org/v3/index.json
     nuget Expecto

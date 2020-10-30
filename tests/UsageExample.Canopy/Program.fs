@@ -10,12 +10,7 @@ open Scrutiny.Scrutiny
 open canopy.classic
 open canopy.runner.classic
 open canopy
-open configuration
-//open reporters
-//open canopy.types
 open System.IO
-open OpenQA.Selenium.Chrome
-open OpenQA.Selenium
 open OpenQA.Selenium.Chrome
 open WebDriverManager
 open WebDriverManager.DriverConfigs.Impl

@@ -24,6 +24,8 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Web", "tests\Web\Web.fsproj
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "UsageExample.Canopy", "tests\UsageExample.Canopy\UsageExample.Canopy.fsproj", "{5EA8D50C-57B3-4D13-9DE0-723BF47342B9}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "UsageExample.Playwright", "tests\UsageExample.Playwright\UsageExample.Playwright.fsproj", "{A8EC69CE-AAC5-4013-B71E-FD965955F1D2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,10 @@ Global
 		{5EA8D50C-57B3-4D13-9DE0-723BF47342B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5EA8D50C-57B3-4D13-9DE0-723BF47342B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5EA8D50C-57B3-4D13-9DE0-723BF47342B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8EC69CE-AAC5-4013-B71E-FD965955F1D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8EC69CE-AAC5-4013-B71E-FD965955F1D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8EC69CE-AAC5-4013-B71E-FD965955F1D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8EC69CE-AAC5-4013-B71E-FD965955F1D2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -55,6 +61,7 @@ Global
 		{5B268771-4332-4B32-87BD-7CBA4147BAB9} = {5B352165-80D8-41A1-B547-C168744F0871}
 		{C1F8656E-FBA3-43C5-9B15-67826212C7C1} = {0DBB812D-1870-492A-B547-0A3EF15117AF}
 		{5EA8D50C-57B3-4D13-9DE0-723BF47342B9} = {0DBB812D-1870-492A-B547-0A3EF15117AF}
+		{A8EC69CE-AAC5-4013-B71E-FD965955F1D2} = {0DBB812D-1870-492A-B547-0A3EF15117AF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C3490AE4-56E5-46F6-A604-A510D0BC925B}
