@@ -140,8 +140,8 @@ module rec Entry =
     [<EntryPoint>]
     let main argv =
         printfn "Setting up browser drivers. This might take awhile"
-        //do DriverManager().SetUpDriver(ChromeConfig())
-        do DriverManager().SetUpDriver(FirefoxConfig())
+        do DriverManager().SetUpDriver(ChromeConfig())
+        //do DriverManager().SetUpDriver(FirefoxConfig())
         printfn "Finished setting up browser drivers"
 
         let options = FirefoxOptions()
@@ -155,8 +155,8 @@ module rec Entry =
             do cOptions.AddArgument "no-sandbox"
             do options.AddArgument "-headless"
 
-        // use chrome = new ChromeDriver(cOptions)
-        use ff = new FirefoxDriver(options)
+        use chrome = new ChromeDriver(cOptions)
+        //use ff = new FirefoxDriver(options)
         let currentDirectory = DirectoryInfo(Directory.GetCurrentDirectory())
 
         let config =
@@ -172,14 +172,14 @@ module rec Entry =
             url "https://127.0.0.1:5001/home"
             scrutinize config (GlobalState()) home
 
-        switchTo ff
+        switchTo chrome
 
         onFail (fun _ ->
-            quit ff
+            quit chrome
             raise (exn "Failed")
         )
 
         run()
-        quit ff
+        quit chrome
 
         0

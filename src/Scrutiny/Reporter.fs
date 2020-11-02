@@ -57,12 +57,14 @@ type internal Reporter<'a, 'b>(filePath: string) =
     let generateMap (graph: State<_, _>) =
         let options = JsonSerializerOptions()
         options.Converters.Add(JsonFSharpConverter())
+        options.ReferenceHandler <- ReferenceHandler.Preserve
         //options.ReferenceHandling <- ReferenceHandling.Preserve
 
         let output = html.Replace("\"{{REPORT}}\"", JsonSerializer.Serialize(graph, options))
 
-        let (filePath, fileName) = file
 
+        let (filePath, fileName) = file
+            
         File.WriteAllText(sprintf "%s/%s" filePath fileName, output)
 
     let mailbox =
@@ -85,10 +87,12 @@ type internal Reporter<'a, 'b>(filePath: string) =
                         return! loop { state with PerformedTransitions = performedTransitions }
                     | Finish reply ->
                         let finalState = { state with PerformedTransitions = state.PerformedTransitions |> List.rev }
-                        reply.Reply finalState
+                        
                         generateMap finalState
+                        
+                        reply.Reply finalState
                         return ()
-                }
+                } 
             loop { State.Graph = []; PerformedTransitions = [] }
         )
 

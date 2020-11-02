@@ -122,9 +122,6 @@ let reporterTests =
 
             let final = reporter.Finish ()
 
-            let options = JsonSerializerOptions()
-            options.Converters.Add(JsonFSharpConverter())
-
             let pt = final.PerformedTransitions
 
             test <@ pt.[0..pt.Length - 2] |> List.forall (fun f -> f.Error.IsNone)  @>

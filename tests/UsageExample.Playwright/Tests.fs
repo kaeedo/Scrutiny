@@ -1,10 +1,6 @@
 namespace UsageExample.Playwright
 
-
-
-open System
 open Xunit
-open FSharp.Control.Tasks.V2
 open PlaywrightSharp
 open Scrutiny
 open Scrutiny.Scrutiny
@@ -26,15 +22,14 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
         logger "Finished setting up browser drivers"
 
         let page =
-            task {
-                let! browser = playwright.Firefox.LaunchAsync(headless = false)
-                let! context = browser.NewContextAsync(ignoreHTTPSErrors = true)
-                let! page = context.NewPageAsync()
+            async {
+                let! browser = playwright.Firefox.LaunchAsync(headless = false) |> Async.AwaitTask
+                let! context = browser.NewContextAsync(ignoreHTTPSErrors = true) |> Async.AwaitTask
+                let! page = context.NewPageAsync() |> Async.AwaitTask
 
-                let! _ = page.GoToAsync("https://127.0.0.1:5001/home")
+                let! _ = page.GoToAsync("https://127.0.0.1:5001/home") |> Async.AwaitTask
                 return page
-            }
-            |> Async.AwaitTask
+            }            
             |> Async.RunSynchronously
 
         let config =
@@ -43,6 +38,8 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
                   MapOnly = false
                   ComprehensiveActions = true
                   ComprehensiveStates = true
-                  ScrutinyResultFilePath = DirectoryInfo(Directory.GetCurrentDirectory()).Parent.Parent.Parent.FullName + "/myResult.html" }
+                  ScrutinyResultFilePath = 
+                    Path.Join(DirectoryInfo(Directory.GetCurrentDirectory()).Parent.Parent.Parent.FullName, "myResult.html") }
 
         scrutinize config (GlobalState(page, logger)) ScrutinyStateMachine.home
+
