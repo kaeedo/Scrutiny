@@ -12,7 +12,6 @@
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="paket.references" />
     <Content Include="Properties\launchSettings.json">
 
     </Content>
@@ -20,5 +19,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <PackageReference Include="Giraffe" Version="4.1.0" />
+  </ItemGroup>
 </Project>

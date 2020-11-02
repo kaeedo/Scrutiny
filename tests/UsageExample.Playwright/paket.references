@@ -1,7 +1,0 @@
-FSharp.Core
-
-group UsageExample.Playwright
-    Microsoft.NET.Test.Sdk
-    xunit
-    xunit.runner.visualstudio
-    PlaywrightSharp

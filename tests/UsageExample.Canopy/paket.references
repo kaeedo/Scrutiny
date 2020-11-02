@@ -1,5 +1,0 @@
-FSharp.Core
-
-group UsageExample.Canopy
-    canopy
-    WebDriverManager

@@ -157,7 +157,6 @@ module rec Entry =
 
         use chrome = new ChromeDriver(cOptions)
         //use ff = new FirefoxDriver(options)
-        let currentDirectory = DirectoryInfo(Directory.GetCurrentDirectory())
 
         let config =
             { ScrutinyConfig.Default with
@@ -165,7 +164,7 @@ module rec Entry =
                   MapOnly = false
                   ComprehensiveActions = true
                   ComprehensiveStates = true
-                  ScrutinyResultFilePath = currentDirectory.Parent.Parent.Parent.FullName + "/myResult.html" }
+                  ScrutinyResultFilePath = Path.Join(Directory.GetCurrentDirectory(), "myResult.html") }
 
         "Scrutiny" &&& fun _ ->
             printfn "opening url"

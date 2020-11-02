@@ -26,3 +26,4 @@ devCert.crt
 src/HtmlReport/dist/
 src/HtmlReport/.fusebox/
 src/HtmlReport/.cache/
+/tests/UsageExample.Canopy/Chrome/

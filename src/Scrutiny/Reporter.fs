@@ -58,10 +58,8 @@ type internal Reporter<'a, 'b>(filePath: string) =
         let options = JsonSerializerOptions()
         options.Converters.Add(JsonFSharpConverter())
         options.ReferenceHandler <- ReferenceHandler.Preserve
-        //options.ReferenceHandling <- ReferenceHandling.Preserve
 
         let output = html.Replace("\"{{REPORT}}\"", JsonSerializer.Serialize(graph, options))
-
 
         let (filePath, fileName) = file
             

@@ -7,8 +7,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 		LICENSE.md = LICENSE.md
-		paket.dependencies = paket.dependencies
-		paket.lock = paket.lock
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -24,7 +22,7 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Web", "tests\Web\Web.fsproj
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "UsageExample.Canopy", "tests\UsageExample.Canopy\UsageExample.Canopy.fsproj", "{5EA8D50C-57B3-4D13-9DE0-723BF47342B9}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "UsageExample.Playwright", "tests\UsageExample.Playwright\UsageExample.Playwright.fsproj", "{A8EC69CE-AAC5-4013-B71E-FD965955F1D2}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "UsageExample.Playwright", "tests\UsageExample.Playwright\UsageExample.Playwright.fsproj", "{A8EC69CE-AAC5-4013-B71E-FD965955F1D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
