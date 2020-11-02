@@ -166,6 +166,7 @@ The HTML report is a single file with all javascript written inline
 
 ## TODO General
 - [x] More code examples
+- [x] Bring your own logger
 - [ ] Implement some kind of Conversion flow
 - [ ] Implement some kind of parameterised input data
 - [ ] Add a concept of Personas
