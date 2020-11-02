@@ -16,9 +16,10 @@ Scrutiny was designed to run UI tests, but using e.g. CanopyUI or Selenium is on
 
 ---
 
-Check the [UsageExample](tests/UsageExample) for a sample test implemented with [CanopyUI](https://github.com/lefthandedgoat/canopy).
-A tiny sample site exists in the [Web directory](tests/Web). This is the website that the [UsageExample](tests/UsageExample) is testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a comment if they are signed in.
-The [UsageExample](tests/UsageExample) showcases a certain approach a developer can take as to how to model their web site as a state machine. In this case, the home and comment page are each listed twice, once as logged out, and once as logged in.
+Check the [Canopy UsageExample](tests/UsageExample.Canopy) for a sample test implemented with [CanopyUI](https://github.com/lefthandedgoat/canopy).
+Check the [Playwright UsageExample](tests/UsageExample.Playwright) for a sample test implemented with [PlaywrightSharp](https://github.com/microsoft/playwright-sharp).
+A tiny sample site exists in the [Web directory](tests/Web). This is the website that the usage examples are testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a comment if they are signed in.
+The usage examples showcase a certain approach a developer can take as to how to model their web site as a state machine. In this case, the home and comment page are each listed twice, once as logged out, and once as logged in.
 This is only one way to handle this case, and the developer could choose to model it in any other way.
 
 Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s. The [Sample Web site](tests/Web) looks like this:
@@ -73,13 +74,15 @@ Some things can be configured via `ScrutinyConfig`. The default config is:
       MapOnly = false
       ComprehensiveActions = true
       ComprehensiveStates = true
-      ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html"}
+      ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html"
+      Logger = printfn "%s" }
 
 `Seed` is printed during each test to be able to recreate a specific test run.
 `MapOnly` won't run the test at all, but only generate the HTML Graph report.
 `ComprehensiveActions` will run ALL defined actions anytime it enters a state with actions defined. If false, it will run a random subset of actions.
 `ComprehensiveStates` will visit ALL states in the state machine. If this is false, then it will visit at least half of all states before randomly quitting.
 `ScrutinyResultFilePath` is the directory and specified file name that the generated HTML report will be saved in
+`Logger` is how individual messages from scrutiny will be logged. the signature is `string -> unit`. This is useful for things like XUnit that bring their own console logging mechanism, or if you wanted to integrate a larger loggin framework.
 
 To actually run the test, call the `scrutinize` function with your entry state, config, and global state object. e.g.
 
@@ -145,11 +148,7 @@ e.g.:
             }
 
 ## Development
-Run:
-* `dotnet tool restore`
-* `dotnet paket install`
-
-To run the [UsageExample](tests/UsageExample), you must start the [web project](tests/Web).
+To run the usage examples, you must start the [web project](tests/Web).
 
 The HTML report is a single file with all javascript written inline
 
@@ -166,13 +165,13 @@ The HTML report is a single file with all javascript written inline
 - [x] Setup proper build scripts
 
 ## TODO General
+- [x] More code examples
 - [ ] Implement some kind of Conversion flow
 - [ ] Implement some kind of parameterised input data
 - [ ] Add a concept of Personas
 - [ ] Documentation
-- [ ] More code examples
 - [ ] More unit/integration tests
-- [ ] Use Fable to create a javascript release and npm package for usage from Node.js
+- [ ] Use Fable to create a javascript release and npm package for usage from Node.js (maybe)
 - [ ] Documentation
 - [ ] Create nice interface for usage from C#
 - [ ] Make pretty report page

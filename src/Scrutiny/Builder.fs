@@ -1,7 +1,6 @@
 ﻿namespace Scrutiny
 
 open System
-open System.IO
 
 type PageBuilder() =
 
@@ -37,8 +36,8 @@ type PageBuilder() =
 
 
 module Scrutiny =
-    let private printPath path =
-        printfn "path: %s"
+    let private printPath logger path =
+        logger <| sprintf "path: %s"
             (path
              |> List.map (fun p -> p.Name)
              |> String.concat " --> ")
@@ -132,7 +131,7 @@ module Scrutiny =
         exitNode
 
     let private baseScrutinize<'a, 'b> (reporter: IReporter<'a, 'b>) (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a, 'b>) =
-        printfn "Scrutinizing system under test with seed: %i" config.Seed
+        config.Logger <| sprintf "Scrutinizing system under test with seed: %i" config.Seed
         let startState = startFn globalState
 
         let allStates = Navigator.constructAdjacencyGraph startState globalState
@@ -176,7 +175,7 @@ module Scrutiny =
                                 runActions config path.Head
                                 path.Head
                             else
-                                printPath path
+                                printPath config.Logger path
                                 if isExitPath then path.Head else clickAround false alreadyVisited path
                     | head :: tail ->
                         currentPath
@@ -200,7 +199,7 @@ module Scrutiny =
         finally
             reporter.Finish() |> ignore
             
-            printfn "Scrutiny Result written to: %s" config.ScrutinyResultFilePath
+            config.Logger <| sprintf "Scrutiny Result written to: %s" config.ScrutinyResultFilePath
 
     let scrutinize<'a, 'b> config = 
         let reporter = Reporter<'a, 'b>(config.ScrutinyResultFilePath) :> IReporter<'a, 'b>

@@ -21,14 +21,16 @@ type ScrutinyConfig =
       MapOnly: bool
       ComprehensiveActions: bool
       ComprehensiveStates: bool
-      ScrutinyResultFilePath: string }
+      ScrutinyResultFilePath: string
+      Logger: string -> unit}
 
       static member Default =
         { ScrutinyConfig.Seed = Environment.TickCount
           MapOnly = false
           ComprehensiveActions = true
           ComprehensiveStates = true
-          ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html" }
+          ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html"
+          Logger = printfn "%s" }
 
 type Transition<'a, 'b> =
     { TransitionFn: 'b -> unit

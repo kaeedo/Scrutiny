@@ -38,6 +38,7 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
                   MapOnly = false
                   ComprehensiveActions = true
                   ComprehensiveStates = true
+                  Logger = logger
                   ScrutinyResultFilePath = Path.Join(Directory.GetCurrentDirectory(), "myResult.html") }
 
         scrutinize config (GlobalState(page, logger)) ScrutinyStateMachine.home
