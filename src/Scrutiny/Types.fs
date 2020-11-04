@@ -41,8 +41,10 @@ and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
       LocalState: 'b
       OnEnter: 'b -> unit
       OnExit: 'b -> unit
-      Transitions: Transition<'a, 'b> list
-      Actions: List<'b -> unit>
+      // TODO can we make this not mutable?
+      // It's required right now because of the C# builder
+      mutable Transitions: Transition<'a, 'b> list
+      Actions: ('b -> unit) list
       // OnAction?
       ExitAction: ('b -> unit) option }
 

@@ -1,12 +1,14 @@
 using Microsoft.FSharp.Core;
 using NUnit.Framework;
 using Scrutiny;
+using Scrutiny.CSharp;
 using System.Collections.Generic;
 
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using WebDriverManager;
 using WebDriverManager.DriverConfigs.Impl;
+using UsageExample.CSharp.Pages;
 
 namespace UsageExample.CSharp
 {
@@ -30,6 +32,13 @@ namespace UsageExample.CSharp
         }
 
         [Test]
+        public void WithAttrs()
+        {
+            var gs = new GlobalState(driver);
+            ScrutinyCSharp.start(gs, new Home(gs));
+        }
+
+        [Test, Ignore("")]
         public void Test1()
         {
             var noop = FSharpFunc<object, Unit>.FromConverter(n => null);
