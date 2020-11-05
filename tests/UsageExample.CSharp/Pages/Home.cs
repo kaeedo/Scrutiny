@@ -1,7 +1,6 @@
 ﻿using Scrutiny.CSharp;
-using OpenQA.Selenium;
-using System;
-using NUnit.Framework;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace UsageExample.CSharp.Pages
 {
@@ -16,32 +15,30 @@ namespace UsageExample.CSharp.Pages
         }
 
         [OnEnter]
-        public void OnEnter()
+        public async Task OnEnter()
         {
-            Console.WriteLine("Checking on page home");
-            var headerText = globalState.Driver.FindElement(By.Id("header"));
+            globalState.Logger.WriteLine("Checking on page home");
+            var headerText = await globalState.Page.GetInnerTextAsync("#header");
 
-            Assert.AreEqual("Home", headerText.Text);
+            Assert.Equal("Home", headerText);
         }
 
         [OnExit]
         public void OnExit()
         {
-            Console.WriteLine("Exiting home");
+            globalState.Logger.WriteLine("Exiting home");
         }
 
         [TransitionTo(nameof(SignIn))]
-        public void ClickOnSignIn()
+        public async Task ClickOnSignIn()
         {
-            System.Threading.Thread.Sleep(5000);
-            globalState.Driver.FindElement(By.Id("signin")).Click();
+            await globalState.Page.ClickAsync("#signin");
         }
 
         [TransitionTo(nameof(Comment))]
-        public void ClickOnComment()
+        public async Task ClickOnComment()
         {
-            System.Threading.Thread.Sleep(5000);
-            globalState.Driver.FindElement(By.Id("comment")).Click();
+            await globalState.Page.ClickAsync("#comment");
         }
     }
 }

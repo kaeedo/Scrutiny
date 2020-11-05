@@ -1,4 +1,4 @@
-﻿using OpenQA.Selenium;
+﻿using System.Threading.Tasks;
 using Scrutiny.CSharp;
 
 namespace UsageExample.CSharp.Pages
@@ -14,10 +14,9 @@ namespace UsageExample.CSharp.Pages
         }
 
         [TransitionTo(nameof(Home))]
-        public void ClickOnHome()
+        public async Task ClickOnHome()
         {
-            System.Threading.Thread.Sleep(5000);
-            globalState.Driver.FindElement(By.Id("home")).Click();
+            await globalState.Page.ClickAsync("#home");
         }
     }
 }

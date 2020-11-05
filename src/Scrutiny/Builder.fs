@@ -165,7 +165,7 @@ module Scrutiny =
                         (currentPath: PageState<'a, 'b> list)
                     =
                     match currentPath with
-                    | head :: [] ->
+                    | [ head ] ->
                         match nextNode alreadyVisited with
                         | None -> head
                         | Some nextNode ->

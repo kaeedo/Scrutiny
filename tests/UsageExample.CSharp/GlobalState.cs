@@ -1,14 +1,18 @@
-﻿using OpenQA.Selenium;
+﻿using PlaywrightSharp;
+using Xunit.Abstractions;
 
 namespace UsageExample.CSharp
 {
     public class GlobalState
     {
-        public IWebDriver Driver { get; }
+        public IPage Page { get; }
 
-        public GlobalState(IWebDriver driver)
+        public ITestOutputHelper Logger { get; }
+
+        public GlobalState(IPage page, ITestOutputHelper logger)
         {
-            Driver = driver;
+            Page = page;
+            Logger = logger;
         }
     }
 }

@@ -7,7 +7,6 @@ open Scrutiny.Scrutiny
 
 open PlaywrightSharp
 open Xunit
-open Xunit.Abstractions
 
 type GlobalState(page: IPage, logger: string -> unit) =
     member val Logger = logger with get

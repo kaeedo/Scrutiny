@@ -1,18 +1,62 @@
 ﻿namespace Scrutiny.CSharp
 
 open Scrutiny
-open System.Reflection
+open System
+open System.Threading.Tasks
 
 module ScrutinyCSharp =
-    let private buildTransition toState (methodInfo: MethodInfo) constructed =
-        let tranFn =
-            if methodInfo.GetParameters().Length = 1
-            then fun ls -> (methodInfo.Invoke(constructed, [|ls|]) |> ignore)
-            else fun _ -> (methodInfo.Invoke(constructed, [||]) |> ignore)
-            
-        { Transition.TransitionFn = tranFn
-          ToState = fun _ -> toState }
+    let private constructPageState<'globalState> (gs: 'globalState) (psType: Type) =
+        let ctor = psType.GetConstructor([|typeof<'globalState>|])
+        ctor.Invoke([|gs|])
 
+    let private getMethodsWithAttribute attr (psType: Type)  =
+        psType.GetMethods()
+        |> Seq.toList
+        |> List.filter (fun method ->
+            method.GetCustomAttributes(attr, true).Length > 0
+        )
+
+    let private buildTransition<'globalState> (gs: 'globalState) defs (psType: Type)  =
+        getMethodsWithAttribute typeof<TransitionToAttribute> psType
+        |> List.map (fun method ->
+            let transitionToAttr =
+                method.GetCustomAttributes(typeof<TransitionToAttribute>, true)
+                |> Seq.head
+                :?> TransitionToAttribute
+
+            let toState =
+                defs
+                |> Seq.find (fun (ps, _) ->
+                    ps.Name = transitionToAttr.Name
+                )
+                |> fst
+
+            let constructedPageState = constructPageState gs psType
+
+            let tranFn =
+                if method.GetParameters().Length = 1
+                then fun ls -> (method.Invoke(constructedPageState, [|ls|]) |> ignore)
+                else fun _ -> (method.Invoke(constructedPageState, [||]) |> ignore)
+                
+            { Transition.TransitionFn = tranFn
+              ToState = fun _ -> toState }
+        )
+
+    let buildFnWithAttribute<'globalState> attr (gs: 'globalState) (psType) =
+        match getMethodsWithAttribute attr psType |> Seq.tryHead with
+        | None -> ignore
+        | Some m ->
+            let constructedPageState = constructPageState gs psType
+
+            if m.ReturnType = typeof<Task>
+            then 
+                if m.GetParameters().Length = 1
+                then fun ls -> (m.Invoke(constructedPageState, [|ls|]) :?> Task |> Async.AwaitTask |> Async.RunSynchronously |> ignore)
+                else fun _ -> (m.Invoke(constructedPageState, [||]) :?> Task |> Async.AwaitTask |> Async.RunSynchronously |> ignore)
+            else
+                if m.GetParameters().Length = 1
+                then fun ls -> (m.Invoke(constructedPageState, [|ls|]) |> ignore)
+                else fun _ -> (m.Invoke(constructedPageState, [||]) |> ignore)
 
     let start<'globalState> (gs: 'globalState) startingPageState: unit = 
         let t = startingPageState.GetType()
@@ -31,8 +75,8 @@ module ScrutinyCSharp =
                 let ps = 
                     { PageState.Name = pst.Name
                       LocalState = obj()
-                      OnEnter = fun _ -> ()
-                      OnExit = fun _ -> ()
+                      OnEnter = buildFnWithAttribute typeof<OnEnterAttribute> gs pst
+                      OnExit = buildFnWithAttribute typeof<OnExitAttribute> gs pst
                       ExitAction = None
                       Actions = []
                       Transitions = [] }
@@ -42,32 +86,7 @@ module ScrutinyCSharp =
         let defs =
             defs 
             |> List.map (fun (ps, psType) ->
-                let transitionsForPageState =
-                    psType.GetMethods()
-                    |> Seq.toList
-                    |> List.filter (fun method ->
-                        method.GetCustomAttributes(typeof<TransitionToAttribute>, true).Length > 0
-                    )
-                    // Extract anonymous fun
-                    |> List.map (fun method ->
-                        let transitionToAttr =
-                            method.GetCustomAttributes(typeof<TransitionToAttribute>, true)
-                            |> Seq.head
-                            :?> TransitionToAttribute
-
-                        let toState =
-                            defs
-                            |> Seq.find (fun (ps, _) ->
-                                ps.Name = transitionToAttr.Name
-                            )
-                            |> fst
-
-                        let constructedPageState =
-                            let ctor = psType.GetConstructor([|typeof<'globalState>|])
-                            ctor.Invoke([|gs|])
-
-                        buildTransition toState method constructedPageState
-                    )
+                let transitionsForPageState = buildTransition gs defs psType
 
                 ps.Transitions <- transitionsForPageState
                 ps

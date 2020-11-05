@@ -1,124 +1,58 @@
 using Microsoft.FSharp.Core;
-using NUnit.Framework;
+using PlaywrightSharp;
 using Scrutiny;
 using Scrutiny.CSharp;
+using System;
 using System.Collections.Generic;
-
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using WebDriverManager;
-using WebDriverManager.DriverConfigs.Impl;
+using System.Threading.Tasks;
 using UsageExample.CSharp.Pages;
+using Xunit;
+using Xunit.Abstractions;
 
 namespace UsageExample.CSharp
 {
-    public class Tests
+    public class Tests : IDisposable
     {
-        PageState<object, object> SignIn;
-        PageState<object, object> Home;
+        private readonly IPlaywright playwright;
+        private readonly ITestOutputHelper outputHelper;
 
-        IWebDriver driver;
-
-        [SetUp]
-        public void Setup()
+        public Tests(ITestOutputHelper outputHelper)
         {
-            new DriverManager().SetUpDriver(new ChromeConfig());
+            outputHelper.WriteLine("Setting up browser drivers. This might take awhile");
+            Playwright.InstallAsync().GetAwaiter().GetResult();
+            Environment.SetEnvironmentVariable("PWDEBUG", "1");
+            Environment.SetEnvironmentVariable("DEBUG", "pw:api");
 
-            var cOptions = new ChromeOptions();
-            cOptions.AddAdditionalCapability("acceptInsecureCerts", true, true);
+            playwright = Playwright.CreateAsync().GetAwaiter().GetResult();
 
-            driver = new ChromeDriver(cOptions);
-            driver.Url = "https://localhost:5001";
+            outputHelper.WriteLine("Finished setting up browser drivers");
+
+            //new DriverManager().SetUpDriver(new ChromeConfig());
+
+            //var cOptions = new ChromeOptions();
+            //cOptions.AddAdditionalCapability("acceptInsecureCerts", true, true);
+
+            //driver = new ChromeDriver(cOptions);
+            //driver.Url = "https://localhost:5001";
+            this.outputHelper = outputHelper;
         }
 
-        [Test]
-        public void WithAttrs()
+        [Fact(Timeout = Playwright.DefaultTimeout)]
+        public async Task WithAttrs()
         {
-            var gs = new GlobalState(driver);
+            var browser = await playwright.Firefox.LaunchAsync(headless: false);
+            var context = await browser.NewContextAsync(ignoreHTTPSErrors: true);
+            var page = await context.NewPageAsync();
+
+            await page.GoToAsync("https://127.0.0.1:5001/home");
+
+            var gs = new GlobalState(page, outputHelper);
             ScrutinyCSharp.start(gs, new Home(gs));
         }
 
-        [Test, Ignore("")]
-        public void Test1()
+        public void Dispose()
         {
-            var noop = FSharpFunc<object, Unit>.FromConverter(n => null);
-            var emptyList = Microsoft.FSharp.Collections.ListModule.OfSeq((IEnumerable<FSharpFunc<object, Unit>>)new List<FSharpFunc<object, Unit>>());
-            //            FSharpFunc<int, int>.FromConverter(input => input * 2)
-            //  {
-            //      PageState.Name = ""
-            //LocalState = Unchecked.defaultof < 'b>
-            //OnEnter = fun _-> ()
-            //OnExit = fun _-> ()
-            //Transitions = []
-            //Actions = []
-            //ExitAction = None }
-            var transitions = new List<Transition<object, object>>();
-            var toState = FSharpFunc<object, PageState<object, object>>.FromConverter(ls => SignIn);
-
-            var transitionFn = FSharpFunc<object, Unit>.FromConverter(ls =>
-            {
-                driver.FindElement(By.Id("signin")).Click();
-
-                return null;
-            });
-
-            var toSignIn = new Transition<object, object>(transitionFn: transitionFn, toState: toState);
-
-            transitions.Add(toSignIn);
-
-            var a = Microsoft.FSharp.Collections.ListModule.OfSeq<Transition<object, object>>(
-                    (IEnumerable<Transition<object, object>>)transitions
-                );
-
-            Home = new PageState<object, object>(
-                name: "Home",
-                localState: null,
-                transitions: a,
-                onEnter: noop,
-                onExit: noop,
-                exitAction: null,
-                actions: emptyList);
-
-
-
-            var transitions2 = new List<Transition<object, object>>();
-            var toState2 = FSharpFunc<object, PageState<object, object>>.FromConverter(ls => Home);
-
-            var transitionFn2 = FSharpFunc<object, Unit>.FromConverter(ls =>
-            {
-                driver.FindElement(By.Id("home")).Click();
-
-                return null;
-            });
-
-            var toHome = new Transition<object, object>(transitionFn: transitionFn2, toState: toState2);
-
-            transitions2.Add(toHome);
-
-            var b = Microsoft.FSharp.Collections.ListModule.OfSeq(transitions2);
-
-            SignIn = new PageState<object, object>(
-                name: "Sign In",
-                localState: null,
-                transitions: b,
-                onEnter: noop,
-                onExit: noop,
-                exitAction: null,
-                actions: emptyList);
-
-            var config = Scrutiny.ScrutinyConfig.Default;
-
-            var scrut = Scrutiny.Scrutiny.scrutinize<object, object>(config);
-            var withGs = scrut.Invoke(new object());
-            withGs.Invoke(FSharpFunc<object, PageState<object, object>>.FromConverter(_ => Home));
-
-            Assert.Pass();
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            driver.Close();
+            playwright?.Dispose();
         }
     }
 }
