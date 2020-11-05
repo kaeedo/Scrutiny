@@ -16,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Scrutiny.CSharp\Scrutiny.CSharp.fsproj" />
     <ProjectReference Include="..\..\src\Scrutiny\Scrutiny.fsproj" />
   </ItemGroup>
 

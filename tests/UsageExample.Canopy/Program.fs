@@ -137,21 +137,6 @@ module rec Entry =
                 )
             }
 
-
-    let signIn2 =
-        fun (globalState: GlobalState) ->
-            page {
-                name "SignIn"
-                transition ((fun _ -> click "#home") ==> home2)
-            }
-
-    let home2 =
-        fun (globalState: GlobalState) ->
-            page {
-                name "Home"
-                transition ((fun _ -> click "#signin") ==> signIn2)
-            }
-
     [<EntryPoint>]
     let main argv =
         printfn "Setting up browser drivers. This might take awhile"
@@ -184,7 +169,7 @@ module rec Entry =
         "Scrutiny" &&& fun _ ->
             printfn "opening url"
             url "https://127.0.0.1:5001/home"
-            scrutinize config (GlobalState()) home2
+            scrutinize config (GlobalState()) home
 
         switchTo chrome
 
