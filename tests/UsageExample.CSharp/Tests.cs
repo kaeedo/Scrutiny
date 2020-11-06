@@ -1,9 +1,6 @@
-using Microsoft.FSharp.Core;
 using PlaywrightSharp;
-using Scrutiny;
 using Scrutiny.CSharp;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using UsageExample.CSharp.Pages;
 using Xunit;
@@ -26,18 +23,10 @@ namespace UsageExample.CSharp
             playwright = Playwright.CreateAsync().GetAwaiter().GetResult();
 
             outputHelper.WriteLine("Finished setting up browser drivers");
-
-            //new DriverManager().SetUpDriver(new ChromeConfig());
-
-            //var cOptions = new ChromeOptions();
-            //cOptions.AddAdditionalCapability("acceptInsecureCerts", true, true);
-
-            //driver = new ChromeDriver(cOptions);
-            //driver.Url = "https://localhost:5001";
             this.outputHelper = outputHelper;
         }
 
-        [Fact(Timeout = Playwright.DefaultTimeout)]
+        [Fact]
         public async Task WithAttrs()
         {
             var browser = await playwright.Firefox.LaunchAsync(headless: false);

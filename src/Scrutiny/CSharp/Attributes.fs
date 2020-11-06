@@ -19,3 +19,11 @@ type OnEnterAttribute() =
 [<AttributeUsage(AttributeTargets.Method)>]
 type OnExitAttribute() =
     inherit Attribute()
+
+[<AttributeUsage(AttributeTargets.Method)>]
+type ActionAttribute() =
+    inherit Attribute()
+
+[<AttributeUsage(AttributeTargets.Method)>]
+type ExitActionAttribute() =
+    inherit Attribute()

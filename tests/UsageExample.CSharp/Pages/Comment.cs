@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Scrutiny.CSharp;
+using Xunit;
 
 namespace UsageExample.CSharp.Pages
 {
@@ -11,6 +12,21 @@ namespace UsageExample.CSharp.Pages
         public Comment(GlobalState globalState)
         {
             this.globalState = globalState;
+        }
+
+        [OnEnter]
+        public async Task OnEnter()
+        {
+            globalState.Logger.WriteLine("Checking on page comment");
+            var headerText = await globalState.Page.GetInnerTextAsync("#header");
+
+            Assert.Equal("Comments", headerText);
+        }
+
+        [OnExit]
+        public void OnExit()
+        {
+            globalState.Logger.WriteLine("Exiting comment");
         }
 
         [TransitionTo(nameof(SignIn))]
