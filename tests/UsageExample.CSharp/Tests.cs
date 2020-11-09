@@ -1,4 +1,5 @@
 using PlaywrightSharp;
+using Scrutiny;
 using Scrutiny.CSharp;
 using System;
 using System.Threading.Tasks;
@@ -35,8 +36,16 @@ namespace UsageExample.CSharp
 
             await page.GoToAsync("https://127.0.0.1:5001/home");
 
+            var config = new Configuration
+            {
+                Seed = 553931187,
+                MapOnly = false,
+                ComprehensiveActions = true,
+                ComprehensiveStates = true
+            };
+
             var gs = new GlobalState(page, outputHelper);
-            ScrutinyCSharp.start(gs, new Home(gs));
+            ScrutinyCSharp.start(config, gs, new Home(gs));
         }
 
         public void Dispose()

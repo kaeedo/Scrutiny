@@ -30,6 +30,8 @@
 
       <Compile Include="CSharp\Attributes.fs" />
 
+      <Compile Include="CSharp\Configuration.fs" />
+
       <Compile Include="CSharp\Entry.fs" />
   </ItemGroup>
   <ItemGroup>

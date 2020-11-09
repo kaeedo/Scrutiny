@@ -60,7 +60,8 @@ module ScrutinyCSharp =
             Some (buildFn m constructedPageState)
         )
 
-    let start<'globalState> (gs: 'globalState) startingPageState: unit = 
+    let start<'globalState> (config: Configuration) (gs: 'globalState) startingPageState: unit = 
+        let config = config.ToScrutiynConfig()
         let t = startingPageState.GetType()
 
         let pageStatesTypes = 
@@ -99,11 +100,8 @@ module ScrutinyCSharp =
             defs
             |> List.find (fun d -> d.Name = t.Name)
         
-        let config =
-            { ScrutinyConfig.Default with
-                  Seed = 553931187
-                  MapOnly = false
-                  ComprehensiveActions = true
-                  ComprehensiveStates = true }
         Scrutiny.scrutinize config (obj()) (fun _ -> starting)
+
+    let startWithDefaultConfig<'globalState> (gs: 'globalState) startingPageState =
+        start (Configuration.FromScrutinyConfig(ScrutinyConfig.Default)) gs startingPageState
         
