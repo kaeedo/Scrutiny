@@ -199,6 +199,10 @@ module rec ScrutinyStateMachine =
                         let! displayState = welcomeText.EvaluateAsync("e => e.style.display") |> Async.AwaitTask
 
                         Assert.False(displayState.ToString() = "none")
+
+                        let! welcomeText = globalState.Page.GetInnerTextAsync("#welcomeText") |> Async.AwaitTask
+
+                        Assert.Equal(sprintf "Welcome %s" globalState.Username, welcomeText);
                     }
                     |> Async.RunSynchronously
                 )

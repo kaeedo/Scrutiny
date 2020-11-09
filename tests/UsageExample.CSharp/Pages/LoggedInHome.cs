@@ -12,6 +12,7 @@ namespace UsageExample.CSharp.Pages
         public LoggedInHome(GlobalState globalState)
         {
             this.globalState = globalState;
+            globalState.Logger.WriteLine($"Constructing {nameof(LoggedInHome)}");
         }
 
         [OnEnter]
@@ -25,6 +26,10 @@ namespace UsageExample.CSharp.Pages
             var displayState = await header.EvaluateAsync("e => e.style.display");
 
             Assert.False(displayState.ToString() == "none");
+
+            var welcomeText = await globalState.Page.GetInnerTextAsync("#welcomeText");
+
+            Assert.Equal($"Welcome {globalState.Username}", welcomeText);
         }
 
         [ExitAction]

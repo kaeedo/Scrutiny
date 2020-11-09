@@ -15,6 +15,7 @@ namespace UsageExample.CSharp.Pages
         public LoggedInComment(GlobalState globalState)
         {
             this.globalState = globalState;
+            globalState.Logger.WriteLine($"Constructing {nameof(LoggedInComment)}");
         }
 
         [OnEnter]

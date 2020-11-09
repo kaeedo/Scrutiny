@@ -12,6 +12,7 @@ namespace UsageExample.CSharp.Pages
         public Home(GlobalState globalState)
         {
             this.globalState = globalState;
+            globalState.Logger.WriteLine($"Constructing {nameof(Home)}");
         }
 
         [OnEnter]

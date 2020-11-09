@@ -100,7 +100,9 @@ module rec Entry =
 
                 onEnter (fun _ ->
                     printfn "Checking on page home logged in"
-                    displayed "#welcomeText")
+                    displayed "#welcomeText"
+                    "#welcomeText" == sprintf "Welcome %s" globalState.Username
+                )
 
                 exitAction (fun _ ->
                     printfn "Exiting!"
