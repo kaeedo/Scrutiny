@@ -80,14 +80,16 @@ module rec Entry =
                     ls.Comment <- "This is my super comment"
                     "#comment" << ls.Comment
                     click "#modalFooterSave"
-
-                    "#commentsUl>li" *= sprintf "%s wrote:%s%s" globalState.Username Environment.NewLine ls.Comment)
+                )
 
                 onEnter (fun _ ->
                     printfn "Checking comment is logged in"
                     displayed "#openModal")
 
-                onExit (fun _ -> printfn "Exiting comment logged in")
+                onExit (fun ls -> 
+                    "#commentsUl>li" *= sprintf "%s wrote:%s%s" globalState.Username Environment.NewLine ls.Comment
+                    printfn "Exiting comment logged in"
+                )
             }
 
     let loggedInHome =

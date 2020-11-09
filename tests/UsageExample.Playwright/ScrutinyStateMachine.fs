@@ -138,21 +138,6 @@ module rec ScrutinyStateMachine =
 
                         do! globalState.Page.FillAsync("#comment", ls.Comment) |> Async.AwaitTask
                         do! globalState.Page.ClickAsync("#modalFooterSave") |> Async.AwaitTask
-
-                        let! comments = globalState.Page.QuerySelectorAllAsync("#commentsUl>li") |> Async.AwaitTask
-                        let comments = comments |> List.ofSeq
-
-                        let writtenComment =
-                            comments
-                            |> List.tryFind(fun c ->
-                                async {
-                                    let! text = c.GetInnerTextAsync() |> Async.AwaitTask
-                                    return text = sprintf "%s wrote:\n%s" globalState.Username ls.Comment
-                                }
-                                |> Async.RunSynchronously
-                            )
-
-                        Assert.True(writtenComment.IsSome)
                     }
                     |> Async.RunSynchronously
                 )
@@ -169,7 +154,26 @@ module rec ScrutinyStateMachine =
                     |> Async.RunSynchronously
                 )
 
-                onExit (fun _ -> globalState.Logger "Exiting comment logged in")
+                onExit (fun ls -> 
+                    async {
+                        let! comments = globalState.Page.QuerySelectorAllAsync("#commentsUl>li") |> Async.AwaitTask
+                        let comments = comments |> List.ofSeq
+
+                        let writtenComment =
+                            comments
+                            |> List.tryFind(fun c ->
+                                async {
+                                    let! text = c.GetInnerTextAsync() |> Async.AwaitTask
+                                    return text = sprintf "%s wrote:\n%s" globalState.Username ls.Comment
+                                }
+                                |> Async.RunSynchronously
+                            )
+
+                        Assert.True(writtenComment.IsSome)
+                    }
+                    |> Async.RunSynchronously
+                    globalState.Logger "Exiting comment logged in"
+                )
             }
 
     let loggedInHome =

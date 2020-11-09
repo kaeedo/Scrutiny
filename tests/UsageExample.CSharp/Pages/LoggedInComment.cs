@@ -40,17 +40,16 @@ namespace UsageExample.CSharp.Pages
             await globalState.Page.FillAsync("#comment", localComment);
 
             await globalState.Page.ClickAsync("#modalFooterSave");
+        }
 
+        [OnExit]
+        public async Task OnExit()
+        {
             var comments = await globalState.Page.QuerySelectorAllAsync("#commentsUl > li");
             var commentTexts = await Task.WhenAll(comments.Select(async c => await c.GetInnerTextAsync()));
             var hasNewComment = commentTexts.Any(c => c == $"{globalState.Username} wrote:\n{localComment}");
 
             Assert.True(hasNewComment);
-        }
-
-        [OnExit]
-        public void OnExit()
-        {
             globalState.Logger.WriteLine("Exiting comment logged in");
         }
 
