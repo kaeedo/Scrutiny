@@ -42,4 +42,3 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
                   ScrutinyResultFilePath = Path.Join(Directory.GetCurrentDirectory(), "myResult.html") }
 
         scrutinize config (GlobalState(page, logger)) ScrutinyStateMachine.home
-

@@ -45,7 +45,7 @@ namespace UsageExample.CSharp
             };
 
             var gs = new GlobalState(page, outputHelper);
-            ScrutinyCSharp.start(config, gs, new Home(gs));
+            ScrutinyCSharp.Start<Home>(config, gs);
         }
 
         public void Dispose()

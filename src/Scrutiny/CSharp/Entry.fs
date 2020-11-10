@@ -60,9 +60,10 @@ module ScrutinyCSharp =
             Some (buildFn m constructedPageState)
         )
 
-    let start<'globalState> (config: Configuration) (gs: 'globalState) startingPageState: unit = 
+    [<CompiledName("Start")>]
+    let start<'startState> (config: Configuration) gs: unit = 
         let config = config.ToScrutiynConfig()
-        let t = startingPageState.GetType()
+        let t = typeof<'startState> 
 
         let pageStatesTypes = 
             seq {
@@ -101,7 +102,8 @@ module ScrutinyCSharp =
             |> List.find (fun d -> d.Name = t.Name)
         
         Scrutiny.scrutinize config (obj()) (fun _ -> starting)
-
-    let startWithDefaultConfig<'globalState> (gs: 'globalState) startingPageState =
-        start (Configuration.FromScrutinyConfig(ScrutinyConfig.Default)) gs startingPageState
+        
+    [<CompiledName("StartWithDefaultConfig")>]
+    let startWithDefaultConfig<'startState> gs =
+        start<'startState> (Configuration.FromScrutinyConfig(ScrutinyConfig.Default)) gs
         
