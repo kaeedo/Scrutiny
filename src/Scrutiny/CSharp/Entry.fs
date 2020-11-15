@@ -5,10 +5,15 @@ open System
 open System.Threading.Tasks
 open System.Reflection
 
-module ScrutinyCSharp =
+module internal ScrutinyCSharp =
     let private constructPageState<'globalState> (gs: 'globalState) (psType: Type) =
-        let ctor = psType.GetConstructor([|typeof<'globalState>|])
-        ctor.Invoke([|gs|])
+        psType.GetConstructors()
+        |> Seq.tryFind (fun ctor ->
+            ctor.GetParameters() |> Array.isEmpty |> not
+        )
+        |> function
+           | Some ctor -> ctor.Invoke([|gs|])
+           | None -> psType.GetConstructor([||]).Invoke([||])
 
     let private getMethodsWithAttribute attr constructedPageState  =
         constructedPageState.GetType().GetMethods()
@@ -46,6 +51,9 @@ module ScrutinyCSharp =
         )
 
     let private buildFnWithAttribute attr constructedPageState =
+        if getMethodsWithAttribute attr constructedPageState |> Seq.length > 1
+        then raise <| ScrutinyException($"Only one \"{attr.Name}\" per PageState. Check \"{constructedPageState.GetType().Name}\" for duplicate attribute usage.", null)
+
         match getMethodsWithAttribute attr constructedPageState |> Seq.tryHead with
         | None -> ignore
         | Some m -> buildFn m constructedPageState
@@ -54,14 +62,19 @@ module ScrutinyCSharp =
         getMethodsWithAttribute typeof<ActionAttribute> constructedPageState
         |> List.map (fun m -> buildFn m constructedPageState)
 
-    let private buildExitAction constructedPageState =
-        getMethodsWithAttribute typeof<ExitActionAttribute> constructedPageState |> Seq.tryHead
-        |> Option.bind (fun m ->
-            Some (buildFn m constructedPageState)
-        )
+    let private buildExitActions constructedPageState =
+        let attr = typeof<ExitActionAttribute>
+        //if getMethodsWithAttribute attr constructedPageState |> Seq.length > 1
+        //then raise <| ScrutinyException($"Only one \"{attr.Name}\" per PageState. Check \"{constructedPageState.GetType().Name}\" for duplicate attribute usage.", null)
 
-    [<CompiledName("Start")>]
-    let start<'startState> (config: Configuration) gs: unit = 
+        getMethodsWithAttribute attr constructedPageState 
+        |> List.map (fun m -> buildFn m constructedPageState)
+        //|> Seq.tryHead
+        //|> Option.bind (fun m ->
+        //    Some (buildFn m constructedPageState)
+        //)
+
+    let start<'startState> gs (config: Configuration): unit = 
         let config = config.ToScrutiynConfig()
         let t = typeof<'startState> 
 
@@ -82,7 +95,7 @@ module ScrutinyCSharp =
                       LocalState = obj()
                       OnEnter = buildFnWithAttribute typeof<OnEnterAttribute> constructed
                       OnExit = buildFnWithAttribute typeof<OnExitAttribute> constructed
-                      ExitAction = buildExitAction constructed
+                      ExitActions = buildExitActions constructed
                       Actions = buildActions constructed
                       Transitions = [] }
                 ps, constructed
@@ -103,7 +116,10 @@ module ScrutinyCSharp =
         
         Scrutiny.scrutinize config (obj()) (fun _ -> starting)
         
-    [<CompiledName("StartWithDefaultConfig")>]
-    let startWithDefaultConfig<'startState> gs =
-        start<'startState> (Configuration.FromScrutinyConfig(ScrutinyConfig.Default)) gs
-        
+[<AbstractClass; Sealed>]
+type Scrutinize private () =
+    static member Start<'startState> (globalState) = 
+        ScrutinyCSharp.start<'startState> globalState (Configuration.FromScrutinyConfig(ScrutinyConfig.Default))
+
+    static member Start<'startState> (globalState, configuration) = 
+        ScrutinyCSharp.start<'startState> globalState configuration

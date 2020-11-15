@@ -11,7 +11,7 @@ type PageBuilder() =
           OnExit = fun _ -> ()
           Transitions = []
           Actions = []
-          ExitAction = None }
+          ExitActions = [] } // TODO. states can have many exit actions. one is chosen at random anyway.
 
     [<CustomOperation("name")>]
     member __.Name(state, handler): PageState<'a, 'b> = { state with Name = handler }
@@ -32,8 +32,7 @@ type PageBuilder() =
     member __.Actions(state, handler): PageState<'a, 'b> = { state with Actions = handler :: state.Actions }
 
     [<CustomOperation("exitAction")>]
-    member __.ExitAction(state, handler): PageState<'a, 'b> = { state with ExitAction = Some handler }
-
+    member __.ExitAction(state, handler): PageState<'a, 'b> =  { state with ExitActions = handler :: state.ExitActions }
 
 module Scrutiny =
     let private printPath logger path =
@@ -124,7 +123,7 @@ module Scrutiny =
 
         let exitNode =
             allStates
-            |> Seq.filter (fun (node, _) -> Option.isSome node.ExitAction)
+            |> Seq.filter (fun (node, _) -> node.ExitActions |> Seq.isEmpty |> not)
             |> Seq.sortBy (fun _ -> random.Next())
             |> Seq.tryHead
 
@@ -195,7 +194,10 @@ module Scrutiny =
                     let path = findPath finalNode exitNode
 
                     let exitNode = navigateDirectly [] path
-                    exitNode.ExitAction |> Option.iter (fun ea -> ea exitNode.LocalState)
+                    exitNode.ExitActions 
+                    |> Seq.sortBy (fun _ -> random.Next())
+                    |> Seq.tryHead
+                    |> Option.iter (fun ea -> ea exitNode.LocalState)
         finally
             reporter.Finish() |> ignore
             

@@ -1,5 +1,4 @@
 using PlaywrightSharp;
-using Scrutiny;
 using Scrutiny.CSharp;
 using System;
 using System.Threading.Tasks;
@@ -45,7 +44,7 @@ namespace UsageExample.CSharp
             };
 
             var gs = new GlobalState(page, outputHelper);
-            ScrutinyCSharp.Start<Home>(config, gs);
+            Scrutinize.Start<Home>(gs, config);
         }
 
         public void Dispose()

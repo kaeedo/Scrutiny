@@ -3,18 +3,18 @@
 open System
 open System.IO
 
-type ScrutinyException(message, innerException: Exception) =
+type internal ScrutinyException(message, innerException: Exception) =
     inherit Exception(message, innerException)
 
 //http://www.fssnip.net/av/title/NinetyNine-F-Problems-Problems-80-89-Graphs
 
-type Edge<'a> = 'a * 'a
+type internal Edge<'a> = 'a * 'a
 
-type Graph<'a> = 'a list * Edge<'a> list
+type internal Graph<'a> = 'a list * Edge<'a> list
 
-type Node<'a> = 'a * 'a list
+type internal Node<'a> = 'a * 'a list
 
-type AdjacencyGraph<'a> = 'a Node list
+type internal AdjacencyGraph<'a> = 'a Node list
 
 type ScrutinyConfig =
     { Seed: int
@@ -46,7 +46,7 @@ and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
       mutable Transitions: Transition<'a, 'b> list
       Actions: ('b -> unit) list
       // OnAction?
-      ExitAction: ('b -> unit) option }
+      ExitActions: ('b -> unit) list }
 
     interface IComparable<PageState<'a, 'b>> with
         member this.CompareTo other = compare this.Name other.Name
