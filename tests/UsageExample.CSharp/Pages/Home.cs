@@ -30,6 +30,13 @@ namespace UsageExample.CSharp.Pages
             globalState.Logger.WriteLine("Exiting home");
         }
 
+        [ExitAction]
+        public async Task ExitAction()
+        {
+            globalState.Logger.WriteLine("Exiting!");
+            await globalState.Page.CloseAsync();
+        }
+
         [TransitionTo(nameof(SignIn))]
         public async Task ClickOnSignIn()
         {

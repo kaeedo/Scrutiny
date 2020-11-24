@@ -53,6 +53,14 @@ namespace UsageExample.CSharp.Pages
             globalState.Logger.WriteLine("Exiting comment logged in");
         }
 
+
+        [ExitAction]
+        public async Task ExitAction()
+        {
+            globalState.Logger.WriteLine("Exiting!");
+            await globalState.Page.CloseAsync();
+        }
+
         [TransitionTo(nameof(LoggedInHome))]
         public async Task ClickOnHome()
         {

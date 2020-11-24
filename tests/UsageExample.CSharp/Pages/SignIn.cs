@@ -71,6 +71,13 @@ namespace UsageExample.CSharp.Pages
             Assert.Equal("42", number);
         }
 
+        [ExitAction]
+        public async Task ExitAction()
+        {
+            globalState.Logger.WriteLine("Exiting!");
+            await globalState.Page.CloseAsync();
+        }
+
         [Action]
         public async Task ForceInvalidForm()
         {

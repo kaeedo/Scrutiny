@@ -24,6 +24,13 @@ namespace UsageExample.CSharp.Pages
             Assert.Equal("Comments", headerText);
         }
 
+        [ExitAction]
+        public async Task ExitAction()
+        {
+            globalState.Logger.WriteLine("Exiting!");
+            await globalState.Page.CloseAsync();
+        }
+
         [OnExit]
         public void OnExit()
         {
