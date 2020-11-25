@@ -32,6 +32,11 @@ type ScrutinyConfig =
           ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html"
           Logger = printfn "%s" }
 
+type CallerInformation =
+    { MemberName: string
+      LineNumber: int
+      FilePath: string }
+
 type Transition<'a, 'b> =
     { TransitionFn: 'b -> unit
       ToState: 'a -> PageState<'a, 'b> }
@@ -44,7 +49,7 @@ and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
       // TODO can we make this not mutable?
       // It's required right now because of the C# builder
       mutable Transitions: Transition<'a, 'b> list
-      Actions: ('b -> unit) list
+      Actions: (CallerInformation * ('b -> unit)) list
       // OnAction?
       ExitActions: ('b -> unit) list }
 
@@ -67,3 +72,22 @@ and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
         | _ -> false
 
     override this.GetHashCode() = hash this.Name
+
+type SerializableException =
+    { Type: string
+      Message: string
+      StackTrace: string
+      InnerException: SerializableException option }
+
+type ErrorLocation =
+| State of string * SerializableException
+| Transition of string * string * SerializableException
+
+type Step<'a, 'b> =
+    { PageState: PageState<'a, 'b>
+      Actions: string seq
+      Error: ErrorLocation option }
+
+type ScrutinizedStates<'a, 'b> =
+    { Graph: AdjacencyGraph<PageState<'a, 'b>>
+      Steps: Step<'a, 'b> seq }

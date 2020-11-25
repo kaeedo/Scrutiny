@@ -74,7 +74,7 @@ module internal ScrutinyCSharp =
         | None -> ignore
         | Some m -> buildMethod m constructedPageState
 
-    let start<'startState> gs (config: Configuration): unit = 
+    let start<'startState> gs (config: Configuration): ScrutinizedStates<'a, 'b> = 
         let config = config.ToScrutiynConfig()
         let t = typeof<'startState> 
 
@@ -122,7 +122,12 @@ module internal ScrutinyCSharp =
                       OnEnter = buildMethodWithAttribute typeof<OnEnterAttribute> constructed
                       OnExit = buildMethodWithAttribute typeof<OnExitAttribute> constructed
                       ExitActions = getMethodsWithAttribute typeof<ExitActionAttribute> constructed |> List.map (fun m -> buildMethod m constructed)
-                      Actions = getMethodsWithAttribute typeof<ActionAttribute> constructed |> List.map (fun m -> buildMethod m constructed)
+                      Actions = getMethodsWithAttribute typeof<ActionAttribute> constructed |> List.map (fun m -> 
+                                                                                                                let callerInfo = 
+                                                                                                                    { CallerInformation.MemberName = m.Name
+                                                                                                                      LineNumber = -1
+                                                                                                                      FilePath = m.ReflectedType.Name }
+                                                                                                                callerInfo, buildMethod m constructed)
                       Transitions = [] }
                 ps, constructed
             )

@@ -1,9 +1,9 @@
 ﻿namespace Scrutiny
 
 open System
+open System.Runtime.CompilerServices
 
 type PageBuilder() =
-
     member __.Yield(_): PageState<'a, 'b> =
         { PageState.Name = ""
           LocalState = Unchecked.defaultof<'b>
@@ -29,8 +29,14 @@ type PageBuilder() =
     member __.Transitions(state, handler): PageState<'a, 'b> = { state with Transitions = handler :: state.Transitions }
 
     [<CustomOperation("action")>]
-    member __.Actions(state, handler): PageState<'a, 'b> = { state with Actions = handler :: state.Actions }
+    member __.Actions(state, handler, [<CallerMemberName>]?memberName: string, [<CallerLineNumber>]?lineNumber: int, [<CallerFilePath>]?filePath: string): PageState<'a, 'b> = 
+        let callerInformation =
+            { CallerInformation.MemberName = defaultArg memberName ""
+              LineNumber = defaultArg lineNumber 0
+              FilePath = defaultArg filePath "" }
 
+        { state with Actions = (callerInformation, handler) :: state.Actions }
+        
     [<CustomOperation("exitAction")>]
     member __.ExitAction(state, handler): PageState<'a, 'b> =  { state with ExitActions = handler :: state.ExitActions }
 
@@ -41,9 +47,18 @@ module Scrutiny =
              |> List.map (fun p -> p.Name)
              |> String.concat " --> ")
 
-    let private runActions (config: ScrutinyConfig) (state: PageState<'a, 'b>) =
+    let private buildActionName (ci: CallerInformation) =
+        if ci.LineNumber > 0
+        then $"Member: {ci.MemberName}, Line #: {ci.LineNumber}, File: {ci.FilePath}"
+        else $"{ci.FilePath}.{ci.MemberName}"
+        
+
+    let private runActions (reporter: IReporter<'a, 'b>) (config: ScrutinyConfig) (state: PageState<'a, 'b>) =
         if config.ComprehensiveActions then
-            state.Actions |> Seq.iter (fun a -> a state.LocalState)
+            state.Actions |> Seq.iter (fun (ci, a) -> 
+                reporter.PushAction (buildActionName ci)
+                a state.LocalState
+            )
         else
             let random = Random(config.Seed)
 
@@ -52,7 +67,10 @@ module Scrutiny =
             state.Actions
             |> Seq.sortBy (fun _ -> random.Next())
             |> Seq.take amount
-            |> Seq.iter (fun a -> a state.LocalState)
+            |> Seq.iter (fun (ci, a) -> 
+                reporter.PushAction (buildActionName ci)
+                a state.LocalState
+            )
 
     let private unvisitedNodes allStates alreadyVisited: AdjacencyGraph<PageState<'a, 'b>> =
         allStates
@@ -63,23 +81,24 @@ module Scrutiny =
 
     let private convertException (e: exn): SerializableException =
         let rec convertInner (currentException: exn) =
-            if currentException.InnerException = null 
-            then { SerializableException.Type = currentException.GetType().ToString()
-                   Message = currentException.Message
-                   StackTrace = currentException.StackTrace
-                   InnerException = None }
-            else 
-                { SerializableException.Type = currentException.GetType().ToString()
-                  Message = currentException.Message
-                  StackTrace = currentException.StackTrace
-                  InnerException = Some <| convertInner currentException.InnerException }
+            let inner = 
+                if currentException.InnerException = null 
+                then None 
+                else Some <| convertInner currentException.InnerException
+            
+            { SerializableException.Type = currentException.GetType().ToString()
+              Message = currentException.Message
+              StackTrace = currentException.StackTrace
+              InnerException = inner }
+
         convertInner e
 
     let private performStateActions (reporter: IReporter<_, _>) config globalState (current, next) =
+        let runActions = runActions reporter config
         // TODO Wrap functions in try function instead of try catching entire block
         try
             current.OnEnter current.LocalState
-            runActions config current
+            runActions current
             current.OnExit current.LocalState
         with exn ->
 
@@ -102,7 +121,7 @@ module Scrutiny =
                     let state = t.ToState globalState
                     state.Name = next.Name)
 
-            reporter.PushTransition (current, next)
+            reporter.PushTransition next
 
             transition.TransitionFn current.LocalState
         with exn ->
@@ -132,9 +151,10 @@ module Scrutiny =
     let private baseScrutinize<'a, 'b> (reporter: IReporter<'a, 'b>) (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a, 'b>) =
         config.Logger <| sprintf "Scrutinizing system under test with seed: %i" config.Seed
         let startState = startFn globalState
+        let runActions = runActions reporter config
 
         let allStates = Navigator.constructAdjacencyGraph startState globalState
-        reporter.Start allStates
+        reporter.Start (allStates, startState)
         
         try
             if not config.MapOnly then
@@ -171,7 +191,7 @@ module Scrutiny =
                             let path = findPath head nextNode
 
                             if path.Length = 1 then
-                                runActions config path.Head
+                                runActions path.Head
                                 path.Head
                             else
                                 printPath config.Logger path
@@ -199,9 +219,10 @@ module Scrutiny =
                     |> Seq.tryHead
                     |> Option.iter (fun ea -> ea exitNode.LocalState)
         finally
+            config.Logger $"Scrutiny Result written to: {config.ScrutinyResultFilePath}" 
             reporter.Finish() |> ignore
-            
-            config.Logger <| sprintf "Scrutiny Result written to: %s" config.ScrutinyResultFilePath
+
+        reporter.Finish()
 
     let scrutinize<'a, 'b> config = 
         let reporter = Reporter<'a, 'b>(config.ScrutinyResultFilePath) :> IReporter<'a, 'b>

@@ -144,8 +144,8 @@ module rec Entry =
     [<EntryPoint>]
     let main argv =
         printfn "Setting up browser drivers. This might take awhile"
-        do DriverManager().SetUpDriver(ChromeConfig())
-        //do DriverManager().SetUpDriver(FirefoxConfig())
+        //do DriverManager().SetUpDriver(ChromeConfig())
+        do DriverManager().SetUpDriver(FirefoxConfig())
         printfn "Finished setting up browser drivers"
 
         let options = FirefoxOptions()
@@ -159,8 +159,8 @@ module rec Entry =
             do cOptions.AddArgument "no-sandbox"
             do options.AddArgument "-headless"
 
-        use chrome = new ChromeDriver(cOptions)
-        //use ff = new FirefoxDriver(options)
+        //use browser = new ChromeDriver(cOptions)
+        use browser = new FirefoxDriver(options)
 
         let config =
             { ScrutinyConfig.Default with
@@ -173,16 +173,21 @@ module rec Entry =
         "Scrutiny" &&& fun _ ->
             printfn "opening url"
             url "https://127.0.0.1:5001/home"
-            scrutinize config (GlobalState()) home
+            let results = scrutinize config (GlobalState()) home
 
-        switchTo chrome
+            if results.Steps |> Seq.length <> 9
+            then raise (Exception($"Expected 9 steps, but was {results.Steps |> Seq.length}"))
+            else ()
+
+
+        switchTo browser
 
         onFail (fun _ ->
-            quit chrome
+            quit browser
             raise (exn "Failed")
         )
 
         run()
-        quit chrome
+        quit browser
 
         0

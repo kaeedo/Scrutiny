@@ -1,6 +1,7 @@
 using PlaywrightSharp;
 using Scrutiny.CSharp;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using UsageExample.CSharp.Pages;
 using Xunit;
@@ -44,7 +45,10 @@ namespace UsageExample.CSharp
             };
 
             var gs = new GlobalState(page, outputHelper);
-            Scrutinize.Start<Home>(gs, config);
+            var result = Scrutinize.Start<Home>(gs, config);
+
+            Assert.Equal(7, result.Steps.Count());
+            Assert.Equal(5, result.Graph.Count());
         }
 
         public void Dispose()

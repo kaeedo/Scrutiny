@@ -5,37 +5,20 @@ open System.IO
 open System.Text.Json
 open System.Text.Json.Serialization
 
-type internal SerializableException =
-    { Type: string
-      Message: string
-      StackTrace: string
-      InnerException: SerializableException option }
-
-type internal ErrorLocation =
-| State of string * SerializableException
-| Transition of string * string * SerializableException
-
-type internal PerformedTransition<'a, 'b> =
-    { From: PageState<'a, 'b>
-      To: PageState<'a, 'b>
-      Error: ErrorLocation option }
-
-type internal State<'a, 'b> =
-    { Graph: AdjacencyGraph<PageState<'a, 'b>>
-      PerformedTransitions: PerformedTransition<'a, 'b> list }
-
 type private ReporterMessage<'a, 'b> =
-| Start of AdjacencyGraph<PageState<'a, 'b>>
-| PushTransition of PageState<'a, 'b> * PageState<'a, 'b>
+| Start of AdjacencyGraph<PageState<'a, 'b>> * PageState<'a, 'b>
+| PushTransition of PageState<'a, 'b>
+| PushAction of string
 | OnError of ErrorLocation
-| Finish of AsyncReplyChannel<State<'a, 'b>>
+| Finish of AsyncReplyChannel<ScrutinizedStates<'a, 'b>>
 
 [<RequireQualifiedAccess>]
 type internal IReporter<'a, 'b> =
-    abstract Start: AdjacencyGraph<PageState<'a, 'b>> -> unit
-    abstract PushTransition: (PageState<'a, 'b> * PageState<'a, 'b>) -> unit
+    abstract Start: (AdjacencyGraph<PageState<'a, 'b>> * PageState<'a, 'b>) -> unit
+    abstract PushTransition: PageState<'a, 'b> -> unit
+    abstract PushAction: string -> unit
     abstract OnError: ErrorLocation -> unit
-    abstract Finish: unit -> State<'a, 'b>
+    abstract Finish: unit -> ScrutinizedStates<'a, 'b>
 
 [<RequireQualifiedAccess>]
 type internal Reporter<'a, 'b>(filePath: string) =
@@ -54,7 +37,7 @@ type internal Reporter<'a, 'b>(filePath: string) =
 
         fileInfo.DirectoryName, fileName
 
-    let generateMap (graph: State<_, _>) =
+    let generateMap (graph: ScrutinizedStates<_, _>) =
         let options = JsonSerializerOptions()
         options.Converters.Add(JsonFSharpConverter())
         options.ReferenceHandler <- ReferenceHandler.Preserve
@@ -65,37 +48,56 @@ type internal Reporter<'a, 'b>(filePath: string) =
             
         File.WriteAllText(sprintf "%s/%s" filePath fileName, output)
 
+    let removeLast steps =
+        let steps = steps |> Seq.toList
+        steps.[0..(steps.Length) - 2]
+
     let mailbox =
         MailboxProcessor.Start (fun inbox ->
-            let rec loop (state: State<'a, 'b>) =
+            let rec loop (state: ScrutinizedStates<'a, 'b>) =
                 async {
                     match! inbox.Receive() with
-                    | Start ag ->
-                        return! loop { State.Graph = ag; PerformedTransitions = [] }
-                    | PushTransition (f, t) ->
-                        let transition =
-                            { PerformedTransition.From = f
-                              To = t
+                    | Start (ag, startState) ->
+                        let step =
+                            { Step.PageState = startState
+                              Actions = []
                               Error = None }
-                        return! loop { state with PerformedTransitions = transition :: state.PerformedTransitions }
+
+                        return! loop { ScrutinizedStates.Graph = ag; Steps = [ step ] }
+                    | PushTransition ps ->
+                        let nextStep =
+                            { Step.PageState = ps
+                              Actions = []
+                              Error = None }
+
+                        let steps = [ yield! state.Steps; nextStep ]
+
+                        return! loop { state with Steps = steps }
+                    | PushAction name ->
+                        let current = state.Steps |> Seq.last
+                        let current = { current with Actions = [yield! current.Actions; name] }
+                        let steps = seq { yield! removeLast state.Steps; current }
+
+                        return! loop { state with Steps = steps }
                     | OnError el ->
-                        let performedTransitions = state.PerformedTransitions |> List.tail
-                        let errorNode = state.PerformedTransitions |> List.head
-                        let performedTransitions = { errorNode with Error = Some el } :: performedTransitions
-                        return! loop { state with PerformedTransitions = performedTransitions }
+                        let current = state.Steps |> Seq.last
+                        let current = { current with Error = Some el }
+
+                        let steps = seq { yield! removeLast state.Steps; current }
+
+                        return! loop { state with Steps = steps }
                     | Finish reply ->
-                        let finalState = { state with PerformedTransitions = state.PerformedTransitions |> List.rev }
+                        generateMap state
                         
-                        generateMap finalState
-                        
-                        reply.Reply finalState
+                        reply.Reply state
                         return ()
                 } 
-            loop { State.Graph = []; PerformedTransitions = [] }
+            loop { ScrutinizedStates.Graph = []; Steps = [] }
         )
 
     interface IReporter<'a, 'b> with
-          member this.Start ag = mailbox.Post (Start ag)
-          member this.PushTransition t = mailbox.Post (PushTransition t)
+          member this.Start st = mailbox.Post (Start st)
+          member this.PushTransition next = mailbox.Post (PushTransition next)
+          member this.PushAction actionName = mailbox.Post (PushAction actionName)
           member this.OnError errorLocation = mailbox.Post (OnError errorLocation)
           member this.Finish () = mailbox.PostAndReply Finish

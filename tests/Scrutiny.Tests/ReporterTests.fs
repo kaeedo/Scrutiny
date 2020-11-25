@@ -6,9 +6,6 @@ open Scrutiny
 open Swensen.Unquote
 open Scrutiny.Scrutiny
 open Scrutiny.Operators
-open System.Text.Json
-
-open System.Text.Json.Serialization
 
 module rec TestPages =
     let home = fun _ ->
@@ -47,37 +44,38 @@ module rec TestPages =
 
 [<Tests>]
 let reporterTests =
+    let ci = { CallerInformation.MemberName = String.Empty; LineNumber = 0; FilePath = String.Empty }
     testList "Reporter Tests" [
         Tests.test "Should set graph" {
             let reporter: IReporter<unit, obj> = Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
             let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
 
-            reporter.Start ag
+            reporter.Start (ag, TestPages.home())
 
             let final = reporter.Finish ()
 
-            let pt = final.PerformedTransitions
+            let steps = final.Steps
 
             test <@ final.Graph = ag @>
-            test <@ pt |> List.exists (fun f -> f.Error.IsSome) |> not @>
-            test <@ pt.Length = 0 @>
+            test <@ steps |> Seq.exists (fun f -> f.Error.IsSome) |> not @>
+            test <@ steps |> Seq.length = 1 @>
         }
 
         Tests.test "Should add transitions" {
             let reporter: IReporter<unit, obj> = Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
             let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
 
-            reporter.Start ag
-            reporter.PushTransition <| (TestPages.loggedInComment(), TestPages.signIn())
-            reporter.PushTransition <| (TestPages.loggedInHome(), TestPages.comment())
-            reporter.PushTransition <| (TestPages.comment(), TestPages.home())
+            reporter.Start (ag, TestPages.home())
+            reporter.PushTransition <| (TestPages.signIn())
+            reporter.PushTransition <| (TestPages.comment())
+            reporter.PushTransition <| (TestPages.home())
 
             let final = reporter.Finish ()
 
-            let pt = final.PerformedTransitions
+            let steps = final.Steps
 
-            test <@ pt |> List.exists (fun f -> f.Error.IsSome) |> not @>
-            test <@ pt.Length = 3 @>
+            test <@ steps |> Seq.exists (fun f -> f.Error.IsSome) |> not @>
+            test <@ steps |> Seq.length = 4 @>
         }
 
         Tests.test "Should set error" {
@@ -90,18 +88,18 @@ let reporterTests =
                   StackTrace = "Happened here"
                   InnerException = None }
 
-            reporter.Start ag
-            reporter.PushTransition <| (TestPages.loggedInComment(), TestPages.signIn())
-            reporter.PushTransition <| (TestPages.loggedInHome(), TestPages.comment())
-            reporter.PushTransition <| (TestPages.comment(), TestPages.home())
-            reporter.OnError (State (TestPages.loggedInComment().Name, serializableException))
+            reporter.Start (ag, TestPages.home())
+            reporter.PushTransition <| (TestPages.loggedInComment())
+            reporter.PushTransition <| (TestPages.comment())
+            reporter.PushTransition <| (TestPages.home())
+            reporter.OnError (State (TestPages.home().Name, serializableException))
 
             let final = reporter.Finish ()
 
-            let pt = final.PerformedTransitions
+            let steps = final.Steps
 
-            test <@ (pt |> List.last).Error.IsSome @>
-            test <@ pt.Length = 3 @>
+            test <@ (steps |> Seq.last).Error.IsSome @>
+            test <@ steps |> Seq.length = 4 @> 
         }
 
         Tests.test "Should write results to file with state error" {
@@ -114,18 +112,18 @@ let reporterTests =
                   StackTrace = "Happened here"
                   InnerException = None }
 
-            reporter.Start ag
-            reporter.PushTransition <| (TestPages.loggedInComment(), TestPages.signIn())
-            reporter.PushTransition <| (TestPages.loggedInHome(), TestPages.comment())
-            reporter.PushTransition <| (TestPages.comment(), TestPages.home())
+            reporter.Start (ag, TestPages.home())
+            reporter.PushTransition <| (TestPages.signIn())
+            reporter.PushTransition <| (TestPages.comment())
+            reporter.PushTransition <| (TestPages.home())
             reporter.OnError (State (TestPages.comment().Name, serializableException))
 
             let final = reporter.Finish ()
 
-            let pt = final.PerformedTransitions
+            let steps = final.Steps |> Seq.toList
 
-            test <@ pt.[0..pt.Length - 2] |> List.forall (fun f -> f.Error.IsNone)  @>
-            test <@ (pt |> List.last).Error.IsSome @>
-            test <@ pt.Length = 3 @>
+            test <@ steps.[0..steps.Length - 2] |> List.forall (fun f -> f.Error.IsNone)  @>
+            test <@ (steps |> Seq.last).Error.IsSome @>
+            test <@ steps |> Seq.length = 4 @>
         }
     ]
