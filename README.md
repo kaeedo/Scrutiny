@@ -168,6 +168,7 @@ The HTML report is a single file with all javascript written inline
 - [x] More code examples
 - [x] Bring your own logger
 - [x] Create nice interface for usage from C#
+- [x] Show performed actions in HTML report
 - [ ] Documentation
 - [ ] Return data about test run at end
 - [ ] More unit/integration tests
@@ -180,3 +181,4 @@ The HTML report is a single file with all javascript written inline
 - [ ] Use Fable to create a javascript release and npm package for usage from Node.js (maybe)
 - [ ] Documentation
 - [ ] Make pretty report page
+- [ ] Bring your own reporter
