@@ -10,6 +10,7 @@ type private ReporterMessage<'a, 'b> =
 | PushTransition of PageState<'a, 'b>
 | PushAction of string
 | OnError of ErrorLocation
+| GenerateMap
 | Finish of AsyncReplyChannel<ScrutinizedStates<'a, 'b>>
 
 [<RequireQualifiedAccess>]
@@ -18,6 +19,7 @@ type internal IReporter<'a, 'b> =
     abstract PushTransition: PageState<'a, 'b> -> unit
     abstract PushAction: string -> unit
     abstract OnError: ErrorLocation -> unit
+    abstract GenerateMap: unit -> unit
     abstract Finish: unit -> ScrutinizedStates<'a, 'b>
 
 [<RequireQualifiedAccess>]
@@ -86,9 +88,11 @@ type internal Reporter<'a, 'b>(filePath: string) =
                         let steps = seq { yield! removeLast state.Steps; current }
 
                         return! loop { state with Steps = steps }
-                    | Finish reply ->
+                    | GenerateMap ->
                         generateMap state
-                        
+
+                        return! loop state
+                    | Finish reply ->
                         reply.Reply state
                         return ()
                 } 
@@ -100,4 +104,5 @@ type internal Reporter<'a, 'b>(filePath: string) =
           member this.PushTransition next = mailbox.Post (PushTransition next)
           member this.PushAction actionName = mailbox.Post (PushAction actionName)
           member this.OnError errorLocation = mailbox.Post (OnError errorLocation)
+          member this.GenerateMap () = mailbox.Post GenerateMap
           member this.Finish () = mailbox.PostAndReply Finish

@@ -40,6 +40,7 @@
     <div>
         <svg></svg>
     </div>
+    <div id="actionsPerformed"></div>
     <div id="errorMessage"></div>
 </body>
 <script src="https://d3js.org/d3.v5.min.js"></script>
@@ -140,6 +141,29 @@
         });
     };
 
+    const setActions = (current) => {
+        const actionsDiv = document.getElementById("actionsPerformed");
+        actionsDiv.innerHTML = "";
+        if (!(current && current.Actions && current.Actions.$values)) {
+            return;
+        }
+
+        const actions = current.Actions.$values;
+
+        const actionsTitle = document.createElement("h3");
+        actionsTitle.innerText = "Actions Performed:";
+        const actionsUl = document.createElement("ul");
+
+        for (let i = 0; i < actions.length; i++) {
+            const listItem = document.createElement("li");
+            listItem.innerText = actions[i];
+            actionsUl.appendChild(listItem);
+        }
+
+        actionsDiv.appendChild(actionsTitle);
+        actionsDiv.appendChild(actionsUl);
+    };
+
     const onChangeSlider = (e) => {
         const stepsDiv = document.getElementById("steps");
         stepsDiv.innerHTML = "<span>Steps:&nbsp;</span>";
@@ -157,6 +181,7 @@
 
         resetColors(window.scrutiny.transitions);
         setColors(subTransitions);
+        setActions(subTransitions[subTransitions.length - 1]);
     };
 
     const getGraph = (graph) => {

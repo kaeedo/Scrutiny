@@ -220,7 +220,7 @@ module Scrutiny =
                     |> Option.iter (fun ea -> ea exitNode.LocalState)
         finally
             config.Logger $"Scrutiny Result written to: {config.ScrutinyResultFilePath}" 
-            reporter.Finish() |> ignore
+            reporter.GenerateMap()
 
         reporter.Finish()
 
