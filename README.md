@@ -137,6 +137,8 @@ To actually run the test, call the `scrutinize` function with your entry state, 
 
         0
 
+At the end of the run, Scrutiny will return an object which contains the generated adjacency graph, as well as a list of individual steps taken, along with the actions performed in each state.
+
 #### Important note for F# users
 As the transitions ultimately depict a cyclic graph, it is necessary to declare module or namespace as recursive so that pages defined later can be referenced by pages earlier. Note the usage of the `rec` keyword.
 e.g.:
@@ -271,8 +273,7 @@ To actually run the test, call the `Scrutiny.CSharp.Scrutinize.Start<Home>(gs, c
     }
 
 The global state can be any class you want it to be. Scrutiny will pass the instance that is passed into the start around to each `PageState` it visits.
-At the end of the run, Scrutiny will return an object which contains some information about your test run, such as the size of the graph, as well as number of steps taken throughout the process.
-It looks like this:
+At the end of the run, Scrutiny will return an object which contains the generated adjacency graph, as well as a list of individual steps taken, along with the actions performed in each state.
 
 
 </details>

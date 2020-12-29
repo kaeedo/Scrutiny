@@ -144,7 +144,7 @@ module internal ScrutinyCSharp =
             ps
         )
 
-    let start<'startState> gs (config: Configuration): ScrutinizedStates<'a, 'b> = 
+    let start<'startState> gs (config: Configuration): ScrutinizedStates = 
         let config = config.ToScrutiynConfig()
         
         let t = typeof<'startState> 
@@ -154,8 +154,10 @@ module internal ScrutinyCSharp =
             defs
             |> List.find (fun d -> d.Name = t.Name)
         
-        Scrutiny.scrutinize config (obj()) (fun _ -> starting)
+        let result = Scrutiny.scrutinize config (obj()) (fun _ -> starting)
         
+        ScrutinizedStates(result.Graph, result.Steps)
+
 [<AbstractClass; Sealed>]
 type Scrutinize private () =
     static member Start<'startState> (globalState) = 
