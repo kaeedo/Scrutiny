@@ -1,6 +1,6 @@
 # Scrutiny
 
-F# library for testing state machines by randomly choosing available states and valid transitions. Designed for usage with UI tests
+F# and C# library for testing state machines by randomly choosing available states and valid transitions. Designed for usage with UI tests
 
 [![Nuget](https://img.shields.io/nuget/vpre/scrutiny?color=blue&style=for-the-badge)](https://www.nuget.org/packages/Scrutiny/) ![Build](https://github.com/kaeedo/Scrutiny/workflows/Build/badge.svg?branch=master)
 
@@ -30,10 +30,10 @@ Scrutiny will also draw a diagram representing the system under test as has been
 
 ![SUT sample report](images/scrutinyDemo.gif)
 
-## Usage
+# Usage
 
 <details>
-  <summary>Click for F# documentation</summary>
+  <summary>## Click for F# documentation</summary>
   
 Define one `page` object for each state in your UI. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
 A `page` looks like this:
@@ -90,7 +90,7 @@ Some things can be configured via `ScrutinyConfig`. The default config is:
 `ComprehensiveActions` will run ALL defined actions anytime it enters a state with actions defined. If false, it will run a random subset of actions.
 `ComprehensiveStates` will visit ALL states in the state machine. If this is false, then it will visit at least half of all states before randomly quitting.
 `ScrutinyResultFilePath` is the directory and specified file name that the generated HTML report will be saved in
-`Logger` is how individual messages from scrutiny will be logged. the signature is `string -> unit`. This is useful for things like XUnit that bring their own console logging mechanism, or if you wanted to integrate a larger loggin framework.
+`Logger` is how individual messages from scrutiny will be logged. The signature is `string -> unit`. This is useful for things like XUnit that bring their own console logging mechanism, or if you wanted to integrate a larger logging framework.
 
 To actually run the test, call the `scrutinize` function with your entry state, config, and global state object. e.g.
 
@@ -157,9 +157,123 @@ e.g.:
 </details>
 
 <details>
-  <summary>Click for C# documentation</summary>
+  <summary>## Click for C# documentation</summary>
 
-  # ergerg
+Define one class for each state in your UI, and decorate it with the `PageState` attribute. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
+A `PageState` could look like this:
+
+    using Scrutiny.CSharp;
+
+    [PageState]
+    public class LoggedInComment
+    {
+        private readonly GlobalState globalState;
+        private string localComment = string.Empty;
+
+        public LoggedInComment(GlobalState globalState)
+        {
+            // Construct anything necessary.
+            // The constructor is called everytime Scrutiny navigates to this state
+        }
+
+        [OnEnter]
+        public void OnEnter()
+        {
+            // Do something when scrutiny enters this state
+            // Can optionally be async/await
+            // Can only define one
+        }
+
+        [Action]
+        public async Task WriteComments()
+        {
+            // Do something on the page
+            // Can optionally be non-async
+            // Define any number of these
+        }
+
+        [OnExit]
+        public void OnExit()
+        {
+            // Do something when scrutiny exits this state
+            // Can optionally be async/await
+            // Can only define one
+        }
+
+        [ExitAction]
+        public async Task ExitAction()
+        {
+            // One exit actions amongst all page states is chosen
+            // Define any number of these
+            // Can optionally be non-async
+        }
+
+        [TransitionTo(nameof(AnotherState))]
+        public void TransitionToAnotherState()
+        {
+            // Code to perform state transition
+            // Define any number of these
+            // Can optionally be async/await
+        }
+    }
+
+Available attriutes are:
+`PageState` This decorates the class. Scrutiny will search for all `PageState`s within an assembly.
+`OnEnter` Only one allowed per class. This method will be run anytime Scrutiny enters this state.
+`OnExit` Only one allowed per class. This method will be run anytime Scrutiny exits this state.
+`ExitAction` Once Scrutiny is done navigating through the states and actions, it will randomly choose a single exit action out of all defined exit actions to exit the state machine.
+`Action` These are any actions that are performed within a state, and then stay in the same state.
+`TransitionTo(string)` These are any methods that perform state transitions. Pass the name of another `PageState` to tell Scrutiny where the transition goes to.
+
+### Configuration
+Some things can be configured via the `Scrutiny.CSharp.Configuration.Configuration` POCO. The default config is:
+
+    Seed = Environment.TickCount
+    MapOnly = false
+    ComprehensiveActions = true
+    ComprehensiveStates = true
+    ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html"
+    Logger = (Action<string>)((s) => Console.WriteLine(s))
+
+`Seed` is printed during each test to be able to recreate a specific test run.
+`MapOnly` won't run the test at all, but only generate the HTML Graph report.
+`ComprehensiveActions` will run ALL defined actions anytime it enters a state with actions defined. If false, it will run a random subset of actions.
+`ComprehensiveStates` will visit ALL states in the state machine. If this is false, then it will visit at least half of all states before randomly quitting.
+`ScrutinyResultFilePath` is the directory and specified file name that the generated HTML report will be saved in
+`Logger` is how individual messages from scrutiny will be logged. This is useful for things like XUnit that bring their own console logging mechanism, or if you wanted to integrate a larger logging framework.
+
+To actually run the test, call the `Scrutiny.CSharp.Scrutinize.Start<Home>(gs, config)` method. It takes your entry state as a generic type argument, and a constructed global state object as well as your config as parameters.
+
+    using Scrutiny.CSharp;
+
+    [Fact]
+    public async Task WithAttrs()
+    {
+        var browser = await playwright.Firefox.LaunchAsync(headless: false);
+        var context = await browser.NewContextAsync(ignoreHTTPSErrors: true);
+        var page = await context.NewPageAsync();
+
+        await page.GoToAsync("https://127.0.0.1:5001/home");
+
+        var config = new Configuration
+        {
+            Seed = 553931187,
+            MapOnly = false,
+            ComprehensiveActions = true,
+            ComprehensiveStates = true
+        };
+
+        var gs = new GlobalState(page, outputHelper);
+        var result = Scrutinize.Start<Home>(gs, config);
+
+        Assert.Equal(7, result.Steps.Count());
+        Assert.Equal(5, result.Graph.Count());
+    }
+
+The global state can be any class you want it to be. Scrutiny will pass the instance that is passed into the start around to each `PageState` it visits.
+At the end of the run, Scrutiny will return an object which contains some information about your test run, such as the size of the graph, as well as number of steps taken throughout the process.
+It looks like this:
+
 
 </details>
 
