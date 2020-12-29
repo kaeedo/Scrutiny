@@ -6,21 +6,21 @@
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Scrutiny\Scrutiny.fsproj">
-      <Name>Scrutiny.fsproj</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\..\src\Scrutiny\Scrutiny.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ReporterTests.fs" />
     <Compile Include="NavigatorTests.fs" />
+    <Compile Include="CSharpEntryTests.fs" />
+    <Compile Include="CSharpConfiugrationTests.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Expecto" Version="9.0.2" />
     <PackageReference Include="Expecto.FsCheck" Version="9.0.2" />
     <PackageReference Include="FsCheck" Version="2.14.3" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
     <PackageReference Include="Unquote" Version="5.0.0" />
-    <PackageReference Include="YoloDev.Expecto.TestSdk" Version="0.9.2" />
+    <PackageReference Include="YoloDev.Expecto.TestSdk" Version="0.11.1" />
   </ItemGroup>
 </Project>

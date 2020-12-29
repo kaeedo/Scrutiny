@@ -8,12 +8,18 @@ open Scrutiny.Scrutiny
 open Scrutiny.Operators
 
 module rec TestPages =
-    let home = fun _ ->
-        page {
-            name "Home"
-            transition (ignore ==> comment)
-            transition (ignore ==> signIn)
-        }
+    let home = 
+        fun _ ->
+            page {
+                name "Home"
+                onEnter (ignore)
+
+                transition (ignore ==> comment)
+                transition (ignore ==> signIn)
+
+                action (ignore) String.Empty 0 String.Empty
+                action (ignore) String.Empty 0 String.Empty
+            }
 
     let comment = fun _ ->
         page {
@@ -27,6 +33,7 @@ module rec TestPages =
             name "Sign In"
             transition (ignore ==> home)
             transition (ignore ==> loggedInHome)
+            action (ignore) String.Empty 0 String.Empty
         }
 
     let loggedInComment = fun _ ->
@@ -44,7 +51,6 @@ module rec TestPages =
 
 [<Tests>]
 let reporterTests =
-    let ci = { CallerInformation.MemberName = String.Empty; LineNumber = 0; FilePath = String.Empty }
     testList "Reporter Tests" [
         Tests.test "Should set graph" {
             let reporter: IReporter<unit, obj> = Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
@@ -59,6 +65,19 @@ let reporterTests =
             test <@ final.Graph = ag @>
             test <@ steps |> Seq.exists (fun f -> f.Error.IsSome) |> not @>
             test <@ steps |> Seq.length = 1 @>
+        }
+
+        Tests.test "Should add actions" {
+            let reporter: IReporter<unit, obj> = Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
+            let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
+
+            reporter.Start (ag, TestPages.home())
+            reporter.PushAction("herp derp")
+
+            let final = reporter.Finish ()
+            let homeStep = final.Steps |> Seq.find (fun s -> s.PageState.Name = "Home")
+
+            test <@ (homeStep.Actions |> Seq.head) = "herp derp" @>
         }
 
         Tests.test "Should add transitions" {

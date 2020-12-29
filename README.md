@@ -170,8 +170,8 @@ The HTML report is a single file with all javascript written inline
 - [x] Create nice interface for usage from C#
 - [x] Show performed actions in HTML report
 - [ ] Documentation
-- [ ] Return data about test run at end
-- [ ] More unit/integration tests
+- [x] Return data about test run at end
+- [x] More unit/integration tests
 
 // Next release
 
@@ -182,3 +182,4 @@ The HTML report is a single file with all javascript written inline
 - [ ] Documentation
 - [ ] Make pretty report page
 - [ ] Bring your own reporter
+- [ ] Page State collection

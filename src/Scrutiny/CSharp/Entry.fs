@@ -4,8 +4,12 @@ open Scrutiny
 open System
 open System.Threading.Tasks
 open System.Reflection
+open System.Runtime.CompilerServices;
 
 module internal ScrutinyCSharp =
+    [<assembly: InternalsVisibleTo("Scrutiny.Tests")>]
+    do()
+
     let private constructPageState<'globalState> (gs: 'globalState) (psType: Type) =
         let constructed = 
             psType.GetConstructors()
@@ -74,10 +78,7 @@ module internal ScrutinyCSharp =
         | None -> ignore
         | Some m -> buildMethod m constructedPageState
 
-    let start<'startState> gs (config: Configuration): ScrutinizedStates<'a, 'b> = 
-        let config = config.ToScrutiynConfig()
-        let t = typeof<'startState> 
-
+    let internal buildPageStateDefinitions gs (t: Type) =
         let pageStatesTypes = 
             seq {
                 for t in t.Assembly.GetTypes() do
@@ -135,14 +136,19 @@ module internal ScrutinyCSharp =
             )
             |> List.ofSeq
 
-        let defs =
-            defs 
-            |> List.map (fun (ps, constructed) ->
-                let transitionsForPageState = buildTransition constructed defs
+        defs 
+        |> List.map (fun (ps, constructed) ->
+            let transitionsForPageState = buildTransition constructed defs
 
-                ps.Transitions <- transitionsForPageState
-                ps
-            )
+            ps.Transitions <- transitionsForPageState
+            ps
+        )
+
+    let start<'startState> gs (config: Configuration): ScrutinizedStates<'a, 'b> = 
+        let config = config.ToScrutiynConfig()
+        
+        let t = typeof<'startState> 
+        let defs = buildPageStateDefinitions gs t
 
         let starting =
             defs
