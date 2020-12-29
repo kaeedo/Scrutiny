@@ -16,8 +16,12 @@ Scrutiny was designed to run UI tests, but using e.g. CanopyUI or Selenium is on
 
 ---
 
-Check the [Canopy UsageExample](tests/UsageExample.Canopy) for a sample test implemented with [CanopyUI](https://github.com/lefthandedgoat/canopy).
-Check the [Playwright UsageExample](tests/UsageExample.Playwright) for a sample test implemented with [PlaywrightSharp](https://github.com/microsoft/playwright-sharp).
+There are several usage example projects in the `tests` directory, implemented using different technologies. The first two are implemented in F#, and the third one in C#.
+
+* [Canopy UsageExample](tests/UsageExample.Canopy) for a sample test implemented with [CanopyUI](https://github.com/lefthandedgoat/canopy)
+* [Playwright UsageExample](tests/UsageExample.Playwright) for a sample test implemented with [PlaywrightSharp](https://github.com/microsoft/playwright-sharp)
+* [C# UsageExample](tests/UsageExample.CSharp) for a sample test implementation also using Playwright, but this time with C#
+
 A tiny sample site exists in the [Web directory](tests/Web). This is the website that the usage examples are testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a comment if they are signed in.
 The usage examples showcase a certain approach a developer can take as to how to model their web site as a state machine. In this case, the home and comment page are each listed twice, once as logged out, and once as logged in.
 This is only one way to handle this case, and the developer could choose to model it in any other way.
@@ -27,6 +31,10 @@ Scrutiny will also draw a diagram representing the system under test as has been
 ![SUT sample report](images/scrutinyDemo.gif)
 
 ## Usage
+
+<details>
+  <summary>Click for F# documentation</summary>
+  
 Define one `page` object for each state in your UI. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
 A `page` looks like this:
 
@@ -85,7 +93,6 @@ Some things can be configured via `ScrutinyConfig`. The default config is:
 `Logger` is how individual messages from scrutiny will be logged. the signature is `string -> unit`. This is useful for things like XUnit that bring their own console logging mechanism, or if you wanted to integrate a larger loggin framework.
 
 To actually run the test, call the `scrutinize` function with your entry state, config, and global state object. e.g.
-
 
     // Sample Global State. This can be anything, and all page states will receive the same instance
     type GlobalState() =
@@ -146,6 +153,15 @@ e.g.:
                 name "Second Page"
                 transition ((fun () -> click "#first") ==> firstPage)
             }
+
+</details>
+
+<details>
+  <summary>Click for C# documentation</summary>
+
+  # ergerg
+
+</details>
 
 ## Development
 To run the usage examples, you must start the [web project](tests/Web).
