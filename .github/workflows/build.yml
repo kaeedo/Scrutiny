@@ -17,7 +17,7 @@ jobs:
     - uses: actions/checkout@v1
     - uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '3.1.300'
+        dotnet-version: '5.0.100'
     - name: Bootstrap .Net Core
       run: dotnet fsi --help
     - name: Set version from changelog
