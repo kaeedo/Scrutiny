@@ -300,12 +300,9 @@ The HTML report is a single file with all javascript written inline
 - [x] Bring your own logger
 - [x] Create nice interface for usage from C#
 - [x] Show performed actions in HTML report
-- [ ] Documentation
+- [x] Documentation
 - [x] Return data about test run at end
 - [x] More unit/integration tests
-
-// Next release
-
 - [ ] Implement some kind of Conversion flow
 - [ ] Implement some kind of parameterised input data
 - [ ] Add a concept of Personas
