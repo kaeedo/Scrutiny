@@ -19,7 +19,7 @@ jobs:
       with:
         dotnet-version: '3.1.300'
     - name: Bootstrap .Net Core
-      run: dotnet --info
+      run: dotnet fsi --help
     - name: Set version from changelog
       run: echo "RELEASE_VERSION=$(dotnet fsi ./updateVersion.fsx)" >> $GITHUB_ENV
     - name: Build solution
