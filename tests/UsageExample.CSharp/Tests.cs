@@ -30,7 +30,9 @@ namespace UsageExample.CSharp
         [Fact]
         public async Task WithAttrs()
         {
-            var browser = await playwright.Firefox.LaunchAsync(headless: false);
+            var isHeadless = System.Environment.GetEnvironmentVariable("CI") == "true";
+
+            var browser = await playwright.Firefox.LaunchAsync(headless: isHeadless);
             var context = await browser.NewContextAsync(ignoreHTTPSErrors: true);
             var page = await context.NewPageAsync();
 

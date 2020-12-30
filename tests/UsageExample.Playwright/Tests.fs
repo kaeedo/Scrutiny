@@ -18,12 +18,16 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
         Playwright.InstallAsync() |> Async.AwaitTask |> Async.RunSynchronously
         System.Environment.SetEnvironmentVariable("PWDEBUG", "1")
         System.Environment.SetEnvironmentVariable("DEBUG", "pw:api")
+
         use playwright = Playwright.CreateAsync() |> Async.AwaitTask |> Async.RunSynchronously
+
+        let isHeadless = System.Environment.GetEnvironmentVariable("CI") = "true"
+
         logger "Finished setting up browser drivers"
 
         let page =
             async {
-                let! browser = playwright.Firefox.LaunchAsync(headless = false) |> Async.AwaitTask
+                let! browser = playwright.Firefox.LaunchAsync(headless = isHeadless) |> Async.AwaitTask
                 let! context = browser.NewContextAsync(ignoreHTTPSErrors = true) |> Async.AwaitTask
                 let! page = context.NewPageAsync() |> Async.AwaitTask
 
