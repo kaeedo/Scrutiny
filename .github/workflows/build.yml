@@ -3,9 +3,7 @@ name: Build
 on:
   push:
     branches:
-    - master
-    paths:
-    - '${{ github.workspace }}/CHANGELOG.md'
+      - master
 
 env:
   CI: true
