@@ -1,4 +1,4 @@
-[![Header]](header.svg)
+[![Header](header.svg)]
 
 F# and C# library for testing state machines by randomly choosing available states and valid transitions. Designed for usage with UI tests
 
