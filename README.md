@@ -1,4 +1,4 @@
-# Scrutiny
+[![Header]](header.svg)
 
 F# and C# library for testing state machines by randomly choosing available states and valid transitions. Designed for usage with UI tests
 
@@ -311,3 +311,4 @@ The HTML report is a single file with all javascript written inline
 - [ ] Make pretty report page
 - [ ] Bring your own reporter
 - [ ] Page State collection
+- [ ] Make better logo

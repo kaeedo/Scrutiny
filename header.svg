@@ -23,7 +23,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -42,8 +42,8 @@
      showgrid="true"
      inkscape:snap-global="true"
      inkscape:zoom="1.8274291"
-     inkscape:cx="311.25661"
-     inkscape:cy="203.65289"
+     inkscape:cx="300.80162"
+     inkscape:cy="209.85468"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -51,7 +51,8 @@
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
-     fit-margin-bottom="0">
+     fit-margin-bottom="0"
+     inkscape:document-rotation="0">
     <inkscape:grid
        type="xygrid"
        id="grid76"
@@ -60,6 +61,12 @@
   </sodipodi:namedview>
   <defs
      id="defs46">
+    <rect
+       x="170"
+       y="80"
+       width="407.73608"
+       height="139.581"
+       id="rect875" />
     <path
        d="M 0,120 V 260 L 320,580 640,260 V 120 L 580,60 H 60 Z"
        id="cFvoVk8Xs" />
@@ -84,7 +91,7 @@
        sodipodi:nodetypes="ccccccccc" />
     <g
        id="g1060"
-       transform="translate(-40.25558,-52.50876)"
+       transform="translate(-254.25558,-52.50876)"
        style="fill:#f8f6f6;fill-opacity:1">
       <path
          style="fill:#f8f6f6;fill-opacity:1;stroke:#2a363b;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -121,5 +128,13 @@
          d="m 348.78731,285.43108 19.69616,3.47296"
          id="path1050" />
     </g>
+    <text
+       xml:space="preserve"
+       id="text873"
+       style="font-style:normal;font-weight:normal;font-size:113.333px;line-height:0;font-family:sans-serif;white-space:pre;shape-inside:url(#rect875);fill:#000000;fill-opacity:1;stroke:none;"
+       transform="translate(13.680421,62.929937)"><tspan
+         x="170"
+         y="179.28903"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:113.333px;line-height:1;font-family:Impact;-inkscape-font-specification:Impact">Scrutiny</tspan></tspan></text>
   </g>
 </svg>
