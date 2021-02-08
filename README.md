@@ -303,6 +303,7 @@ The HTML report is a single file with all javascript written inline
 - [x] Documentation
 - [x] Return data about test run at end
 - [x] More unit/integration tests
+- [ ] Investigate using [microsoft/automatic-graph-layout](https://github.com/microsoft/automatic-graph-layout)
 - [ ] Implement some kind of Conversion flow
 - [ ] Implement some kind of parameterised input data
 - [ ] Add a concept of Personas

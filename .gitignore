@@ -27,3 +27,5 @@ src/HtmlReport/dist/
 src/HtmlReport/.fusebox/
 src/HtmlReport/.cache/
 /tests/UsageExample.Canopy/Chrome/
+/usageExamples/UsageExample.Canopy/Chrome/
+/usageExamples/Web/Properties/launchSettings.json
