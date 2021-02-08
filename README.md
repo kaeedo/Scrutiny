@@ -34,7 +34,7 @@ Scrutiny will also draw a diagram representing the system under test as has been
 
 <details>
   <summary><i>Click</i> for F# documentation</summary>
-  
+
 Define one `page` object for each state in your UI. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
 A `page` looks like this:
 
@@ -322,8 +322,6 @@ Donations are greatly appreciated, but not needed at all. Please only donate if 
 
 Liberapay: [![Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/kaeedo)
 
-Ethereum:
+Ethereum: `0x05f231D19c19A2111fe03c923F26813Bad43B57f`
 
-Cardano:
-
-Dogecoins: 
+Cardano ADA: `addr1qx35nmy62dfp3n5tqgga92gxcnq5vkvflw963yg7fm5e5my68x9frc2qq0r8nstjtnjcrcnpmtpzwvp0sqz46y4ykrmqrd4dg9`
