@@ -9,9 +9,9 @@
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    version="1.1"
    preserveAspectRatio="xMidYMid meet"
-   viewBox="0 0 640 400"
+   viewBox="0 0 640 315"
    width="640"
-   height="400"
+   height="315"
    id="svg70"
    sodipodi:docname="header.svg"
    inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)">
@@ -23,7 +23,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -36,16 +36,16 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1920"
-     inkscape:window-height="1017"
+     inkscape:window-width="2560"
+     inkscape:window-height="1377"
      id="namedview72"
      showgrid="true"
      inkscape:snap-global="true"
      inkscape:zoom="1.8274291"
      inkscape:cx="300.80162"
-     inkscape:cy="209.85468"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
+     inkscape:cy="167.35468"
+     inkscape:window-x="1912"
+     inkscape:window-y="5"
      inkscape:window-maximized="1"
      inkscape:current-layer="g68"
      fit-margin-top="0"
@@ -57,7 +57,7 @@
        type="xygrid"
        id="grid76"
        originx="0"
-       originy="0" />
+       originy="-42.5" />
   </sodipodi:namedview>
   <defs
      id="defs46">
@@ -65,28 +65,20 @@
        x="170"
        y="80"
        width="407.73608"
-       height="139.581"
+       height="139.58099"
        id="rect875" />
-    <path
-       d="M 0,120 V 260 L 320,580 640,260 V 120 L 580,60 H 60 Z"
-       id="cFvoVk8Xs" />
-    <path
-       d="m 48.46,142.57 v 118.46 c 82.12,82.12 145.75,145.75 190.87,190.88 45.13,45.12 71.76,71.76 79.9,79.89 L 590,261.03 V 142.57 L 539.23,91.8 h -440 z"
-       id="awKOJzmX" />
-    <path
-       d=""
-       id="da0Q7WV3c" />
   </defs>
   <g
-     id="g68">
+     id="g68"
+     transform="translate(0,-42.5)">
     <path
        style="fill:#cf4647;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 70,0 h 510 l 60,60 v 290 l -60,50 H 60 L 0,330 V 70 Z"
+       d="m 70,42.5 h 510 l 60,60 v 205 l -60,50 H 60 l -60,-70 v -175 z"
        id="path84"
        sodipodi:nodetypes="ccccccccc" />
     <path
        style="fill:#f5d061;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 80,40 h 480 l 40,40 v 250 l -40,35 H 80 L 40,330 V 80 Z"
+       d="m 80,82.5 h 480 l 40,40 v 165 l -40,35 H 80 l -40,-45 v -155 z"
        id="path86"
        sodipodi:nodetypes="ccccccccc" />
     <g

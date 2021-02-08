@@ -16,24 +16,24 @@ Scrutiny was designed to run UI tests, but using e.g. CanopyUI or Selenium is on
 
 ---
 
-There are several usage example projects in the `tests` directory, implemented using different technologies. The first two are implemented in F#, and the third one in C#.
+There are several usage example projects in the `usageExamples` directory, implemented using different technologies. The first two are implemented in F#, and the third one in C#.
 
-* [Canopy UsageExample](tests/UsageExample.Canopy) for a sample test implemented with [CanopyUI](https://github.com/lefthandedgoat/canopy)
-* [Playwright UsageExample](tests/UsageExample.Playwright) for a sample test implemented with [PlaywrightSharp](https://github.com/microsoft/playwright-sharp)
-* [C# UsageExample](tests/UsageExample.CSharp) for a sample test implementation also using Playwright, but this time with C#
+* [Canopy UsageExample](usageExamples/UsageExample.Canopy) for a sample test implemented with [CanopyUI](https://github.com/lefthandedgoat/canopy)
+* [Playwright UsageExample](usageExamples/UsageExample.Playwright) for a sample test implemented with [PlaywrightSharp](https://github.com/microsoft/playwright-sharp)
+* [C# UsageExample](usageExamples/UsageExample.CSharp) for a sample test implementation also using Playwright, but this time with C#
 
-A tiny sample site exists in the [Web directory](tests/Web). This is the website that the usage examples are testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a comment if they are signed in.
+A tiny sample site exists in the [Usage Example directory](usageExamples/Web). This is the website that the usage examples are testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a comment if they are signed in.
 The usage examples showcase a certain approach a developer can take as to how to model their web site as a state machine. In this case, the home and comment page are each listed twice, once as logged out, and once as logged in.
 This is only one way to handle this case, and the developer could choose to model it in any other way.
 
-Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s. The [Sample Web site](tests/Web) looks like this:
+Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s. The [Sample Web site](usageExamples/Web) looks like this:
 
 ![SUT sample report](images/scrutinyDemo.gif)
 
 # Usage
 
 <details>
-  <summary>## Click for F# documentation</summary>
+  <summary><i>Click</i> for F# documentation</summary>
   
 Define one `page` object for each state in your UI. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
 A `page` looks like this:
@@ -159,7 +159,7 @@ e.g.:
 </details>
 
 <details>
-  <summary>## Click for C# documentation</summary>
+  <summary><i>Click</i> for C# documentation</summary>
 
 Define one class for each state in your UI, and decorate it with the `PageState` attribute. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
 A `PageState` could look like this:
@@ -279,7 +279,7 @@ At the end of the run, Scrutiny will return an object which contains the generat
 </details>
 
 ## Development
-To run the usage examples, you must start the [web project](tests/Web).
+To run the usage examples, you must start the [web project](usageExamples/Web).
 
 The HTML report is a single file with all javascript written inline
 
@@ -312,3 +312,17 @@ The HTML report is a single file with all javascript written inline
 - [ ] Bring your own reporter
 - [ ] Page State collection
 - [ ] Make better logo
+
+---
+
+### Donations
+
+Donations are greatly appreciated, but not needed at all. Please only donate if you are in a position to be able to afford it, and only if you truly believe in the gift of giving.
+
+Liberapay: [![Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/kaeedo)
+
+Ethereum:
+
+Cardano:
+
+Dogecoins: 
