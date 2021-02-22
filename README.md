@@ -327,3 +327,5 @@ Ethereum: `0x05f231D19c19A2111fe03c923F26813Bad43B57f`
 Cardano ADA: `addr1qx35nmy62dfp3n5tqgga92gxcnq5vkvflw963yg7fm5e5my68x9frc2qq0r8nstjtnjcrcnpmtpzwvp0sqz46y4ykrmqrd4dg9`
 
 Litecoin: `MSaBzQ81tVmbPhcqwh2hnvzsXDE4LYq63W`
+
+Monero: `44ZvjrjgStKAPaxTAEX3achdCAhsc5pT85MaK27VLKTFfZte2pAtoNmUBGfHRvnq62jow3D7HUm2ohjjuP7AjjaKBDovruf`
