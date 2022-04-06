@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using PlaywrightSharp;
+using Microsoft.Playwright;
 using Xunit.Abstractions;
 
 namespace UsageExample.CSharp

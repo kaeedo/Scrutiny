@@ -1,11 +1,11 @@
 ﻿namespace UsageExample.Playwright
 
 open System
+open Microsoft.Playwright
 open Scrutiny
 open Scrutiny.Operators
 open Scrutiny.Scrutiny
 
-open PlaywrightSharp
 open Xunit
 
 type GlobalState(page: IPage, logger: string -> unit) =
@@ -34,7 +34,7 @@ module rec ScrutinyStateMachine =
                     globalState.Logger "Checking on page sign in"
                     (task {
                         globalState.Logger "Sign in: Looking for header text"
-                        let! headerText = globalState.Page.GetInnerTextAsync("#header") 
+                        let! headerText = globalState.Page.InnerTextAsync("#header") 
                         Assert.Equal("Sign In", headerText)
                     }).GetAwaiter().GetResult()
                 )
@@ -154,7 +154,7 @@ module rec ScrutinyStateMachine =
                             comments
                             |> List.tryFind(fun c ->
                                 (task {
-                                    let! text = c.GetInnerTextAsync()
+                                    let! text = c.InnerTextAsync()
                                     return text = sprintf "%s wrote:\n%s" globalState.Username ls.Comment
                                 }).GetAwaiter().GetResult()
                             )
@@ -191,7 +191,7 @@ module rec ScrutinyStateMachine =
 
                         Assert.False(displayState.ToString() = "none")
 
-                        let! welcomeText = globalState.Page.GetInnerTextAsync("#welcomeText")
+                        let! welcomeText = globalState.Page.InnerTextAsync("#welcomeText")
 
                         Assert.Equal(sprintf "Welcome %s" globalState.Username, welcomeText);
                     }).GetAwaiter().GetResult()
@@ -213,7 +213,7 @@ module rec ScrutinyStateMachine =
                     globalState.Logger "Checking on page comment"
 
                     (task {
-                        let! headerText = globalState.Page.GetInnerTextAsync("#header") 
+                        let! headerText = globalState.Page.InnerTextAsync("#header") 
                         Assert.Equal("Comments", headerText)
                     }).GetAwaiter().GetResult()
                 )
@@ -240,7 +240,7 @@ module rec ScrutinyStateMachine =
                     globalState.Logger "Checking on page home"
 
                     (task {
-                        let! headerText = globalState.Page.GetInnerTextAsync("#header") 
+                        let! headerText = globalState.Page.InnerTextAsync("#header") 
                         Assert.Equal("Home", headerText)
                     }).GetAwaiter().GetResult()
                 )

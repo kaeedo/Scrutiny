@@ -27,7 +27,7 @@ namespace UsageExample.CSharp.Pages
 
             Assert.False(displayState.ToString() == "none");
 
-            var welcomeText = await globalState.Page.GetInnerTextAsync("#welcomeText");
+            var welcomeText = await globalState.Page.InnerTextAsync("#welcomeText");
 
             Assert.Equal($"Welcome {globalState.Username}", welcomeText);
         }

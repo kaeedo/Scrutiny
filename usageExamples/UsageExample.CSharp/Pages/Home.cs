@@ -19,7 +19,7 @@ namespace UsageExample.CSharp.Pages
         public async Task OnEnter()
         {
             globalState.Logger.WriteLine("Checking on page home");
-            var headerText = await globalState.Page.GetInnerTextAsync("#header");
+            var headerText = await globalState.Page.InnerTextAsync("#header");
 
             Assert.Equal("Home", headerText);
         }

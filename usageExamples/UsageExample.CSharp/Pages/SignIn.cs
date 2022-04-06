@@ -20,7 +20,7 @@ namespace UsageExample.CSharp.Pages
         {
             globalState.Logger.WriteLine("Checking on page sign in");
 
-            var headerText = await globalState.Page.GetInnerTextAsync("#header");
+            var headerText = await globalState.Page.InnerTextAsync("#header");
 
             Assert.Equal("Sign In", headerText);
         }

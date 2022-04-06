@@ -46,7 +46,7 @@ namespace UsageExample.CSharp.Pages
         public async Task OnExit()
         {
             var comments = await globalState.Page.QuerySelectorAllAsync("#commentsUl > li");
-            var commentTexts = await Task.WhenAll(comments.Select(async c => await c.GetInnerTextAsync()));
+            var commentTexts = await Task.WhenAll(comments.Select(async c => await c.InnerTextAsync()));
             var hasNewComment = commentTexts.Any(c => c == $"{globalState.Username} wrote:\n{localComment}");
 
             Assert.True(hasNewComment);

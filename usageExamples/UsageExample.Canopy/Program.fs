@@ -144,8 +144,8 @@ module rec Entry =
     [<EntryPoint>]
     let main argv =
         printfn "Setting up browser drivers. This might take awhile"
-        do DriverManager().SetUpDriver(ChromeConfig())
-        //do DriverManager().SetUpDriver(FirefoxConfig())
+        //do DriverManager().SetUpDriver(ChromeConfig())
+        do DriverManager().SetUpDriver(FirefoxConfig())
         printfn "Finished setting up browser drivers"
 
         let options = FirefoxOptions()
@@ -159,8 +159,8 @@ module rec Entry =
             do cOptions.AddArgument "no-sandbox"
             do options.AddArgument "-headless"
 
-        use browser = new ChromeDriver(cOptions)
-        //use browser = new FirefoxDriver(options)
+        //use browser = new ChromeDriver(cOptions)
+        use browser = new FirefoxDriver(options)
 
         let config =
             { ScrutinyConfig.Default with

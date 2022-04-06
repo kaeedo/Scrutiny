@@ -1,8 +1,8 @@
-using PlaywrightSharp;
 using Scrutiny.CSharp;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Playwright;
 using UsageExample.CSharp.Pages;
 using Xunit;
 using Xunit.Abstractions;
@@ -17,9 +17,7 @@ namespace UsageExample.CSharp
         public Tests(ITestOutputHelper outputHelper)
         {
             outputHelper.WriteLine("Setting up browser drivers. This might take awhile");
-            Playwright.InstallAsync().GetAwaiter().GetResult();
-            Environment.SetEnvironmentVariable("PWDEBUG", "1");
-            Environment.SetEnvironmentVariable("DEBUG", "pw:api");
+            Microsoft.Playwright.Program.Main(new[] {"install"});
 
             playwright = Playwright.CreateAsync().GetAwaiter().GetResult();
 
@@ -30,13 +28,18 @@ namespace UsageExample.CSharp
         [Fact]
         public async Task WithAttrs()
         {
-            var isHeadless = System.Environment.GetEnvironmentVariable("CI") == "true";
+            var isHeadless = Environment.GetEnvironmentVariable("CI") == "true";
 
-            var browser = await playwright.Firefox.LaunchAsync(headless: isHeadless);
-            var context = await browser.NewContextAsync(ignoreHTTPSErrors: true);
+            var launchOptions = new BrowserTypeLaunchOptions
+            {
+                Headless = isHeadless
+            };
+            
+            var browser = await playwright.Firefox.LaunchAsync(launchOptions);
+            var context = await browser.NewContextAsync(new BrowserNewContextOptions {IgnoreHTTPSErrors = true});
             var page = await context.NewPageAsync();
 
-            await page.GoToAsync("https://127.0.0.1:5001/home");
+            await page.GotoAsync("https://127.0.0.1:5001/home");
 
             var config = new Configuration
             {
