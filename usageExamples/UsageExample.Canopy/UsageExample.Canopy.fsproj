@@ -1,8 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <LangVersion>preview</LangVersion>
+    <TargetFramework>net6.0</TargetFramework>
     <OutputType>exe</OutputType>
   </PropertyGroup>
   <PropertyGroup>
@@ -14,6 +13,7 @@
   <ItemGroup>
     <PackageReference Include="canopy" Version="2.1.5" />
     <PackageReference Include="WebDriverManager" Version="2.11.0" />
+    <PackageReference Update="FSharp.Core" Version="6.0.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Scrutiny\Scrutiny.fsproj" />

@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <LangVersion>preview</LangVersion>
+    <TargetFramework>net6.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
@@ -18,6 +17,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Update="FSharp.Core" Version="6.0.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Scrutiny\Scrutiny.fsproj" />

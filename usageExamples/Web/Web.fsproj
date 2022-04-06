@@ -1,11 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <DebugType>portable</DebugType>
     <AssemblyName>Web</AssemblyName>
     <OutputType>Exe</OutputType>
-    <LangVersion>preview</LangVersion>
     <EnableDefaultContentItems>false</EnableDefaultContentItems>
   </PropertyGroup>
   <ItemGroup>
@@ -21,5 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Giraffe" Version="4.1.0" />
+    <PackageReference Update="FSharp.Core" Version="6.0.3" />
   </ItemGroup>
 </Project>

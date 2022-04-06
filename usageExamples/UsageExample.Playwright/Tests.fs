@@ -26,15 +26,16 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
         logger "Finished setting up browser drivers"
 
         let page =
-            async {
-                let! browser = playwright.Firefox.LaunchAsync(headless = isHeadless) |> Async.AwaitTask
-                let! context = browser.NewContextAsync(ignoreHTTPSErrors = true) |> Async.AwaitTask
-                let! page = context.NewPageAsync() |> Async.AwaitTask
+            let task =
+                task {
+                    let! browser = playwright.Firefox.LaunchAsync(headless = isHeadless)
+                    let! context = browser.NewContextAsync(ignoreHTTPSErrors = true)
+                    let! page = context.NewPageAsync() 
 
-                let! _ = page.GoToAsync("https://127.0.0.1:5001/home") |> Async.AwaitTask
-                return page
-            }            
-            |> Async.RunSynchronously
+                    let! _ = page.GoToAsync("https://127.0.0.1:5001/home") 
+                    return page
+                }
+            task.GetAwaiter().GetResult()
 
         let config =
             { ScrutinyConfig.Default with
