@@ -25,8 +25,8 @@ jobs:
       run: dotnet run --project ${{ github.workspace }}/usageExamples/Web/Web.fsproj &
     - name: Run unit tests
       run: dotnet test
-    #- name: Run usage example
-    #  run: dotnet run --project ${{ github.workspace }}/usageExamples/UsageExample.Canopy/UsageExample.Canopy.fsproj
+    - name: Run usage example
+      run: dotnet run --project ${{ github.workspace }}/usageExamples/UsageExample.Canopy/UsageExample.Canopy.fsproj
     - name: Pack nuget package
       run: dotnet pack ./src/Scrutiny/Scrutiny.fsproj --include-source --include-symbols --output ${{ github.workspace }}/output
     #- name: Push nuget package
