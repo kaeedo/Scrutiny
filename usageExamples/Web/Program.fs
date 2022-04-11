@@ -1,6 +1,7 @@
 module Web.App
 
 open Giraffe
+open Giraffe.ViewEngine
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Cors.Infrastructure
 open Microsoft.AspNetCore.Hosting
@@ -22,8 +23,6 @@ type Message =
 // ---------------------------------
 
 module Views =
-    open GiraffeViewEngine
-
     let layout (content: XmlNode list) =
         html []
             [ head []
