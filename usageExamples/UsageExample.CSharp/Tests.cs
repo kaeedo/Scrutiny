@@ -18,7 +18,7 @@ namespace UsageExample.CSharp
         {
             outputHelper.WriteLine("Setting up browser drivers. This might take awhile");
             Microsoft.Playwright.Program.Main(new[] {"install"});
-
+            
             playwright = Playwright.CreateAsync().GetAwaiter().GetResult();
 
             outputHelper.WriteLine("Finished setting up browser drivers");

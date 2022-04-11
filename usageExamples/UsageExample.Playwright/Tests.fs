@@ -1,5 +1,6 @@
 namespace UsageExample.Playwright
 
+open System
 open Microsoft.Playwright
 open Xunit
 open Scrutiny
@@ -9,15 +10,13 @@ open System.IO
 open Xunit.Abstractions
 
 type PlaywrightTests(outputHelper: ITestOutputHelper) =
+    do Microsoft.Playwright.Program.Main([|"install"|]) |> ignore
     let logger msg = outputHelper.WriteLine(msg)
+    let playwright = Playwright.CreateAsync().GetAwaiter().GetResult()
 
     [<Fact>]
-    member _.``Run Scrutiny Test`` () =
+    member this.``Run Scrutiny Test`` () =
         task {
-            Microsoft.Playwright.Program.Main([|"install"|]) |> ignore
-
-            use! playwright = Playwright.CreateAsync()
-
             let isHeadless = System.Environment.GetEnvironmentVariable("CI") = "true"
 
             let launchOptions = BrowserTypeLaunchOptions()
@@ -43,3 +42,5 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
             Assert.Equal(9, result.Steps |> Seq.length);
             Assert.Equal(5, result.Graph.Length)
         }
+    interface IDisposable with
+        member this.Dispose() = playwright.Dispose()
