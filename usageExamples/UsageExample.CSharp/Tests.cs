@@ -25,7 +25,7 @@ namespace UsageExample.CSharp
             this.outputHelper = outputHelper;
         }
 
-        [Fact]
+        //[Fact]
         public async Task WithAttrs()
         {
             var isHeadless = Environment.GetEnvironmentVariable("CI") == "true";
