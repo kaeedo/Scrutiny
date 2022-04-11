@@ -11,7 +11,7 @@ open Xunit.Abstractions
 type PlaywrightTests(outputHelper: ITestOutputHelper) =
     let logger msg = outputHelper.WriteLine(msg)
 
-    //[<Fact>]
+    [<Fact>]
     let ``Run Scrutiny Test`` () =
         task {
             Microsoft.Playwright.Program.Main([|"install"|]) |> ignore
