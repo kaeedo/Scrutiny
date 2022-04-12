@@ -6,7 +6,6 @@ open Xunit
 open Scrutiny
 open Scrutiny.Scrutiny
 open UsageExample.Playwright
-open System.IO
 open Xunit.Abstractions
 
 type PlaywrightTests(outputHelper: ITestOutputHelper) =
@@ -14,10 +13,10 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
     let logger msg = outputHelper.WriteLine(msg)
     let playwright = Playwright.CreateAsync().GetAwaiter().GetResult()
 
-    [<Fact>]
+    //[<Fact>]
     member this.``Run Scrutiny Test`` () =
         task {
-            let isHeadless = System.Environment.GetEnvironmentVariable("CI") = "true"
+            let isHeadless = Environment.GetEnvironmentVariable("CI") = "true"
 
             let launchOptions = BrowserTypeLaunchOptions()
             launchOptions.Headless <- isHeadless
@@ -33,14 +32,13 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
                       Seed = 553931187
                       MapOnly = false
                       ComprehensiveActions = true
-                      ComprehensiveStates = true
-                      Logger = logger
-                      ScrutinyResultFilePath = Path.Join(Directory.GetCurrentDirectory(), "myResult.html") }
+                      ComprehensiveStates = true }
 
             let result = scrutinize config (GlobalState(page, logger)) ScrutinyStateMachine.home
 
             Assert.Equal(9, result.Steps |> Seq.length);
             Assert.Equal(5, result.Graph.Length)
         }
+        
     interface IDisposable with
         member this.Dispose() = playwright.Dispose()

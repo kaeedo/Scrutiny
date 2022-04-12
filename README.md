@@ -35,7 +35,18 @@ Scrutiny will also draw a diagram representing the system under test as has been
 <details>
   <summary><i>Click</i> for F# documentation</summary>
 
-Define one `page` object for each state in your UI. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
+Define one `page` object for each st ate in your UI. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
+
+The possible custom operations are:
+
+- `name`: Name of the state. Required
+- `localState`: A type to store some local state. Will be recreated everytime this page object is entered 
+- `onEnter`: Function to run when entering this page. Only one allowed
+- `onExit`: Function to run when exiting this page. Only one allowed
+- `transition`: Possible transition. Define how to transition to the next state, as well as which state to navigate to. Any number of transitions allowed
+- `action`: Possible action. Define function to run while in this page state. Any number of actions allowed
+- `exitAction`: After scrutiny traverses the graph of possible states, will pick a single exit action defined in any state to navigate to and finish the test with
+
 A `page` looks like this:
 
     let loggedInComment = fun (globalState: GlobalState) ->
@@ -162,6 +173,16 @@ e.g.:
   <summary><i>Click</i> for C# documentation</summary>
 
 Define one class for each state in your UI, and decorate it with the `PageState` attribute. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
+
+The possible attributes are:
+
+- `PageState`: Define a class as a Page state.
+- `OnEnter`: Function to run when entering this page. Only one allowed
+- `OnExit`: Function to run when exiting this page. Only one allowed
+- `TransitionTo`: Possible transition. Define how to transition to the next state, as well as which state to navigate to. Any number of transitions allowed
+- `Action`: Possible action. Define function to run while in this page state. Any number of actions allowed
+- `ExitAction`: After scrutiny traverses the graph of possible states, will pick a single exit action defined in any state to navigate to and finish the test with
+
 A `PageState` could look like this:
 
     using Scrutiny.CSharp;
