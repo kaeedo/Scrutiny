@@ -304,37 +304,13 @@ To run the usage examples, you must start the [web project](usageExamples/Web).
 
 The HTML report is a single file with all javascript written inline
 
-## TODO for Beta release
-- [x] Finish initial HTML report
-- [x] Create and publish NuGet package
-- [x] Documentation
+---
 
-## TODO for initial release
-- [x] Documentation
-- [x] Detailed result report. Color coded states and transitions showcasing which parts succeeded and failed
-- [x] Write unit tests
-- [x] Documentation
-- [x] Setup proper build scripts
+## Sponsor
 
-## TODO General
-- [x] More code examples
-- [x] Bring your own logger
-- [x] Create nice interface for usage from C#
-- [x] Show performed actions in HTML report
-- [x] Documentation
-- [x] Return data about test run at end
-- [x] More unit/integration tests
-- [ ] Allow returning Async/Task from state machine functions
-- [ ] Investigate using [microsoft/automatic-graph-layout](https://github.com/microsoft/automatic-graph-layout)
-- [ ] Implement some kind of Conversion flow
-- [ ] Implement some kind of parameterised input data
-- [ ] Add a concept of Personas
-- [ ] Use Fable to create a javascript release and npm package for usage from Node.js (maybe)
-- [ ] Documentation
-- [ ] Make pretty report page
-- [ ] Bring your own reporter
-- [ ] Page State collection
-- [ ] Make better logo
+Thank you to [Valora](https://valora.digital) for sponsoring this project:
+
+![valora_logo](./valora.gif)
 
 ---
 
