@@ -9,30 +9,30 @@ open System.Threading.Tasks
 [<PageState>]
 type ValidPageState(gs: obj) =
     [<OnEnter>] 
-    member __.OnEnter() = ()
+    member _.OnEnter() = ()
 
     [<TransitionTo("AnotherValidPageState")>] 
-    member __.MoveToAnother() = ()
+    member _.MoveToAnother() = ()
 
 [<PageState>]
 type AnotherValidPageState(gs: obj) =
     [<OnExit>] 
-    member __.OnEnter() = ()
+    member _.OnEnter() = ()
 
     [<TransitionTo("ValidPageState")>] 
-    member __.MoveToValid() = ()
+    member _.MoveToValid() = ()
 
 [<PageState>]
 type AsyncPageState(gs: obj) =
     [<Action>]
-    member __.DoSOmething() = 
+    member _.DoSomething() = 
         Task.FromResult(gs.ToString() |> ignore)
 
     [<TransitionTo("AnotherValidPageState")>]
-    member __.MoveToAnotherValid() = Task.FromResult(())
+    member _.MoveToAnotherValid() = Task.FromResult(())
 
     [<TransitionTo("ValidPageState")>]
-    member __.MoveToValid() = Task.FromResult(())
+    member _.MoveToValid() = Task.FromResult(())
 
 [<Tests>]
 let csharpEntryTests = 

@@ -2,34 +2,39 @@
 
 open System
 open System.Runtime.CompilerServices
+open System.Threading.Tasks
 
 type PageBuilder() =
-    member __.Yield(_): PageState<'a, 'b> =
+    member _.Yield _: PageState<'a, 'b> =
         { PageState.Name = ""
           LocalState = Unchecked.defaultof<'b>
-          OnEnter = fun _ -> ()
+          OnEnter = fun _ -> Task.FromResult()
           OnExit = fun _ -> ()
           Transitions = []
           Actions = []
           ExitActions = [] } // TODO. states can have many exit actions. one is chosen at random anyway.
 
     [<CustomOperation("name")>]
-    member __.Name(state, handler): PageState<'a, 'b> = { state with Name = handler }
+    member _.Name(state, handler): PageState<'a, 'b> = { state with Name = handler }
 
     [<CustomOperation("localState")>]
-    member __.LocalState(state, handler): PageState<'a, 'b> = { state with LocalState = handler }
+    member _.LocalState(state, handler): PageState<'a, 'b> = { state with LocalState = handler }
 
     [<CustomOperation("onEnter")>]
-    member __.OnEnter(state, handler): PageState<'a, 'b> = { state with OnEnter = handler }
+    member _.OnEnter(state, handler: 'b -> unit): PageState<'a, 'b> =
+        let handler = fun localState -> Task.FromResult(handler localState)
+        { state with OnEnter = handler }
+    [<CustomOperation("onEnter")>]
+    member _.OnEnter(state, handler: 'b -> Task<unit>): PageState<'a, 'b> = { state with OnEnter = handler }
 
     [<CustomOperation("onExit")>]
-    member __.OnExit(state, handler): PageState<'a, 'b> = { state with OnExit = handler }
+    member _.OnExit(state, handler): PageState<'a, 'b> = { state with OnExit = handler }
 
     [<CustomOperation("transition")>]
-    member __.Transitions(state, handler): PageState<'a, 'b> = { state with Transitions = handler :: state.Transitions }
+    member _.Transitions(state, handler): PageState<'a, 'b> = { state with Transitions = handler :: state.Transitions }
 
     [<CustomOperation("action")>]
-    member __.Actions(state, handler, [<CallerMemberName>]?memberName: string, [<CallerLineNumber>]?lineNumber: int, [<CallerFilePath>]?filePath: string): PageState<'a, 'b> = 
+    member _.Actions(state, handler, [<CallerMemberName>]?memberName: string, [<CallerLineNumber>]?lineNumber: int, [<CallerFilePath>]?filePath: string): PageState<'a, 'b> = 
         let callerInformation =
             { CallerInformation.MemberName = defaultArg memberName ""
               LineNumber = defaultArg lineNumber 0
@@ -38,7 +43,7 @@ type PageBuilder() =
         { state with Actions = (callerInformation, handler) :: state.Actions }
         
     [<CustomOperation("exitAction")>]
-    member __.ExitAction(state, handler): PageState<'a, 'b> =  { state with ExitActions = handler :: state.ExitActions }
+    member _.ExitAction(state, handler): PageState<'a, 'b> =  { state with ExitActions = handler :: state.ExitActions }
 
 module Scrutiny =
     let private printPath logger path =
@@ -97,7 +102,9 @@ module Scrutiny =
         let runActions = runActions reporter config
         // TODO Wrap functions in try function instead of try catching entire block
         try
-            current.OnEnter current.LocalState
+            (task {
+                do! current.OnEnter current.LocalState
+            }).GetAwaiter().GetResult()
             runActions current
             current.OnExit current.LocalState
         with exn ->

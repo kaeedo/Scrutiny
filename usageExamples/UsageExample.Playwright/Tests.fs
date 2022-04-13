@@ -13,7 +13,7 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
     let logger msg = outputHelper.WriteLine(msg)
     let playwright = Playwright.CreateAsync().GetAwaiter().GetResult()
 
-    //[<Fact>]
+    [<Fact>]
     member this.``Run Scrutiny Test`` () =
         task {
             let isHeadless = Environment.GetEnvironmentVariable("CI") = "true"
