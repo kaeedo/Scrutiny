@@ -4,8 +4,7 @@ open System
 open Expecto
 open Scrutiny
 open Swensen.Unquote
-open Scrutiny.Scrutiny
-open Scrutiny.Operators
+open Scrutiny
 
 module rec TestPages =
     let home = 

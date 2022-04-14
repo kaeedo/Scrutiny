@@ -1,4 +1,4 @@
-﻿module CSharpConfiugrationTests
+﻿module CSharpConfigurationTests
 
 open Scrutiny
 open Scrutiny.CSharp

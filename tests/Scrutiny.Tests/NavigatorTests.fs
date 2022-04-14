@@ -5,8 +5,7 @@ open Expecto
 open Scrutiny
 open Swensen.Unquote
 open FsCheck
-open Scrutiny.Scrutiny
-open Scrutiny.Operators
+open Scrutiny
 
 let shuffle (r: Random) xs = xs |> Seq.sortBy (fun _ -> r.Next())
 

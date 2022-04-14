@@ -64,7 +64,7 @@ module rec ScrutinyStateMachine =
                     ) ==> loggedInHome)
 
                 action (fun _ ->
-                    (task {
+                    task {
                         globalState.Logger "Sign in: filling username"
                         do! globalState.Page.FillAsync("#username", "MyUsername")
 
@@ -72,21 +72,21 @@ module rec ScrutinyStateMachine =
                         
                         let! username = globalState.GetInputValueAsync("#username")
                         Assert.Equal("MyUsername", username)
-                    }).GetAwaiter().GetResult()
+                    }
                 )
                 action (fun _ ->
-                    (task {
+                    task {
                         globalState.Logger "Sign in: filling number"
                         do! globalState.Page.FillAsync("#number", "42") 
 
                         globalState.Logger "Sign in: getting number"
                         let! number = globalState.GetInputValueAsync("#number")
                         Assert.Equal("42", number)
-                    }).GetAwaiter().GetResult()
+                    }
                 )
 
                 action (fun _ ->
-                    (task {
+                    task {
                         let! username = globalState.GetInputValueAsync("#username")
                         let! number = globalState.GetInputValueAsync("#number")
 
@@ -103,7 +103,7 @@ module rec ScrutinyStateMachine =
                         let! displayState = errorMessage.EvaluateAsync("e => e.style.display")
 
                         Assert.False(displayState.ToString() = "none")
-                    }).GetAwaiter().GetResult()
+                    }
                 )
 
                 onExit (fun _ -> globalState.Logger "Exiting sign in")
@@ -124,19 +124,20 @@ module rec ScrutinyStateMachine =
                 ) ==> loggedInHome)
 
                 action (fun ls ->
-                    (task {
+                    task {
                         do! globalState.Page.ClickAsync("#openModal")
 
                         ls.Comment <- "This is my super comment"
 
                         do! globalState.Page.FillAsync("#comment", ls.Comment)
                         do! globalState.Page.ClickAsync("#modalFooterSave")
-                    }).GetAwaiter().GetResult()
+                    }
                 )
 
                 onEnter (fun _ ->
-                    globalState.Logger "Checking comment is logged in"
                     task {
+                        globalState.Logger "Checking comment is logged in"
+
                         let! openModal = globalState.Page.QuerySelectorAsync("#openModal")
                         Assert.NotNull(openModal)
                         let! displayState = openModal.EvaluateAsync("e => e.style.display")
@@ -182,9 +183,9 @@ module rec ScrutinyStateMachine =
                 ) ==> home)
 
                 onEnter (fun _ ->
-                    globalState.Logger "Checking on page home logged in"
-
                     task {
+                        globalState.Logger "Checking on page home logged in"
+
                         let! welcomeText = globalState.Page.QuerySelectorAsync("#welcomeText")
                         Assert.NotNull(welcomeText)
                         let! displayState = welcomeText.EvaluateAsync("e => e.style.display")
@@ -198,10 +199,12 @@ module rec ScrutinyStateMachine =
                 )
 
                 exitAction (fun _ ->
-                    globalState.Logger "Exiting!"
-                    (task {
+                    task {
+                        globalState.Logger "Exiting!"
+                        let! welcomeText = globalState.Page.QuerySelectorAsync("#welcomeText")
+                        Assert.NotNull(welcomeText)
                         do! globalState.Page.ClickAsync("#logout")
-                    }).GetAwaiter().GetResult()
+                    }
                 )
             }
 
@@ -230,6 +233,12 @@ module rec ScrutinyStateMachine =
                 ) ==> signIn)
 
                 onExit (fun _ -> globalState.Logger "Exiting comment")
+                
+                exitAction (fun _ ->
+                    task {
+                        do! globalState.Page.CloseAsync()
+                    }
+                )
             }
 
     let home =

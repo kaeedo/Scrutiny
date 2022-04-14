@@ -79,18 +79,19 @@ module internal ScrutinyCSharp =
         | Some m -> buildMethod m constructedPageState
     
     let private buildMethod2 (m: MethodInfo) constructed =
-        task {
-            if m.ReturnType = typeof<Task>
-            then do! m.Invoke(constructed, [||]) :?> Task
-            else do m.Invoke(constructed, [||])
-        }
+        fun _ ->
+            task {
+                if m.ReturnType = typeof<Task>
+                then do! m.Invoke(constructed, [||]) :?> Task
+                else do m.Invoke(constructed, [||])
+            }
     let private buildMethodWithAttribute2 attr constructedPageState =
         if getMethodsWithAttribute attr constructedPageState |> Seq.length > 1
         then raise <| ScrutinyException($"Only one \"{attr.Name}\" per PageState. Check \"{constructedPageState.GetType().Name}\" for duplicate attribute usage.", null)
         
         match getMethodsWithAttribute attr constructedPageState |> Seq.tryHead with
         | None -> fun _ -> Task.FromResult()
-        | Some m -> fun _ -> buildMethod2 m constructedPageState
+        | Some m -> buildMethod2 m constructedPageState
 
     let internal buildPageStateDefinitions gs (t: Type) =
         let pageStatesTypes = 
@@ -136,14 +137,16 @@ module internal ScrutinyCSharp =
                       LocalState = obj()
                       OnEnter = buildMethodWithAttribute2 typeof<OnEnterAttribute> constructed
                       OnExit = buildMethodWithAttribute2 typeof<OnExitAttribute> constructed
-                      ExitActions = getMethodsWithAttribute typeof<ExitActionAttribute> constructed |> List.map (fun m -> buildMethod m constructed)
+                      ExitActions =
+                          getMethodsWithAttribute typeof<ExitActionAttribute> constructed
+                          |> List.map (fun m -> buildMethod2 m constructed)
                       Actions = getMethodsWithAttribute typeof<ActionAttribute> constructed |> List.map (
                                     fun m -> 
                                         let callerInfo = 
                                             { CallerInformation.MemberName = m.Name
                                               LineNumber = -1
                                               FilePath = m.ReflectedType.Name }
-                                        callerInfo, buildMethod m constructed
+                                        callerInfo, buildMethod2 m constructed
                       )
                       Transitions = [] }
                 ps, constructed

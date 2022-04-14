@@ -50,9 +50,9 @@ and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
       // TODO can we make this not mutable?
       // It's required right now because of the C# builder
       mutable Transitions: Transition<'a, 'b> list
-      Actions: (CallerInformation * ('b -> unit)) list
+      Actions: (CallerInformation * ('b -> Task<unit>)) list
       // OnAction?
-      ExitActions: ('b -> unit) list }
+      ExitActions: ('b -> Task<unit>) list }
 
     interface IComparable<PageState<'a, 'b>> with
         member this.CompareTo other = compare this.Name other.Name

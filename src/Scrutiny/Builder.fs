@@ -40,7 +40,17 @@ type PageBuilder() =
     member _.Transitions(state, handler): PageState<'a, 'b> = { state with Transitions = handler :: state.Transitions }
 
     [<CustomOperation("action")>]
-    member _.Actions(state, handler, [<CallerMemberName>]?memberName: string, [<CallerLineNumber>]?lineNumber: int, [<CallerFilePath>]?filePath: string): PageState<'a, 'b> = 
+    member _.Actions(state, handler: 'b -> unit, [<CallerMemberName>]?memberName: string, [<CallerLineNumber>]?lineNumber: int, [<CallerFilePath>]?filePath: string): PageState<'a, 'b> = 
+        let callerInformation =
+            { CallerInformation.MemberName = defaultArg memberName ""
+              LineNumber = defaultArg lineNumber 0
+              FilePath = defaultArg filePath "" }
+            
+        let handler = fun localState -> Task.FromResult(handler localState)
+        { state with Actions = (callerInformation, handler) :: state.Actions }
+        
+    [<CustomOperation("action")>]
+    member _.Actions(state, handler: 'b -> Task<unit>, [<CallerMemberName>]?memberName: string, [<CallerLineNumber>]?lineNumber: int, [<CallerFilePath>]?filePath: string): PageState<'a, 'b> = 
         let callerInformation =
             { CallerInformation.MemberName = defaultArg memberName ""
               LineNumber = defaultArg lineNumber 0
@@ -49,7 +59,13 @@ type PageBuilder() =
         { state with Actions = (callerInformation, handler) :: state.Actions }
         
     [<CustomOperation("exitAction")>]
-    member _.ExitAction(state, handler): PageState<'a, 'b> =  { state with ExitActions = handler :: state.ExitActions }
+    member _.ExitAction(state, handler: 'b -> unit): PageState<'a, 'b> =
+        let handler = fun localState -> Task.FromResult(handler localState)
+        { state with ExitActions = handler :: state.ExitActions }
+        
+    [<CustomOperation("exitAction")>]
+    member _.ExitAction(state, handler: 'b -> Task<unit>): PageState<'a, 'b> =
+        { state with ExitActions = handler :: state.ExitActions }
 
 module Scrutiny =
     let private printPath logger path =
@@ -68,7 +84,7 @@ module Scrutiny =
         if config.ComprehensiveActions then
             state.Actions |> Seq.iter (fun (ci, a) -> 
                 reporter.PushAction (buildActionName ci)
-                a state.LocalState
+                (a state.LocalState).GetAwaiter().GetResult()
             )
         else
             let random = Random(config.Seed)
@@ -80,7 +96,7 @@ module Scrutiny =
             |> Seq.take amount
             |> Seq.iter (fun (ci, a) -> 
                 reporter.PushAction (buildActionName ci)
-                a state.LocalState
+                (a state.LocalState).GetAwaiter().GetResult()
             )
 
     let private unvisitedNodes allStates alreadyVisited: AdjacencyGraph<PageState<'a, 'b>> =
@@ -105,12 +121,11 @@ module Scrutiny =
         convertInner e
 
     let private performStateActions (reporter: IReporter<_, _>) config globalState (current, next) =
-        let runActions = runActions reporter config
         // TODO Wrap functions in try function instead of try catching entire block
         try
             (task {
                 do! current.OnEnter current.LocalState
-                runActions current
+                runActions reporter config current
                 do! current.OnExit current.LocalState
             }).GetAwaiter().GetResult()
         with exn ->
@@ -192,7 +207,7 @@ module Scrutiny =
                         None
 
                 let rec clickAround
-                        (isExitPath: bool)
+                        (isDirectPath: bool)
                         (alreadyVisited: PageState<'a, 'b> list)
                         (currentPath: PageState<'a, 'b> list)
                     =
@@ -208,14 +223,14 @@ module Scrutiny =
                                 path.Head
                             else
                                 printPath config.Logger path
-                                if isExitPath then path.Head else clickAround false alreadyVisited path
+                                if isDirectPath then path.Head else clickAround false alreadyVisited path
                     | head :: tail ->
                         currentPath
                         |> Seq.pairwise
                         |> Seq.find (fun (current, _) -> current = head)
                         |> performStateActions reporter config globalState
 
-                        clickAround false (head :: alreadyVisited) tail
+                        clickAround isDirectPath (head :: alreadyVisited) tail
 
                 let navigateDirectly = clickAround true
 
@@ -230,7 +245,7 @@ module Scrutiny =
                     exitNode.ExitActions 
                     |> Seq.sortBy (fun _ -> random.Next())
                     |> Seq.tryHead
-                    |> Option.iter (fun ea -> ea exitNode.LocalState)
+                    |> Option.iter (fun ea -> (ea exitNode.LocalState).GetAwaiter().GetResult())
         finally
             config.Logger $"Scrutiny Result written to: {config.ScrutinyResultFilePath}" 
             reporter.GenerateMap()
