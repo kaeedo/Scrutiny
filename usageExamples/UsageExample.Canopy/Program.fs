@@ -4,12 +4,9 @@ open OpenQA.Selenium.Firefox
 
 open System
 open Scrutiny
-open Scrutiny.Operators
-open Scrutiny.Scrutiny
 
 open canopy.classic
 open canopy.runner.classic
-open canopy
 open System.IO
 open OpenQA.Selenium.Chrome
 open WebDriverManager

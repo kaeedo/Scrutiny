@@ -45,13 +45,12 @@ module internal ScrutinyCSharp =
         )
 
     let private buildMethod (m: MethodInfo) constructed =
-        if m.ReturnType = typeof<Task>
-        then (fun _ -> 
-            (m.Invoke(constructed, [||]) :?> Task 
-             |> Async.AwaitTask 
-             |> Async.RunSynchronously)
-        )
-        else fun _ -> (m.Invoke(constructed, [||]) |> ignore)
+        fun _ ->
+            task {
+                if m.ReturnType = typeof<Task>
+                then do! m.Invoke(constructed, [||]) :?> Task
+                else do m.Invoke(constructed, [||])
+            }
 
     let private buildTransition constructedPageState defs =
         getMethodsWithAttribute typeof<TransitionToAttribute> constructedPageState
@@ -75,23 +74,23 @@ module internal ScrutinyCSharp =
         then raise <| ScrutinyException($"Only one \"{attr.Name}\" per PageState. Check \"{constructedPageState.GetType().Name}\" for duplicate attribute usage.", null)
 
         match getMethodsWithAttribute attr constructedPageState |> Seq.tryHead with
-        | None -> ignore
+        | None -> fun _ -> Task.FromResult()
         | Some m -> buildMethod m constructedPageState
     
-    let private buildMethod2 (m: MethodInfo) constructed =
-        fun _ ->
-            task {
-                if m.ReturnType = typeof<Task>
-                then do! m.Invoke(constructed, [||]) :?> Task
-                else do m.Invoke(constructed, [||])
-            }
-    let private buildMethodWithAttribute2 attr constructedPageState =
-        if getMethodsWithAttribute attr constructedPageState |> Seq.length > 1
-        then raise <| ScrutinyException($"Only one \"{attr.Name}\" per PageState. Check \"{constructedPageState.GetType().Name}\" for duplicate attribute usage.", null)
-        
-        match getMethodsWithAttribute attr constructedPageState |> Seq.tryHead with
-        | None -> fun _ -> Task.FromResult()
-        | Some m -> buildMethod2 m constructedPageState
+//    let private buildMethod2 (m: MethodInfo) constructed =
+//        fun _ ->
+//            task {
+//                if m.ReturnType = typeof<Task>
+//                then do! m.Invoke(constructed, [||]) :?> Task
+//                else do m.Invoke(constructed, [||])
+//            }
+//    let private buildMethodWithAttribute2 attr constructedPageState =
+//        if getMethodsWithAttribute attr constructedPageState |> Seq.length > 1
+//        then raise <| ScrutinyException($"Only one \"{attr.Name}\" per PageState. Check \"{constructedPageState.GetType().Name}\" for duplicate attribute usage.", null)
+//        
+//        match getMethodsWithAttribute attr constructedPageState |> Seq.tryHead with
+//        | None -> fun _ -> Task.FromResult()
+//        | Some m -> buildMethod2 m constructedPageState
 
     let internal buildPageStateDefinitions gs (t: Type) =
         let pageStatesTypes = 
@@ -135,18 +134,18 @@ module internal ScrutinyCSharp =
                 let ps = 
                     { PageState.Name = constructed.GetType().Name
                       LocalState = obj()
-                      OnEnter = buildMethodWithAttribute2 typeof<OnEnterAttribute> constructed
-                      OnExit = buildMethodWithAttribute2 typeof<OnExitAttribute> constructed
+                      OnEnter = buildMethodWithAttribute typeof<OnEnterAttribute> constructed
+                      OnExit = buildMethodWithAttribute typeof<OnExitAttribute> constructed
                       ExitActions =
                           getMethodsWithAttribute typeof<ExitActionAttribute> constructed
-                          |> List.map (fun m -> buildMethod2 m constructed)
+                          |> List.map (fun m -> buildMethod m constructed)
                       Actions = getMethodsWithAttribute typeof<ActionAttribute> constructed |> List.map (
                                     fun m -> 
                                         let callerInfo = 
                                             { CallerInformation.MemberName = m.Name
                                               LineNumber = -1
                                               FilePath = m.ReflectedType.Name }
-                                        callerInfo, buildMethod2 m constructed
+                                        callerInfo, buildMethod m constructed
                       )
                       Transitions = [] }
                 ps, constructed

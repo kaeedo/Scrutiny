@@ -67,6 +67,7 @@ type PageBuilder() =
     member _.ExitAction(state, handler: 'b -> Task<unit>): PageState<'a, 'b> =
         { state with ExitActions = handler :: state.ExitActions }
 
+[<AutoOpen>]
 module Scrutiny =
     let private printPath logger path =
         logger <| sprintf "path: %s"
@@ -151,7 +152,7 @@ module Scrutiny =
 
             reporter.PushTransition next
 
-            transition.TransitionFn current.LocalState
+            (transition.TransitionFn current.LocalState).GetAwaiter().GetResult()
         with exn ->
             let message =
                 $"System under test failed scrutiny.

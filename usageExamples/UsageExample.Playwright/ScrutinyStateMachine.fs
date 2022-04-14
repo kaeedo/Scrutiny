@@ -3,8 +3,6 @@
 open System
 open Microsoft.Playwright
 open Scrutiny
-open Scrutiny.Operators
-open Scrutiny.Scrutiny
 
 open Xunit
 
@@ -40,15 +38,15 @@ module rec ScrutinyStateMachine =
                 )
 
                 transition ((fun _ ->
-                    (task {
+                    task {
                         globalState.Logger "Sign in: Clicking on home"
                         do! globalState.Page.ClickAsync("#home")
-                    }).GetAwaiter().GetResult()
-                ) ==> home)
+                    }
+                ) ==>! home)
 
                 transition
                     ((fun _ ->
-                        (task {
+                        task {
                             globalState.Logger "Sign in: Filling in username"
                             globalState.Username <- "kaeedo"
                             do! globalState.Page.FillAsync("#username", globalState.Username)
@@ -60,8 +58,8 @@ module rec ScrutinyStateMachine =
 
                             globalState.Logger "Sign in: clicking text=sign in"
                             do! globalState.Page.ClickAsync("css=button >> text=Sign In")
-                        }).GetAwaiter().GetResult()
-                    ) ==> loggedInHome)
+                        }
+                    ) ==>! loggedInHome)
 
                 action (fun _ ->
                     task {
@@ -118,10 +116,10 @@ module rec ScrutinyStateMachine =
                 localState (LoggedInComment())
 
                 transition ((fun _ ->
-                    (task{
+                    task{
                         do! globalState.Page.ClickAsync("#home")
-                    }).GetAwaiter().GetResult()
-                ) ==> loggedInHome)
+                    }
+                ) ==>! loggedInHome)
 
                 action (fun ls ->
                     task {
@@ -172,15 +170,15 @@ module rec ScrutinyStateMachine =
                 name "Logged in Home"
 
                 transition ((fun _ ->
-                    (task {
+                    task {
                         do! globalState.Page.ClickAsync("#comment")
-                    }).GetAwaiter().GetResult()
-                ) ==> loggedInComment)
+                    }
+                ) ==>! loggedInComment)
                 transition ((fun _ ->
-                    (task {
+                    task {
                         do! globalState.Page.ClickAsync("#logout")
-                    }).GetAwaiter().GetResult()
-                ) ==> home)
+                    }
+                ) ==>! home)
 
                 onEnter (fun _ ->
                     task {
@@ -222,15 +220,15 @@ module rec ScrutinyStateMachine =
                 )
 
                 transition ((fun _ ->
-                    (task {
+                    task {
                         do! globalState.Page.ClickAsync("#home")
-                    }).GetAwaiter().GetResult()
-                ) ==> home)
+                    }
+                ) ==>! home)
                 transition ((fun _ ->
-                    (task {
+                    task {
                         do! globalState.Page.ClickAsync("#signin")
-                    }).GetAwaiter().GetResult()
-                ) ==> signIn)
+                    }
+                ) ==>! signIn)
 
                 onExit (fun _ -> globalState.Logger "Exiting comment")
                 
@@ -255,15 +253,15 @@ module rec ScrutinyStateMachine =
                 )
 
                 transition ((fun _ ->
-                    (task {
+                    task {
                         do! globalState.Page.ClickAsync("#comment") 
-                    }).GetAwaiter().GetResult()
-                ) ==> comment)
+                    }
+                ) ==>! comment)
                 transition ((fun _ ->
-                    (task {
+                    task {
                         do! globalState.Page.ClickAsync("#signin") 
-                    }).GetAwaiter().GetResult()
-                ) ==> signIn)
+                    }
+                ) ==>! signIn)
 
                 onExit (fun _ ->
                     globalState.Logger "Exiting home"

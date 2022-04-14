@@ -39,7 +39,7 @@ type CallerInformation =
       FilePath: string }
 
 type Transition<'a, 'b> =
-    { TransitionFn: 'b -> unit
+    { TransitionFn: 'b -> Task<unit>
       ToState: 'a -> PageState<'a, 'b> }
 
 and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
