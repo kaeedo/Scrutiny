@@ -9,7 +9,7 @@ type PageBuilder() =
         { PageState.Name = ""
           LocalState = Unchecked.defaultof<'b>
           OnEnter = fun _ -> Task.FromResult()
-          OnExit = fun _ -> ()
+          OnExit = fun _ -> Task.FromResult()
           Transitions = []
           Actions = []
           ExitActions = [] } // TODO. states can have many exit actions. one is chosen at random anyway.
@@ -24,11 +24,17 @@ type PageBuilder() =
     member _.OnEnter(state, handler: 'b -> unit): PageState<'a, 'b> =
         let handler = fun localState -> Task.FromResult(handler localState)
         { state with OnEnter = handler }
+        
     [<CustomOperation("onEnter")>]
     member _.OnEnter(state, handler: 'b -> Task<unit>): PageState<'a, 'b> = { state with OnEnter = handler }
 
     [<CustomOperation("onExit")>]
-    member _.OnExit(state, handler): PageState<'a, 'b> = { state with OnExit = handler }
+    member _.OnExit(state, handler: 'b -> unit): PageState<'a, 'b> =
+        let handler = fun localState -> Task.FromResult(handler localState)
+        { state with OnExit = handler }
+    
+    [<CustomOperation("onExit")>]
+    member _.OnExit(state, handler: 'b -> Task<unit>): PageState<'a, 'b> = { state with OnExit = handler }
 
     [<CustomOperation("transition")>]
     member _.Transitions(state, handler): PageState<'a, 'b> = { state with Transitions = handler :: state.Transitions }
@@ -104,16 +110,16 @@ module Scrutiny =
         try
             (task {
                 do! current.OnEnter current.LocalState
+                runActions current
+                do! current.OnExit current.LocalState
             }).GetAwaiter().GetResult()
-            runActions current
-            current.OnExit current.LocalState
         with exn ->
 
             let message =
-                sprintf "System under test failed scrutiny.
-    To re-run this exact test, specify the seed in the config with the value: '%i'.
-    The error occurred in state: '%s'
-    The error that occurred is of type: '%A%s'" config.Seed current.Name exn Environment.NewLine
+                $"System under test failed scrutiny.
+    To re-run this exact test, specify the seed in the config with the value: '%i{config.Seed}'.
+    The error occurred in state: '%s{current.Name}'
+    The error that occurred is of type: '%A{exn}%s{Environment.NewLine}'"
 
             let exn = ScrutinyException(message, exn)
 
@@ -133,10 +139,10 @@ module Scrutiny =
             transition.TransitionFn current.LocalState
         with exn ->
             let message =
-                sprintf "System under test failed scrutiny.
-    To re-run this exact test, specify the seed in the config with the value: '%i'.
-    The error occurred in state: '%s'
-    The error that occurred is of type: '%A%s'" config.Seed current.Name exn Environment.NewLine
+                $"System under test failed scrutiny.
+    To re-run this exact test, specify the seed in the config with the value: '%i{config.Seed}'.
+    The error occurred in state: '%s{current.Name}'
+    The error that occurred is of type: '%A{exn}%s{Environment.NewLine}'"
 
             let exn = ScrutinyException(message, exn)
 
@@ -156,7 +162,7 @@ module Scrutiny =
         exitNode
 
     let private baseScrutinize<'a, 'b> (reporter: IReporter<'a, 'b>) (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a, 'b>) =
-        config.Logger <| sprintf "Scrutinizing system under test with seed: %i" config.Seed
+        config.Logger <| $"Scrutinizing system under test with seed: %i{config.Seed}"
         let startState = startFn globalState
         let runActions = runActions reporter config
 

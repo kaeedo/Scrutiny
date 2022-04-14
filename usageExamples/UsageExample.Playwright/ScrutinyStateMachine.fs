@@ -146,7 +146,7 @@ module rec ScrutinyStateMachine =
                 )
 
                 onExit (fun ls -> 
-                    (task {
+                    task {
                         let! comments = globalState.Page.QuerySelectorAllAsync("#commentsUl>li")
                         let comments = comments |> List.ofSeq
 
@@ -155,13 +155,13 @@ module rec ScrutinyStateMachine =
                             |> List.tryFind(fun c ->
                                 (task {
                                     let! text = c.InnerTextAsync()
-                                    return text = sprintf "%s wrote:\n%s" globalState.Username ls.Comment
+                                    return text = $"%s{globalState.Username} wrote:\n%s{ls.Comment}"
                                 }).GetAwaiter().GetResult()
                             )
 
                         Assert.True(writtenComment.IsSome)
-                    }).GetAwaiter().GetResult()
-                    globalState.Logger "Exiting comment logged in"
+                        globalState.Logger "Exiting comment logged in"
+                    }
                 )
             }
 

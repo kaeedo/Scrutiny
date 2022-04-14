@@ -30,7 +30,7 @@ type GraphGen() =
                     gen {
                         return ([lowerSize..upperSize] |> List.map (fun _ ->
                             nodes
-                            |> shuffle (rnd)
+                            |> shuffle rnd
                             |> Seq.take 2
                             |> Seq.pairwise
                             |> Seq.head
@@ -61,7 +61,7 @@ type AdjacencyGraphGen() =
                             nodes |> List.map (fun n ->
                                 let edges =
                                     nodes
-                                    |> shuffle (rnd)
+                                    |> shuffle rnd
                                     |> Seq.take (rnd.Next(nodes.Length - 1))
                                     |> Seq.except [n]
                                     |> Seq.toList
@@ -203,7 +203,7 @@ let navigatorTests =
               (1, 2, [1; 2])
             ]
             |> List.map (fun (startNode, endNode, path) ->
-                Tests.test (sprintf "Should find a path from %i to %i" startNode endNode) {
+                Tests.test $"Should find a path from %i{startNode} to %i{endNode}" {
                     let ag =
                         [
                             (1, [2])

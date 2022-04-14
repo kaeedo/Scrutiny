@@ -80,7 +80,9 @@ module internal ScrutinyCSharp =
     
     let private buildMethod2 (m: MethodInfo) constructed =
         task {
-            do! m.Invoke(constructed, [||]) :?> Task
+            if m.ReturnType = typeof<Task>
+            then do! m.Invoke(constructed, [||]) :?> Task
+            else do m.Invoke(constructed, [||])
         }
     let private buildMethodWithAttribute2 attr constructedPageState =
         if getMethodsWithAttribute attr constructedPageState |> Seq.length > 1
@@ -133,7 +135,7 @@ module internal ScrutinyCSharp =
                     { PageState.Name = constructed.GetType().Name
                       LocalState = obj()
                       OnEnter = buildMethodWithAttribute2 typeof<OnEnterAttribute> constructed
-                      OnExit = buildMethodWithAttribute typeof<OnExitAttribute> constructed
+                      OnExit = buildMethodWithAttribute2 typeof<OnExitAttribute> constructed
                       ExitActions = getMethodsWithAttribute typeof<ExitActionAttribute> constructed |> List.map (fun m -> buildMethod m constructed)
                       Actions = getMethodsWithAttribute typeof<ActionAttribute> constructed |> List.map (
                                     fun m -> 

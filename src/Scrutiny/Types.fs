@@ -46,7 +46,7 @@ and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
     { Name: string
       LocalState: 'b
       OnEnter: 'b -> Task<unit>
-      OnExit: 'b -> unit
+      OnExit: 'b -> Task<unit>
       // TODO can we make this not mutable?
       // It's required right now because of the C# builder
       mutable Transitions: Transition<'a, 'b> list

@@ -144,8 +144,8 @@ module rec Entry =
     [<EntryPoint>]
     let main argv =
         printfn "Setting up browser drivers. This might take awhile"
-        //do DriverManager().SetUpDriver(ChromeConfig())
-        do DriverManager().SetUpDriver(FirefoxConfig())
+        //DriverManager().SetUpDriver(ChromeConfig()) |> ignore
+        DriverManager().SetUpDriver(FirefoxConfig()) |> ignore
         printfn "Finished setting up browser drivers"
 
         let options = FirefoxOptions()
