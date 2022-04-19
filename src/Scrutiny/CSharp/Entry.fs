@@ -161,7 +161,7 @@ module internal ScrutinyCSharp =
         )
 
     let start<'startState> gs (config: Configuration): ScrutinizedStates = 
-        let config = config.ToScrutiynConfig()
+        let config = config.ToScrutinyConfig()
         
         let t = typeof<'startState> 
         let defs = buildPageStateDefinitions gs t

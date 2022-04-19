@@ -124,11 +124,9 @@ module Scrutiny =
     let private performStateActions (reporter: IReporter<_, _>) config globalState (current, next) =
         // TODO Wrap functions in try function instead of try catching entire block
         try
-            (task {
-                do! current.OnEnter current.LocalState
-                runActions reporter config current
-                do! current.OnExit current.LocalState
-            }).GetAwaiter().GetResult()
+            (current.OnEnter current.LocalState).GetAwaiter().GetResult()
+            runActions reporter config current
+            (current.OnExit current.LocalState).GetAwaiter().GetResult()
         with exn ->
 
             let message =
