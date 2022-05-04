@@ -29,16 +29,19 @@ module rec Entry =
                     printfn "Checking on page sign in"
                     "#header" == "Sign In")
 
-                transition ((fun _ -> click "#home") ==> home)
+                transition ((fun _ -> task { click "#home" }) ==> home)
                 transition
                     ((fun _ ->
-                        globalState.Username <- "kaeedo"
-                        "#username" << globalState.Username
-                        "#number" << globalState.Number.ToString()
+                        task {
+                            globalState.Username <- "kaeedo"
+                            "#username" << globalState.Username
+                            "#number" << globalState.Number.ToString()
 
-                        globalState.IsSignedIn <- true
+                            globalState.IsSignedIn <- true
 
-                        click "Sign In")
+                            click "Sign In"
+                        }
+                    )
                      ==> loggedInHome)
 
                 action (fun _ ->
@@ -70,7 +73,11 @@ module rec Entry =
 
                 localState (LoggedInComment())
 
-                transition ((fun _ -> click "#home") ==> loggedInHome)
+                transition ((fun _ ->
+                    task {
+                        click "#home"
+                    }
+                    ) ==> loggedInHome)
 
                 action (fun ls ->
                     click "#openModal"
@@ -94,8 +101,8 @@ module rec Entry =
             page {
                 name "Logged in Home"
 
-                transition ((fun _ -> click "#comment") ==> loggedInComment)
-                transition ((fun _ -> click "#logout") ==> home)
+                transition ((fun _ -> task { click "#comment" }) ==> loggedInComment)
+                transition ((fun _ -> task { click "#logout" }) ==> home)
 
                 onEnter (fun _ ->
                     printfn "Checking on page home logged in"
@@ -116,8 +123,8 @@ module rec Entry =
                     printfn "Checking on page comment"
                     "#header" == "Comments")
 
-                transition ((fun _ -> click "#home") ==> home)
-                transition ((fun _ -> click "#signin") ==> signIn)
+                transition ((fun _ -> task { click "#home" }) ==> home)
+                transition ((fun _ -> task { click "#signin" }) ==> signIn)
 
                 onExit (fun _ -> printfn "Exiting comment")
             }
@@ -130,8 +137,8 @@ module rec Entry =
                     printfn "Checking on page home"
                     "#header" == "Home")
 
-                transition ((fun _ -> click "#comment") ==> comment)
-                transition ((fun _ -> click "#signin") ==> signIn)
+                transition ((fun _ -> task { click "#comment" }) ==> comment)
+                transition ((fun _ -> task { click "#signin" }) ==> signIn)
 
                 onExit (fun _ ->
                     printfn "Exiting home"

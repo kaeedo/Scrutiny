@@ -42,7 +42,7 @@ module rec ScrutinyStateMachine =
                         globalState.Logger "Sign in: Clicking on home"
                         do! globalState.Page.ClickAsync("#home")
                     }
-                ) ==>! home)
+                ) ==> home)
 
                 transition
                     ((fun _ ->
@@ -59,7 +59,7 @@ module rec ScrutinyStateMachine =
                             globalState.Logger "Sign in: clicking text=sign in"
                             do! globalState.Page.ClickAsync("css=button >> text=Sign In")
                         }
-                    ) ==>! loggedInHome)
+                    ) ==> loggedInHome)
 
                 action (fun _ ->
                     task {
@@ -116,10 +116,10 @@ module rec ScrutinyStateMachine =
                 localState (LoggedInComment())
 
                 transition ((fun _ ->
-                    task{
+                    task {
                         do! globalState.Page.ClickAsync("#home")
                     }
-                ) ==>! loggedInHome)
+                ) ==> loggedInHome)
 
                 action (fun ls ->
                     task {
@@ -173,12 +173,12 @@ module rec ScrutinyStateMachine =
                     task {
                         do! globalState.Page.ClickAsync("#comment")
                     }
-                ) ==>! loggedInComment)
+                ) ==> loggedInComment)
                 transition ((fun _ ->
                     task {
                         do! globalState.Page.ClickAsync("#logout")
                     }
-                ) ==>! home)
+                ) ==> home)
 
                 onEnter (fun _ ->
                     task {
@@ -223,12 +223,12 @@ module rec ScrutinyStateMachine =
                     task {
                         do! globalState.Page.ClickAsync("#home")
                     }
-                ) ==>! home)
+                ) ==> home)
                 transition ((fun _ ->
                     task {
                         do! globalState.Page.ClickAsync("#signin")
                     }
-                ) ==>! signIn)
+                ) ==> signIn)
 
                 onExit (fun _ -> globalState.Logger "Exiting comment")
                 
@@ -256,12 +256,12 @@ module rec ScrutinyStateMachine =
                     task {
                         do! globalState.Page.ClickAsync("#comment") 
                     }
-                ) ==>! comment)
+                ) ==> comment)
                 transition ((fun _ ->
                     task {
                         do! globalState.Page.ClickAsync("#signin") 
                     }
-                ) ==>! signIn)
+                ) ==> signIn)
 
                 onExit (fun _ ->
                     globalState.Logger "Exiting home"

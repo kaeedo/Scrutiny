@@ -86,38 +86,42 @@ let adjacencyGraphGenConfig =
         arbitrary = [typeof<AdjacencyGraphGen>] }
 
 module rec TestPages =
+    let ignoreTask _ =
+        task {
+            return ()
+        }
     let page1 = fun _ ->
         page {
             name "Page1"
-            transition (ignore ==> page2)
+            transition (ignoreTask ==> page2)
         }
 
     let page2 = fun _ ->
         page {
             name "Page2"
-            transition (ignore ==> page1)
-            transition (ignore ==> page3)
+            transition (ignoreTask ==> page1)
+            transition (ignoreTask ==> page3)
         }
 
     let page3 = fun _ ->
         page {
             name "Page3"
-            transition (ignore ==> page4)
-            transition (ignore ==> page5)
+            transition (ignoreTask ==> page4)
+            transition (ignoreTask ==> page5)
         }
 
     let page4 = fun _ ->
         page {
             name "Page4"
-            transition (ignore ==> page3)
-            transition (ignore ==> page5)
+            transition (ignoreTask ==> page3)
+            transition (ignoreTask ==> page5)
         }
 
     let page5 = fun _ ->
         page {
             name "Page5"
-            transition (ignore ==> page2)
-            transition (ignore ==> page3)
+            transition (ignoreTask ==> page2)
+            transition (ignoreTask ==> page3)
         }
 
 [<Tests>]

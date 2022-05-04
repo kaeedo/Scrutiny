@@ -4,17 +4,20 @@ open System
 open Expecto
 open Scrutiny
 open Swensen.Unquote
-open Scrutiny
 
 module rec TestPages =
+    let ignoreTask _ =
+        task {
+            return ()
+        }
     let home = 
         fun _ ->
             page {
                 name "Home"
                 onEnter (ignore)
 
-                transition (ignore ==> comment)
-                transition (ignore ==> signIn)
+                transition (ignoreTask ==> comment)
+                transition (ignoreTask ==> signIn)
 
                 action (ignore) String.Empty 0 String.Empty
                 action (ignore) String.Empty 0 String.Empty
@@ -23,29 +26,29 @@ module rec TestPages =
     let comment = fun _ ->
         page {
             name "Comment"
-            transition (ignore ==> home)
-            transition (ignore ==> signIn)
+            transition (ignoreTask ==> home)
+            transition (ignoreTask ==> signIn)
         }
 
     let signIn = fun _ ->
         page {
             name "Sign In"
-            transition (ignore ==> home)
-            transition (ignore ==> loggedInHome)
+            transition (ignoreTask ==> home)
+            transition (ignoreTask ==> loggedInHome)
             action (ignore) String.Empty 0 String.Empty
         }
 
     let loggedInComment = fun _ ->
         page {
             name "Logged in Comment"
-            transition (ignore ==> loggedInHome)
+            transition (ignoreTask ==> loggedInHome)
         }
 
     let loggedInHome = fun _ ->
         page {
             name "Logged in Home"
-            transition (ignore ==> home)
-            transition (ignore ==> loggedInComment)
+            transition (ignoreTask ==> home)
+            transition (ignoreTask ==> loggedInComment)
         }
 
 [<Tests>]
