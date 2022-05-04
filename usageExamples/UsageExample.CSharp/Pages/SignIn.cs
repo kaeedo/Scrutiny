@@ -19,9 +19,9 @@ namespace UsageExample.CSharp.Pages
         public async Task OnEnter()
         {
             globalState.Logger.WriteLine("Checking on page sign in");
-        
+
             var headerText = await globalState.Page.InnerTextAsync("#header");
-        
+
             Assert.Equal("Sign In", headerText);
         }
 

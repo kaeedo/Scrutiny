@@ -76,21 +76,6 @@ module internal ScrutinyCSharp =
         match getMethodsWithAttribute attr constructedPageState |> Seq.tryHead with
         | None -> fun _ -> Task.FromResult()
         | Some m -> buildMethod m constructedPageState
-    
-//    let private buildMethod2 (m: MethodInfo) constructed =
-//        fun _ ->
-//            task {
-//                if m.ReturnType = typeof<Task>
-//                then do! m.Invoke(constructed, [||]) :?> Task
-//                else do m.Invoke(constructed, [||])
-//            }
-//    let private buildMethodWithAttribute2 attr constructedPageState =
-//        if getMethodsWithAttribute attr constructedPageState |> Seq.length > 1
-//        then raise <| ScrutinyException($"Only one \"{attr.Name}\" per PageState. Check \"{constructedPageState.GetType().Name}\" for duplicate attribute usage.", null)
-//        
-//        match getMethodsWithAttribute attr constructedPageState |> Seq.tryHead with
-//        | None -> fun _ -> Task.FromResult()
-//        | Some m -> buildMethod2 m constructedPageState
 
     let internal buildPageStateDefinitions gs (t: Type) =
         let pageStatesTypes = 
