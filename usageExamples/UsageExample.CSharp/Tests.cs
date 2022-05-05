@@ -50,7 +50,7 @@ namespace UsageExample.CSharp
             };
 
             var gs = new GlobalState(page, outputHelper);
-            var result = Scrutinize.Start<Home>(gs, config);
+            var result = await Scrutinize.Start<Home>(gs, config);
 
             Assert.Equal(7, result.Steps.Count());
             Assert.Equal(5, result.Graph.Count());

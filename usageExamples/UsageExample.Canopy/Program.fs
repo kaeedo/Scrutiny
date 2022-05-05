@@ -175,14 +175,16 @@ module rec Entry =
                   ScrutinyResultFilePath = Path.Join(Directory.GetCurrentDirectory(), "myResult.html") }
 
         "Scrutiny" &&& fun _ ->
-            printfn "opening url"
-            url "https://127.0.0.1:5001/home"
-            let results = scrutinize config (GlobalState()) home
+            (task {
+                printfn "opening url"
+                url "https://127.0.0.1:5001/home"
+                let! results = scrutinize config (GlobalState()) home
 
-            if results.Steps |> Seq.length <> 9
-            then raise (Exception($"Expected 9 steps, but was {results.Steps |> Seq.length}"))
-            else ()
-
+                return 
+                    if results.Steps |> Seq.length <> 9
+                    then raise (Exception($"Expected 9 steps, but was {results.Steps |> Seq.length}"))
+                    else ()
+            }).GetAwaiter().GetResult()
 
         switchTo browser
 
