@@ -34,7 +34,7 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
                       ComprehensiveActions = true
                       ComprehensiveStates = true }
 
-            let result = scrutinize config (GlobalState(page, logger)) ScrutinyStateMachine.home
+            let! result = scrutinize config (GlobalState(page, logger)) ScrutinyStateMachine.home
 
             Assert.Equal(9, result.Steps |> Seq.length);
             Assert.Equal(5, result.Graph.Length)

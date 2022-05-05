@@ -80,25 +80,49 @@ module Scrutiny =
         then $"Member: {ci.MemberName}, Line #: {ci.LineNumber}, File: {ci.FilePath}"
         else $"{ci.FilePath}.{ci.MemberName}"
         
+    let private simpleTraverse (tasks: (unit -> Task<unit>) list): unit -> Task<unit> =
+        match tasks with
+        | [] -> fun () -> Task.FromResult(())
+        | x ->
+            x
+            |> List.reduce (fun accumulator element ->
+                fun () ->
+                    task {
+                        do! accumulator()
+                        return! element()
+                    }
+            )
 
     let private runActions (reporter: IReporter<'a, 'b>) (config: ScrutinyConfig) (state: PageState<'a, 'b>) =
         if config.ComprehensiveActions then
-            state.Actions |> Seq.iter (fun (ci, a) -> 
-                reporter.PushAction (buildActionName ci)
-                (a state.LocalState).GetAwaiter().GetResult()
+            state.Actions
+            |> List.map (fun (ci, a) ->
+                fun () ->
+                    task {
+                        reporter.PushAction (buildActionName ci)
+                        return! (a state.LocalState)
+                    }
             )
+            |> simpleTraverse
+            |> fun fn -> fn()
         else
             let random = Random(config.Seed)
 
             let amount =
                 random.Next(if state.Actions.Length > 1 then state.Actions.Length else 1)
+            
             state.Actions
-            |> Seq.sortBy (fun _ -> random.Next())
-            |> Seq.take amount
-            |> Seq.iter (fun (ci, a) -> 
-                reporter.PushAction (buildActionName ci)
-                (a state.LocalState).GetAwaiter().GetResult()
+            |> List.sortBy (fun _ -> random.Next())
+            |> List.take amount
+            |> List.map (fun (ci, a) ->
+                fun () -> 
+                    task {
+                        reporter.PushAction (buildActionName ci)
+                        return! (a state.LocalState)
+                    }
             )
+            |> simpleTraverse
+            |> fun fn -> fn()
 
     let private unvisitedNodes allStates alreadyVisited: AdjacencyGraph<PageState<'a, 'b>> =
         allStates
@@ -122,47 +146,47 @@ module Scrutiny =
         convertInner e
 
     let private performStateActions (reporter: IReporter<_, _>) config globalState (current, next) =
-        // TODO Wrap functions in try function instead of try catching entire block
-        try
-            (current.OnEnter current.LocalState).GetAwaiter().GetResult()
-            runActions reporter config current
-            (current.OnExit current.LocalState).GetAwaiter().GetResult()
-        with exn ->
+        task {
+            try
+                do! current.OnEnter current.LocalState
+                do! runActions reporter config current
+                do! current.OnExit current.LocalState
+            with exn ->
+                let message =
+                    $"System under test failed scrutiny.
+        To re-run this exact test, specify the seed in the config with the value: '%i{config.Seed}'.
+        The error occurred in state: '%s{current.Name}'
+        The error that occurred is of type: '%A{exn}%s{Environment.NewLine}'"
 
-            let message =
-                $"System under test failed scrutiny.
-    To re-run this exact test, specify the seed in the config with the value: '%i{config.Seed}'.
-    The error occurred in state: '%s{current.Name}'
-    The error that occurred is of type: '%A{exn}%s{Environment.NewLine}'"
+                let exn = ScrutinyException(message, exn)
 
-            let exn = ScrutinyException(message, exn)
+                reporter.OnError (State (current.Name, convertException exn))
 
-            reporter.OnError (State (current.Name, convertException exn))
+                raise <| exn
 
-            raise <| exn
+            try
+                let transition =
+                    current.Transitions
+                    |> Seq.find (fun t ->
+                        let state = t.ToState globalState
+                        state.Name = next.Name)
 
-        try
-            let transition =
-                current.Transitions
-                |> Seq.find (fun t ->
-                    let state = t.ToState globalState
-                    state.Name = next.Name)
+                reporter.PushTransition next
 
-            reporter.PushTransition next
+                do! transition.TransitionFn current.LocalState
+            with exn ->
+                let message =
+                    $"System under test failed scrutiny.
+        To re-run this exact test, specify the seed in the config with the value: '%i{config.Seed}'.
+        The error occurred in state: '%s{current.Name}'
+        The error that occurred is of type: '%A{exn}%s{Environment.NewLine}'"
 
-            (transition.TransitionFn current.LocalState).GetAwaiter().GetResult()
-        with exn ->
-            let message =
-                $"System under test failed scrutiny.
-    To re-run this exact test, specify the seed in the config with the value: '%i{config.Seed}'.
-    The error occurred in state: '%s{current.Name}'
-    The error that occurred is of type: '%A{exn}%s{Environment.NewLine}'"
+                let exn = ScrutinyException(message, exn)
 
-            let exn = ScrutinyException(message, exn)
+                reporter.OnError (Transition (current.Name, next.Name, convertException exn))
 
-            reporter.OnError (Transition (current.Name, next.Name, convertException exn))
-
-            raise <| exn
+                raise <| exn
+        }
 
     let private findExit (config: ScrutinyConfig) (allStates: AdjacencyGraph<PageState<'a, 'b>>) =
         let random = Random(config.Seed)
@@ -174,82 +198,102 @@ module Scrutiny =
             |> Seq.tryHead
 
         exitNode
-
-    let private baseScrutinize<'a, 'b> (reporter: IReporter<'a, 'b>) (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a, 'b>) =
-        config.Logger <| $"Scrutinizing system under test with seed: %i{config.Seed}"
-        let startState = startFn globalState
-        let runActions = runActions reporter config
-
-        let allStates = Navigator.constructAdjacencyGraph startState globalState
-        reporter.Start (allStates, startState)
         
-        try
-            if not config.MapOnly then
-                let random = Random(config.Seed)
-                let findPath = Navigator.shortestPathFunction allStates
+    let private navigateStateMachine reporter config allStates globalState startState =
+        let random = Random(config.Seed)
+        let findPath = Navigator.shortestPathFunction allStates
 
-                let nextNode alreadyVisited =
-                    let unvisitedNodes = unvisitedNodes allStates alreadyVisited
+        let nextNode alreadyVisited =
+            let unvisitedNodes = unvisitedNodes allStates alreadyVisited
 
-                    let shouldContinue =
-                        if config.ComprehensiveStates then
-                            unvisitedNodes
-                            |> Seq.isEmpty
-                            |> not
+            let shouldContinue =
+                if config.ComprehensiveStates then
+                    unvisitedNodes
+                    |> Seq.isEmpty
+                    |> not
+                else
+                    unvisitedNodes.Length > (allStates.Length / 2)
+
+            if shouldContinue then
+                let next = random.Next(unvisitedNodes.Length)
+                Some(fst unvisitedNodes.[next])
+            else
+                None
+
+        let rec clickAround (isDirectPath: bool) (alreadyVisited: PageState<'a, 'b> list) (currentPath: PageState<'a, 'b> list) =
+            task {
+                match currentPath with
+                | [ head ] ->
+                    match nextNode alreadyVisited with
+                    | None -> return head
+                    | Some nextNode ->
+                        let path = findPath head nextNode
+
+                        if path.Length = 1 then
+                            do! runActions reporter config path.Head
+                            return path.Head
                         else
-                            unvisitedNodes.Length > (allStates.Length / 2)
-
-                    if shouldContinue then
-                        let next = random.Next(unvisitedNodes.Length)
-                        Some(fst unvisitedNodes.[next])
-                    else
-                        None
-
-                let rec clickAround
-                        (isDirectPath: bool)
-                        (alreadyVisited: PageState<'a, 'b> list)
-                        (currentPath: PageState<'a, 'b> list)
-                    =
-                    match currentPath with
-                    | [ head ] ->
-                        match nextNode alreadyVisited with
-                        | None -> head
-                        | Some nextNode ->
-                            let path = findPath head nextNode
-
-                            if path.Length = 1 then
-                                runActions path.Head
-                                path.Head
+                            printPath config.Logger path
+                            if isDirectPath
+                            then return path.Head
                             else
-                                printPath config.Logger path
-                                if isDirectPath then path.Head else clickAround false alreadyVisited path
-                    | head :: tail ->
+                                return! clickAround false alreadyVisited path
+                | head :: tail ->
+                    do! 
                         currentPath
                         |> Seq.pairwise
                         |> Seq.find (fun (current, _) -> current = head)
                         |> performStateActions reporter config globalState
 
-                        clickAround isDirectPath (head :: alreadyVisited) tail
+                    return! clickAround isDirectPath (head :: alreadyVisited) tail
+            }
 
-                let navigateDirectly = clickAround true
+        let navigateDirectly = clickAround true
 
-                let finalNode = clickAround false [] [ startState ]
+        task {
+            let! finalNode = clickAround false [] [ startState ]
 
-                match findExit config allStates with
-                | None -> ()
-                | Some(exitNode, _) ->
-                    let path = findPath finalNode exitNode
+            match findExit config allStates with
+            | None -> return ()
+            | Some(exitNode, _) ->
+                let t =
+                    task {
+                        let path = findPath finalNode exitNode
 
-                    let exitNode = navigateDirectly [] path
-                    exitNode.ExitActions 
-                    |> Seq.sortBy (fun _ -> random.Next())
-                    |> Seq.tryHead
-                    |> Option.iter (fun ea -> (ea exitNode.LocalState).GetAwaiter().GetResult())
-        finally
-            config.Logger $"Scrutiny Result written to: {config.ScrutinyResultFilePath}" 
-            reporter.GenerateMap()
+                        let! exitNode = navigateDirectly [] path
+                        
+                        let a =
+                            exitNode.ExitActions 
+                            |> Seq.sortBy (fun _ -> random.Next())
+                            |> Seq.tryHead
+                            |> Option.map (fun ea -> (ea exitNode.LocalState))
+                            
+                        match a with
+                        | None -> return ()
+                        | Some asd -> return! asd
+                    }
+                    
+                return! t
+        }
+                
 
-        reporter.Finish()
+    let private baseScrutinize<'a, 'b> (reporter: IReporter<'a, 'b>) (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a, 'b>) =
+        task {
+            config.Logger <| $"Scrutinizing system under test with seed: %i{config.Seed}"
+            let startState = startFn globalState
+
+            let allStates = Navigator.constructAdjacencyGraph startState globalState
+            reporter.Start (allStates, startState)
+            
+            try
+                if not config.MapOnly then
+                    do! navigateStateMachine reporter config allStates globalState startState
+            finally
+                config.Logger $"Scrutiny Result written to: {config.ScrutinyResultFilePath}" 
+                reporter.GenerateMap()
+
+            return reporter.Finish()
+        }
 
     let scrutinize<'a, 'b> config = 
         let reporter = Reporter<'a, 'b>(config.ScrutinyResultFilePath) :> IReporter<'a, 'b>

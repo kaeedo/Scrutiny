@@ -145,19 +145,21 @@ module internal ScrutinyCSharp =
             ps
         )
 
-    let start<'startState> gs (config: Configuration): ScrutinizedStates = 
-        let config = config.ToScrutinyConfig()
-        
-        let t = typeof<'startState> 
-        let defs = buildPageStateDefinitions gs t
+    let start<'startState> gs (config: Configuration): Task<ScrutinizedStates> =
+        task {
+            let config = config.ToScrutinyConfig()
+            
+            let t = typeof<'startState> 
+            let defs = buildPageStateDefinitions gs t
 
-        let starting =
-            defs
-            |> List.find (fun d -> d.Name = t.Name)
-        
-        let result = Scrutiny.scrutinize config (obj()) (fun _ -> starting)
-        
-        ScrutinizedStates(result.Graph, result.Steps)
+            let starting =
+                defs
+                |> List.find (fun d -> d.Name = t.Name)
+            
+            let! result = Scrutiny.scrutinize config (obj()) (fun _ -> starting)
+            
+            return ScrutinizedStates(result.Graph, result.Steps)
+        }
 
 [<AbstractClass; Sealed>]
 type Scrutinize private () =
