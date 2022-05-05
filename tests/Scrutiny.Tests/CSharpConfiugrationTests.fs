@@ -1,4 +1,4 @@
-﻿module CSharpConfiugrationTests
+﻿module CSharpConfigurationTests
 
 open Scrutiny
 open Scrutiny.CSharp
@@ -26,7 +26,7 @@ let csharpEntryTests =
                     ComprehensiveStates = false,
                     ScrutinyResultFilePath = "mypath",
                     Logger = Action<string>(ignore)
-                ).ToScrutiynConfig()
+                ).ToScrutinyConfig()
             
             test <@ actual.Seed = expected.Seed @>
             test <@ actual.MapOnly = expected.MapOnly @>

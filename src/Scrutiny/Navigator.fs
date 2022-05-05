@@ -75,7 +75,7 @@ module internal Navigator =
 
         let rec shortestPath (path: 'a list) (current: 'a) =
             if current.Equals(start) then start :: path
-            else if previous.ContainsKey(current) then shortestPath (current :: path) (previous.[current])
+            else if previous.ContainsKey(current) then shortestPath (current :: path) previous.[current]
             else start :: path
 
         shortestPath []

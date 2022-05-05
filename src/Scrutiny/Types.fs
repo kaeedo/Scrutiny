@@ -2,6 +2,7 @@
 
 open System
 open System.IO
+open System.Threading.Tasks
 
 type internal ScrutinyException(message, innerException: Exception) =
     inherit Exception(message, innerException)
@@ -38,20 +39,20 @@ type CallerInformation =
       FilePath: string }
 
 type Transition<'a, 'b> =
-    { TransitionFn: 'b -> unit
+    { TransitionFn: 'b -> Task<unit>
       ToState: 'a -> PageState<'a, 'b> }
 
 and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
     { Name: string
       LocalState: 'b
-      OnEnter: 'b -> unit
-      OnExit: 'b -> unit
+      OnEnter: 'b -> Task<unit>
+      OnExit: 'b -> Task<unit>
       // TODO can we make this not mutable?
       // It's required right now because of the C# builder
       mutable Transitions: Transition<'a, 'b> list
-      Actions: (CallerInformation * ('b -> unit)) list
+      Actions: (CallerInformation * ('b -> Task<unit>)) list
       // OnAction?
-      ExitActions: ('b -> unit) list }
+      ExitActions: ('b -> Task<unit>) list }
 
     interface IComparable<PageState<'a, 'b>> with
         member this.CompareTo other = compare this.Name other.Name

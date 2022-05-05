@@ -45,13 +45,12 @@ module internal ScrutinyCSharp =
         )
 
     let private buildMethod (m: MethodInfo) constructed =
-        if m.ReturnType = typeof<Task>
-        then (fun _ -> 
-            (m.Invoke(constructed, [||]) :?> Task 
-             |> Async.AwaitTask 
-             |> Async.RunSynchronously)
-        )
-        else fun _ -> (m.Invoke(constructed, [||]) |> ignore)
+        fun _ ->
+            task {
+                if m.ReturnType = typeof<Task>
+                then do! m.Invoke(constructed, [||]) :?> Task
+                else do m.Invoke(constructed, [||])
+            }
 
     let private buildTransition constructedPageState defs =
         getMethodsWithAttribute typeof<TransitionToAttribute> constructedPageState
@@ -75,7 +74,7 @@ module internal ScrutinyCSharp =
         then raise <| ScrutinyException($"Only one \"{attr.Name}\" per PageState. Check \"{constructedPageState.GetType().Name}\" for duplicate attribute usage.", null)
 
         match getMethodsWithAttribute attr constructedPageState |> Seq.tryHead with
-        | None -> ignore
+        | None -> fun _ -> Task.FromResult()
         | Some m -> buildMethod m constructedPageState
 
     let internal buildPageStateDefinitions gs (t: Type) =
@@ -122,7 +121,9 @@ module internal ScrutinyCSharp =
                       LocalState = obj()
                       OnEnter = buildMethodWithAttribute typeof<OnEnterAttribute> constructed
                       OnExit = buildMethodWithAttribute typeof<OnExitAttribute> constructed
-                      ExitActions = getMethodsWithAttribute typeof<ExitActionAttribute> constructed |> List.map (fun m -> buildMethod m constructed)
+                      ExitActions =
+                          getMethodsWithAttribute typeof<ExitActionAttribute> constructed
+                          |> List.map (fun m -> buildMethod m constructed)
                       Actions = getMethodsWithAttribute typeof<ActionAttribute> constructed |> List.map (
                                     fun m -> 
                                         let callerInfo = 
@@ -145,7 +146,7 @@ module internal ScrutinyCSharp =
         )
 
     let start<'startState> gs (config: Configuration): ScrutinizedStates = 
-        let config = config.ToScrutiynConfig()
+        let config = config.ToScrutinyConfig()
         
         let t = typeof<'startState> 
         let defs = buildPageStateDefinitions gs t

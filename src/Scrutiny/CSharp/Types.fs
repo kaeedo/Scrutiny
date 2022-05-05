@@ -13,7 +13,7 @@ type Configuration() =
     member val ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html" with get, set
     member val Logger = Action<string>(fun s -> printfn "%s" s) with get, set
 
-    member x.ToScrutiynConfig () =
+    member x.ToScrutinyConfig () =
         { ScrutinyConfig.Seed = x.Seed
           MapOnly = x.MapOnly
           ComprehensiveActions = x.ComprehensiveActions

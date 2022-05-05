@@ -5,8 +5,7 @@ open Expecto
 open Scrutiny
 open Swensen.Unquote
 open FsCheck
-open Scrutiny.Scrutiny
-open Scrutiny.Operators
+open Scrutiny
 
 let shuffle (r: Random) xs = xs |> Seq.sortBy (fun _ -> r.Next())
 
@@ -30,7 +29,7 @@ type GraphGen() =
                     gen {
                         return ([lowerSize..upperSize] |> List.map (fun _ ->
                             nodes
-                            |> shuffle (rnd)
+                            |> shuffle rnd
                             |> Seq.take 2
                             |> Seq.pairwise
                             |> Seq.head
@@ -61,7 +60,7 @@ type AdjacencyGraphGen() =
                             nodes |> List.map (fun n ->
                                 let edges =
                                     nodes
-                                    |> shuffle (rnd)
+                                    |> shuffle rnd
                                     |> Seq.take (rnd.Next(nodes.Length - 1))
                                     |> Seq.except [n]
                                     |> Seq.toList
@@ -87,38 +86,42 @@ let adjacencyGraphGenConfig =
         arbitrary = [typeof<AdjacencyGraphGen>] }
 
 module rec TestPages =
+    let ignoreTask _ =
+        task {
+            return ()
+        }
     let page1 = fun _ ->
         page {
             name "Page1"
-            transition (ignore ==> page2)
+            transition (ignoreTask ==> page2)
         }
 
     let page2 = fun _ ->
         page {
             name "Page2"
-            transition (ignore ==> page1)
-            transition (ignore ==> page3)
+            transition (ignoreTask ==> page1)
+            transition (ignoreTask ==> page3)
         }
 
     let page3 = fun _ ->
         page {
             name "Page3"
-            transition (ignore ==> page4)
-            transition (ignore ==> page5)
+            transition (ignoreTask ==> page4)
+            transition (ignoreTask ==> page5)
         }
 
     let page4 = fun _ ->
         page {
             name "Page4"
-            transition (ignore ==> page3)
-            transition (ignore ==> page5)
+            transition (ignoreTask ==> page3)
+            transition (ignoreTask ==> page5)
         }
 
     let page5 = fun _ ->
         page {
             name "Page5"
-            transition (ignore ==> page2)
-            transition (ignore ==> page3)
+            transition (ignoreTask ==> page2)
+            transition (ignoreTask ==> page3)
         }
 
 [<Tests>]
@@ -203,7 +206,7 @@ let navigatorTests =
               (1, 2, [1; 2])
             ]
             |> List.map (fun (startNode, endNode, path) ->
-                Tests.test (sprintf "Should find a path from %i to %i" startNode endNode) {
+                Tests.test $"Should find a path from %i{startNode} to %i{endNode}" {
                     let ag =
                         [
                             (1, [2])

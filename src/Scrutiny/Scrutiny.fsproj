@@ -38,6 +38,5 @@
     <PackageReference Include="FSharp.SystemTextJson" Version="0.17.4" />
     <PackageReference Include="System.Text.Json" Version="6.0.2" />
     <PackageReference Update="FSharp.Core" Version="6.0.3" />
-    <PackageReference Update="FSharp.Core" Version="6.0.3" />
   </ItemGroup>
 </Project>

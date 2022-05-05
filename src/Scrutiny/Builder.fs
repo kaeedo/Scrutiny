@@ -2,34 +2,55 @@
 
 open System
 open System.Runtime.CompilerServices
+open System.Threading.Tasks
 
 type PageBuilder() =
-    member __.Yield(_): PageState<'a, 'b> =
+    member _.Yield _: PageState<'a, 'b> =
         { PageState.Name = ""
           LocalState = Unchecked.defaultof<'b>
-          OnEnter = fun _ -> ()
-          OnExit = fun _ -> ()
+          OnEnter = fun _ -> Task.FromResult()
+          OnExit = fun _ -> Task.FromResult()
           Transitions = []
           Actions = []
           ExitActions = [] } // TODO. states can have many exit actions. one is chosen at random anyway.
 
     [<CustomOperation("name")>]
-    member __.Name(state, handler): PageState<'a, 'b> = { state with Name = handler }
+    member _.Name(state, handler): PageState<'a, 'b> = { state with Name = handler }
 
     [<CustomOperation("localState")>]
-    member __.LocalState(state, handler): PageState<'a, 'b> = { state with LocalState = handler }
+    member _.LocalState(state, handler): PageState<'a, 'b> = { state with LocalState = handler }
 
     [<CustomOperation("onEnter")>]
-    member __.OnEnter(state, handler): PageState<'a, 'b> = { state with OnEnter = handler }
+    member _.OnEnter(state, handler: 'b -> unit): PageState<'a, 'b> =
+        let handler = fun localState -> Task.FromResult(handler localState)
+        { state with OnEnter = handler }
+        
+    [<CustomOperation("onEnter")>]
+    member _.OnEnter(state, handler: 'b -> Task<unit>): PageState<'a, 'b> = { state with OnEnter = handler }
 
     [<CustomOperation("onExit")>]
-    member __.OnExit(state, handler): PageState<'a, 'b> = { state with OnExit = handler }
+    member _.OnExit(state, handler: 'b -> unit): PageState<'a, 'b> =
+        let handler = fun localState -> Task.FromResult(handler localState)
+        { state with OnExit = handler }
+    
+    [<CustomOperation("onExit")>]
+    member _.OnExit(state, handler: 'b -> Task<unit>): PageState<'a, 'b> = { state with OnExit = handler }
 
     [<CustomOperation("transition")>]
-    member __.Transitions(state, handler): PageState<'a, 'b> = { state with Transitions = handler :: state.Transitions }
+    member _.Transitions(state, handler): PageState<'a, 'b> = { state with Transitions = handler :: state.Transitions }
 
     [<CustomOperation("action")>]
-    member __.Actions(state, handler, [<CallerMemberName>]?memberName: string, [<CallerLineNumber>]?lineNumber: int, [<CallerFilePath>]?filePath: string): PageState<'a, 'b> = 
+    member _.Actions(state, handler: 'b -> unit, [<CallerMemberName>]?memberName: string, [<CallerLineNumber>]?lineNumber: int, [<CallerFilePath>]?filePath: string): PageState<'a, 'b> = 
+        let callerInformation =
+            { CallerInformation.MemberName = defaultArg memberName ""
+              LineNumber = defaultArg lineNumber 0
+              FilePath = defaultArg filePath "" }
+            
+        let handler = fun localState -> Task.FromResult(handler localState)
+        { state with Actions = (callerInformation, handler) :: state.Actions }
+        
+    [<CustomOperation("action")>]
+    member _.Actions(state, handler: 'b -> Task<unit>, [<CallerMemberName>]?memberName: string, [<CallerLineNumber>]?lineNumber: int, [<CallerFilePath>]?filePath: string): PageState<'a, 'b> = 
         let callerInformation =
             { CallerInformation.MemberName = defaultArg memberName ""
               LineNumber = defaultArg lineNumber 0
@@ -38,8 +59,15 @@ type PageBuilder() =
         { state with Actions = (callerInformation, handler) :: state.Actions }
         
     [<CustomOperation("exitAction")>]
-    member __.ExitAction(state, handler): PageState<'a, 'b> =  { state with ExitActions = handler :: state.ExitActions }
+    member _.ExitAction(state, handler: 'b -> unit): PageState<'a, 'b> =
+        let handler = fun localState -> Task.FromResult(handler localState)
+        { state with ExitActions = handler :: state.ExitActions }
+        
+    [<CustomOperation("exitAction")>]
+    member _.ExitAction(state, handler: 'b -> Task<unit>): PageState<'a, 'b> =
+        { state with ExitActions = handler :: state.ExitActions }
 
+[<AutoOpen>]
 module Scrutiny =
     let private printPath logger path =
         logger <| sprintf "path: %s"
@@ -57,7 +85,7 @@ module Scrutiny =
         if config.ComprehensiveActions then
             state.Actions |> Seq.iter (fun (ci, a) -> 
                 reporter.PushAction (buildActionName ci)
-                a state.LocalState
+                (a state.LocalState).GetAwaiter().GetResult()
             )
         else
             let random = Random(config.Seed)
@@ -69,7 +97,7 @@ module Scrutiny =
             |> Seq.take amount
             |> Seq.iter (fun (ci, a) -> 
                 reporter.PushAction (buildActionName ci)
-                a state.LocalState
+                (a state.LocalState).GetAwaiter().GetResult()
             )
 
     let private unvisitedNodes allStates alreadyVisited: AdjacencyGraph<PageState<'a, 'b>> =
@@ -94,19 +122,18 @@ module Scrutiny =
         convertInner e
 
     let private performStateActions (reporter: IReporter<_, _>) config globalState (current, next) =
-        let runActions = runActions reporter config
         // TODO Wrap functions in try function instead of try catching entire block
         try
-            current.OnEnter current.LocalState
-            runActions current
-            current.OnExit current.LocalState
+            (current.OnEnter current.LocalState).GetAwaiter().GetResult()
+            runActions reporter config current
+            (current.OnExit current.LocalState).GetAwaiter().GetResult()
         with exn ->
 
             let message =
-                sprintf "System under test failed scrutiny.
-    To re-run this exact test, specify the seed in the config with the value: '%i'.
-    The error occurred in state: '%s'
-    The error that occurred is of type: '%A%s'" config.Seed current.Name exn Environment.NewLine
+                $"System under test failed scrutiny.
+    To re-run this exact test, specify the seed in the config with the value: '%i{config.Seed}'.
+    The error occurred in state: '%s{current.Name}'
+    The error that occurred is of type: '%A{exn}%s{Environment.NewLine}'"
 
             let exn = ScrutinyException(message, exn)
 
@@ -123,13 +150,13 @@ module Scrutiny =
 
             reporter.PushTransition next
 
-            transition.TransitionFn current.LocalState
+            (transition.TransitionFn current.LocalState).GetAwaiter().GetResult()
         with exn ->
             let message =
-                sprintf "System under test failed scrutiny.
-    To re-run this exact test, specify the seed in the config with the value: '%i'.
-    The error occurred in state: '%s'
-    The error that occurred is of type: '%A%s'" config.Seed current.Name exn Environment.NewLine
+                $"System under test failed scrutiny.
+    To re-run this exact test, specify the seed in the config with the value: '%i{config.Seed}'.
+    The error occurred in state: '%s{current.Name}'
+    The error that occurred is of type: '%A{exn}%s{Environment.NewLine}'"
 
             let exn = ScrutinyException(message, exn)
 
@@ -149,7 +176,7 @@ module Scrutiny =
         exitNode
 
     let private baseScrutinize<'a, 'b> (reporter: IReporter<'a, 'b>) (config: ScrutinyConfig) (globalState: 'a) (startFn: 'a -> PageState<'a, 'b>) =
-        config.Logger <| sprintf "Scrutinizing system under test with seed: %i" config.Seed
+        config.Logger <| $"Scrutinizing system under test with seed: %i{config.Seed}"
         let startState = startFn globalState
         let runActions = runActions reporter config
 
@@ -179,7 +206,7 @@ module Scrutiny =
                         None
 
                 let rec clickAround
-                        (isExitPath: bool)
+                        (isDirectPath: bool)
                         (alreadyVisited: PageState<'a, 'b> list)
                         (currentPath: PageState<'a, 'b> list)
                     =
@@ -195,14 +222,14 @@ module Scrutiny =
                                 path.Head
                             else
                                 printPath config.Logger path
-                                if isExitPath then path.Head else clickAround false alreadyVisited path
+                                if isDirectPath then path.Head else clickAround false alreadyVisited path
                     | head :: tail ->
                         currentPath
                         |> Seq.pairwise
                         |> Seq.find (fun (current, _) -> current = head)
                         |> performStateActions reporter config globalState
 
-                        clickAround false (head :: alreadyVisited) tail
+                        clickAround isDirectPath (head :: alreadyVisited) tail
 
                 let navigateDirectly = clickAround true
 
@@ -217,7 +244,7 @@ module Scrutiny =
                     exitNode.ExitActions 
                     |> Seq.sortBy (fun _ -> random.Next())
                     |> Seq.tryHead
-                    |> Option.iter (fun ea -> ea exitNode.LocalState)
+                    |> Option.iter (fun ea -> (ea exitNode.LocalState).GetAwaiter().GetResult())
         finally
             config.Logger $"Scrutiny Result written to: {config.ScrutinyResultFilePath}" 
             reporter.GenerateMap()
