@@ -4,7 +4,6 @@ open System
 open Microsoft.Playwright
 open Xunit
 open Scrutiny
-open Scrutiny.Scrutiny
 open UsageExample.Playwright
 open Xunit.Abstractions
 
@@ -35,6 +34,8 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
                       ComprehensiveStates = true }
 
             let! result = scrutinize config (GlobalState(page, logger)) ScrutinyStateMachine.home
+            
+            let wf = result.Steps |> Seq.countBy (fun ps -> ps.PageState)
 
             Assert.Equal(9, result.Steps |> Seq.length);
             Assert.Equal(5, result.Graph.Length)

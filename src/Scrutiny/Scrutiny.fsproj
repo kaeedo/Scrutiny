@@ -23,9 +23,11 @@
       <IncludeInPackage>true</IncludeInPackage>
     </EmbeddedResource>
     <Compile Include="Types.fs" />
+    <Compile Include="Utilities.fs" />
     <Compile Include="Navigator.fs" />
     <Compile Include="Reporter.fs" />
     <Compile Include="Builder.fs" />
+    <Compile Include="Scrutiny.fs" />
     <Compile Include="Operators.fs" />
 
       <Compile Include="CSharp\Attributes.fs" />

@@ -104,6 +104,8 @@ module rec Entry =
                 transition ((fun _ -> task { click "#comment" }) ==> loggedInComment)
                 transition ((fun _ -> task { click "#logout" }) ==> home)
 
+                // minimumVisits 10
+                
                 onEnter (fun _ ->
                     printfn "Checking on page home logged in"
                     displayed "#welcomeText"

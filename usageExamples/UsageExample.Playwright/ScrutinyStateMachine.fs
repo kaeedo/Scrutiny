@@ -82,7 +82,7 @@ module rec ScrutinyStateMachine =
                         Assert.Equal("42", number)
                     }
                 )
-
+                
                 action (fun _ ->
                     task {
                         let! username = globalState.GetInputValueAsync("#username")
@@ -174,6 +174,7 @@ module rec ScrutinyStateMachine =
                         do! globalState.Page.ClickAsync("#comment")
                     }
                 ) ==> loggedInComment)
+                
                 transition ((fun _ ->
                     task {
                         do! globalState.Page.ClickAsync("#logout")
