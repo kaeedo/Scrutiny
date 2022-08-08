@@ -310,7 +310,7 @@ The HTML report is a single file with all javascript written inline
 
 Thank you to [Valora](https://valora.digital) for sponsoring this project:
 
-![valora_logo](./valora.png)
+![valora_logo](./valora_rgb.jpg)
 
 ---
 
