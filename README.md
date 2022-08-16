@@ -35,7 +35,7 @@ Scrutiny will also draw a diagram representing the system under test as has been
 <details>
   <summary><i>Click</i> for F# documentation</summary>
 
-Define one `page` object for each st ate in your UI. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
+Define one `page` object for each state in your UI. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
 
 The possible custom operations are:
 
