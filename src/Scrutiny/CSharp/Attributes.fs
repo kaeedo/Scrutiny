@@ -10,7 +10,7 @@ type PageStateAttribute() =
 type TransitionToAttribute(name: string) =
     inherit Attribute()
 
-    member val Name = name with get 
+    member val Name = name
 
 [<AttributeUsage(AttributeTargets.Method)>]
 type OnEnterAttribute() =

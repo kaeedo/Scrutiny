@@ -7,13 +7,13 @@ open Scrutiny
 open Xunit
 
 type GlobalState(page: IPage, logger: string -> unit) =
-    member val Logger = logger with get
-    member val Page = page with get
+    member val Logger = logger
+    member val Page = page
     member val IsSignedIn = false with get, set
     member val Username = "MyUsername" with get, set
     member val Number = 42
 
-    member x.GetInputValueAsync (selector: string) =
+    member x.GetInputValueAsync(selector: string) =
         task {
             let! element = x.Page.QuerySelectorAsync(selector)
             let! value = element.EvaluateAsync("e => e.value")
@@ -28,24 +28,27 @@ module rec ScrutinyStateMachine =
         fun (globalState: GlobalState) ->
             page {
                 name "Sign In"
+
                 onEnter (fun _ ->
                     globalState.Logger "Checking on page sign in"
+
                     task {
                         globalState.Logger "Sign in: Looking for header text"
-                        let! headerText = globalState.Page.InnerTextAsync("#header") 
+                        let! headerText = globalState.Page.InnerTextAsync("#header")
                         Assert.Equal("Sign In", headerText)
-                    }
+                    })
+
+                transition (
+                    (fun _ ->
+                        task {
+                            globalState.Logger "Sign in: Clicking on home"
+                            do! globalState.Page.ClickAsync("#home")
+                        })
+                    ==> home
                 )
 
-                transition ((fun _ ->
-                    task {
-                        globalState.Logger "Sign in: Clicking on home"
-                        do! globalState.Page.ClickAsync("#home")
-                    }
-                ) ==> home)
-
-                transition
-                    ((fun _ ->
+                transition (
+                    (fun _ ->
                         task {
                             globalState.Logger "Sign in: Filling in username"
                             globalState.Username <- "kaeedo"
@@ -58,8 +61,9 @@ module rec ScrutinyStateMachine =
 
                             globalState.Logger "Sign in: clicking text=sign in"
                             do! globalState.Page.ClickAsync("css=button >> text=Sign In")
-                        }
-                    ) ==> loggedInHome)
+                        })
+                    ==> loggedInHome
+                )
 
                 action (fun _ ->
                     task {
@@ -67,22 +71,21 @@ module rec ScrutinyStateMachine =
                         do! globalState.Page.FillAsync("#username", "MyUsername")
 
                         globalState.Logger "Sign in: getting username"
-                        
+
                         let! username = globalState.GetInputValueAsync("#username")
                         Assert.Equal("MyUsername", username)
-                    }
-                )
+                    })
+
                 action (fun _ ->
                     task {
                         globalState.Logger "Sign in: filling number"
-                        do! globalState.Page.FillAsync("#number", "42") 
+                        do! globalState.Page.FillAsync("#number", "42")
 
                         globalState.Logger "Sign in: getting number"
                         let! number = globalState.GetInputValueAsync("#number")
                         Assert.Equal("42", number)
-                    }
-                )
-                
+                    })
+
                 action (fun _ ->
                     task {
                         let! username = globalState.GetInputValueAsync("#username")
@@ -90,19 +93,21 @@ module rec ScrutinyStateMachine =
 
                         let signInButtonSelector = "css=button >> text=Sign In"
 
-                        if String.IsNullOrWhiteSpace(username) || String.IsNullOrWhiteSpace(number) then
-                            do! globalState.Page.ClickAsync(signInButtonSelector) 
+                        if
+                            String.IsNullOrWhiteSpace(username)
+                            || String.IsNullOrWhiteSpace(number)
+                        then
+                            do! globalState.Page.ClickAsync(signInButtonSelector)
                         else
-                            do! globalState.Page.FillAsync("#username", String.Empty) 
-                            do! globalState.Page.ClickAsync(signInButtonSelector) 
-                        
-                        let! errorMessage = globalState.Page.QuerySelectorAsync("#ErrorMessage") 
+                            do! globalState.Page.FillAsync("#username", String.Empty)
+                            do! globalState.Page.ClickAsync(signInButtonSelector)
+
+                        let! errorMessage = globalState.Page.QuerySelectorAsync("#ErrorMessage")
                         Assert.NotNull(errorMessage)
                         let! displayState = errorMessage.EvaluateAsync("e => e.style.display")
 
                         Assert.False(displayState.ToString() = "none")
-                    }
-                )
+                    })
 
                 onExit (fun _ -> globalState.Logger "Exiting sign in")
             }
@@ -115,11 +120,10 @@ module rec ScrutinyStateMachine =
 
                 localState (LoggedInComment())
 
-                transition ((fun _ ->
-                    task {
-                        do! globalState.Page.ClickAsync("#home")
-                    }
-                ) ==> loggedInHome)
+                transition (
+                    (fun _ -> task { do! globalState.Page.ClickAsync("#home") })
+                    ==> loggedInHome
+                )
 
                 action (fun ls ->
                     task {
@@ -129,8 +133,7 @@ module rec ScrutinyStateMachine =
 
                         do! globalState.Page.FillAsync("#comment", ls.Comment)
                         do! globalState.Page.ClickAsync("#modalFooterSave")
-                    }
-                )
+                    })
 
                 onEnter (fun _ ->
                     task {
@@ -141,27 +144,26 @@ module rec ScrutinyStateMachine =
                         let! displayState = openModal.EvaluateAsync("e => e.style.display")
 
                         Assert.False(displayState.ToString() = "none")
-                    }
-                )
+                    })
 
-                onExit (fun ls -> 
+                onExit (fun ls ->
                     task {
                         let! comments = globalState.Page.QuerySelectorAllAsync("#commentsUl>li")
                         let comments = comments |> List.ofSeq
 
                         let writtenComment =
                             comments
-                            |> List.tryFind(fun c ->
+                            |> List.tryFind (fun c ->
                                 (task {
                                     let! text = c.InnerTextAsync()
                                     return text = $"%s{globalState.Username} wrote:\n%s{ls.Comment}"
-                                }).GetAwaiter().GetResult()
-                            )
+                                })
+                                    .GetAwaiter()
+                                    .GetResult())
 
                         Assert.True(writtenComment.IsSome)
                         globalState.Logger "Exiting comment logged in"
-                    }
-                )
+                    })
             }
 
     let loggedInHome =
@@ -169,17 +171,15 @@ module rec ScrutinyStateMachine =
             page {
                 name "Logged in Home"
 
-                transition ((fun _ ->
-                    task {
-                        do! globalState.Page.ClickAsync("#comment")
-                    }
-                ) ==> loggedInComment)
-                
-                transition ((fun _ ->
-                    task {
-                        do! globalState.Page.ClickAsync("#logout")
-                    }
-                ) ==> home)
+                transition (
+                    (fun _ -> task { do! globalState.Page.ClickAsync("#comment") })
+                    ==> loggedInComment
+                )
+
+                transition (
+                    (fun _ -> task { do! globalState.Page.ClickAsync("#logout") })
+                    ==> home
+                )
 
                 onEnter (fun _ ->
                     task {
@@ -193,9 +193,8 @@ module rec ScrutinyStateMachine =
 
                         let! welcomeText = globalState.Page.InnerTextAsync("#welcomeText")
 
-                        Assert.Equal(sprintf "Welcome %s" globalState.Username, welcomeText);
-                    }
-                )
+                        Assert.Equal(sprintf "Welcome %s" globalState.Username, welcomeText)
+                    })
 
                 exitAction (fun _ ->
                     task {
@@ -203,68 +202,59 @@ module rec ScrutinyStateMachine =
                         let! welcomeText = globalState.Page.QuerySelectorAsync("#welcomeText")
                         Assert.NotNull(welcomeText)
                         do! globalState.Page.ClickAsync("#logout")
-                    }
-                )
+                    })
             }
 
     let comment =
         fun (globalState: GlobalState) ->
             page {
                 name "Comment"
+
                 onEnter (fun _ ->
                     globalState.Logger "Checking on page comment"
 
                     task {
-                        let! headerText = globalState.Page.InnerTextAsync("#header") 
+                        let! headerText = globalState.Page.InnerTextAsync("#header")
                         Assert.Equal("Comments", headerText)
-                    }
+                    })
+
+                transition (
+                    (fun _ -> task { do! globalState.Page.ClickAsync("#home") })
+                    ==> home
                 )
 
-                transition ((fun _ ->
-                    task {
-                        do! globalState.Page.ClickAsync("#home")
-                    }
-                ) ==> home)
-                transition ((fun _ ->
-                    task {
-                        do! globalState.Page.ClickAsync("#signin")
-                    }
-                ) ==> signIn)
+                transition (
+                    (fun _ -> task { do! globalState.Page.ClickAsync("#signin") })
+                    ==> signIn
+                )
 
                 onExit (fun _ -> globalState.Logger "Exiting comment")
-                
-                exitAction (fun _ ->
-                    task {
-                        do! globalState.Page.CloseAsync()
-                    }
-                )
+
+                exitAction (fun _ -> task { do! globalState.Page.CloseAsync() })
             }
 
     let home =
         fun (globalState: GlobalState) ->
             page {
                 name "Home"
+
                 onEnter (fun _ ->
                     globalState.Logger "Checking on page home"
 
                     task {
-                        let! headerText = globalState.Page.InnerTextAsync("#header") 
+                        let! headerText = globalState.Page.InnerTextAsync("#header")
                         Assert.Equal("Home", headerText)
-                    }
+                    })
+
+                transition (
+                    (fun _ -> task { do! globalState.Page.ClickAsync("#comment") })
+                    ==> comment
                 )
 
-                transition ((fun _ ->
-                    task {
-                        do! globalState.Page.ClickAsync("#comment") 
-                    }
-                ) ==> comment)
-                transition ((fun _ ->
-                    task {
-                        do! globalState.Page.ClickAsync("#signin") 
-                    }
-                ) ==> signIn)
-
-                onExit (fun _ ->
-                    globalState.Logger "Exiting home"
+                transition (
+                    (fun _ -> task { do! globalState.Page.ClickAsync("#signin") })
+                    ==> signIn
                 )
+
+                onExit (fun _ -> globalState.Logger "Exiting home")
             }

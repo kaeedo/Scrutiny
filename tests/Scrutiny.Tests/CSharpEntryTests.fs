@@ -8,24 +8,24 @@ open System.Threading.Tasks
 
 [<PageState>]
 type ValidPageState(gs: obj) =
-    [<OnEnter>] 
+    [<OnEnter>]
     member _.OnEnter() = ()
 
-    [<TransitionTo("AnotherValidPageState")>] 
+    [<TransitionTo("AnotherValidPageState")>]
     member _.MoveToAnother() = ()
 
 [<PageState>]
 type AnotherValidPageState(gs: obj) =
-    [<OnExit>] 
+    [<OnExit>]
     member _.OnEnter() = ()
 
-    [<TransitionTo("ValidPageState")>] 
+    [<TransitionTo("ValidPageState")>]
     member _.MoveToValid() = ()
 
 [<PageState>]
 type AsyncPageState(gs: obj) =
     [<Action>]
-    member _.DoSomething() = 
+    member _.DoSomething() =
         Task.FromResult(gs.ToString() |> ignore)
 
     [<TransitionTo("AnotherValidPageState")>]
@@ -35,17 +35,17 @@ type AsyncPageState(gs: obj) =
     member _.MoveToValid() = Task.FromResult(())
 
 [<Tests>]
-let csharpEntryTests = 
-    testList "C# Entry Tests" [
-        Tests.test "Should construct page state definitions" {
-            let definitions = ScrutinyCSharp.buildPageStateDefinitions (obj()) typeof<ValidPageState>
-            let transitions = 
-                definitions 
-                |> List.collect (fun d ->
-                    d.Transitions
-                )
+let csharpEntryTests =
+    testList
+        "C# Entry Tests"
+        [ Tests.test "Should construct page state definitions" {
+              let definitions =
+                  ScrutinyCSharp.buildPageStateDefinitions (obj ()) typeof<ValidPageState>
 
-            test <@ definitions.Length = 3 @>
-            test <@ transitions.Length = 4 @>
-        }
-    ]
+              let transitions =
+                  definitions
+                  |> List.collect (fun d -> d.Transitions)
+
+              test <@ definitions.Length = 3 @>
+              test <@ transitions.Length = 4 @>
+          } ]

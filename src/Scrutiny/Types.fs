@@ -23,14 +23,16 @@ type ScrutinyConfig =
       ComprehensiveActions: bool
       ComprehensiveStates: bool
       ScrutinyResultFilePath: string
-      Logger: string -> unit}
+      Logger: string -> unit }
 
-      static member Default =
+    static member Default =
         { ScrutinyConfig.Seed = Environment.TickCount
           MapOnly = false
           ComprehensiveActions = true
           ComprehensiveStates = true
-          ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html"
+          ScrutinyResultFilePath =
+            Directory.GetCurrentDirectory()
+            + "/ScrutinyResult.html"
           Logger = printfn "%s" }
 
 type CallerInformation =
@@ -81,8 +83,8 @@ type SerializableException =
       InnerException: SerializableException option }
 
 type ErrorLocation =
-| State of string * SerializableException
-| Transition of string * string * SerializableException
+    | State of string * SerializableException
+    | Transition of string * string * SerializableException
 
 type Step<'a, 'b> =
     { PageState: PageState<'a, 'b>

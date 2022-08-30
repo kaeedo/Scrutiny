@@ -6,12 +6,12 @@ open System.Text.Json
 open System.Text.Json.Serialization
 
 type private ReporterMessage<'a, 'b> =
-| Start of AdjacencyGraph<PageState<'a, 'b>> * PageState<'a, 'b>
-| PushTransition of PageState<'a, 'b>
-| PushAction of string
-| OnError of ErrorLocation
-| GenerateMap
-| Finish of AsyncReplyChannel<ScrutinizedStates<'a, 'b>>
+    | Start of AdjacencyGraph<PageState<'a, 'b>> * PageState<'a, 'b>
+    | PushTransition of PageState<'a, 'b>
+    | PushAction of string
+    | OnError of ErrorLocation
+    | GenerateMap
+    | Finish of AsyncReplyChannel<ScrutinizedStates<'a, 'b>>
 
 [<RequireQualifiedAccess>]
 type internal IReporter<'a, 'b> =
@@ -27,7 +27,9 @@ type internal Reporter<'a, 'b>(filePath: string) =
     let assembly = typeof<Reporter<'a, 'b>>.Assembly
 
     let html =
-        use htmlStream = assembly.GetManifestResourceStream("Scrutiny.wwwroot.graph.template.html")
+        use htmlStream =
+            assembly.GetManifestResourceStream("Scrutiny.wwwroot.graph.template.html")
+
         use htmlReader = new StreamReader(htmlStream)
         htmlReader.ReadToEnd()
 
@@ -35,7 +37,10 @@ type internal Reporter<'a, 'b>(filePath: string) =
         let fileInfo = FileInfo(filePath)
 
         let fileName =
-            if fileInfo.Name = String.Empty then "ScrutinyResult.html" else fileInfo.Name
+            if fileInfo.Name = String.Empty then
+                "ScrutinyResult.html"
+            else
+                fileInfo.Name
 
         fileInfo.DirectoryName, fileName
 
@@ -44,18 +49,19 @@ type internal Reporter<'a, 'b>(filePath: string) =
         options.Converters.Add(JsonFSharpConverter())
         options.ReferenceHandler <- ReferenceHandler.Preserve
 
-        let output = html.Replace("\"{{REPORT}}\"", JsonSerializer.Serialize(graph, options))
+        let output =
+            html.Replace("\"{{REPORT}}\"", JsonSerializer.Serialize(graph, options))
 
         let (filePath, fileName) = file
-            
+
         File.WriteAllText(sprintf "%s/%s" filePath fileName, output)
 
     let removeLast steps =
         let steps = steps |> Seq.toList
-        steps.[0..(steps.Length) - 2]
+        steps.[0 .. (steps.Length) - 2]
 
     let mailbox =
-        MailboxProcessor.Start (fun inbox ->
+        MailboxProcessor.Start(fun inbox ->
             let rec loop (state: ScrutinizedStates<'a, 'b>) =
                 async {
                     match! inbox.Receive() with
@@ -65,7 +71,10 @@ type internal Reporter<'a, 'b>(filePath: string) =
                               Actions = []
                               Error = None }
 
-                        return! loop { ScrutinizedStates.Graph = ag; Steps = [ step ] }
+                        return!
+                            loop
+                                { ScrutinizedStates.Graph = ag
+                                  Steps = [ step ] }
                     | PushTransition ps ->
                         let nextStep =
                             { Step.PageState = ps
@@ -77,15 +86,24 @@ type internal Reporter<'a, 'b>(filePath: string) =
                         return! loop { state with Steps = steps }
                     | PushAction name ->
                         let current = state.Steps |> Seq.last
-                        let current = { current with Actions = [yield! current.Actions; name] }
-                        let steps = seq { yield! removeLast state.Steps; current }
+                        let current = { current with Actions = [ yield! current.Actions; name ] }
+
+                        let steps =
+                            seq {
+                                yield! removeLast state.Steps
+                                current
+                            }
 
                         return! loop { state with Steps = steps }
                     | OnError el ->
                         let current = state.Steps |> Seq.last
                         let current = { current with Error = Some el }
 
-                        let steps = seq { yield! removeLast state.Steps; current }
+                        let steps =
+                            seq {
+                                yield! removeLast state.Steps
+                                current
+                            }
 
                         return! loop { state with Steps = steps }
                     | GenerateMap ->
@@ -95,14 +113,16 @@ type internal Reporter<'a, 'b>(filePath: string) =
                     | Finish reply ->
                         reply.Reply state
                         return ()
-                } 
-            loop { ScrutinizedStates.Graph = []; Steps = [] }
-        )
+                }
+
+            loop
+                { ScrutinizedStates.Graph = []
+                  Steps = [] })
 
     interface IReporter<'a, 'b> with
-          member this.Start st = mailbox.Post (Start st)
-          member this.PushTransition next = mailbox.Post (PushTransition next)
-          member this.PushAction actionName = mailbox.Post (PushAction actionName)
-          member this.OnError errorLocation = mailbox.Post (OnError errorLocation)
-          member this.GenerateMap () = mailbox.Post GenerateMap
-          member this.Finish () = mailbox.PostAndReply Finish
+        member this.Start st = mailbox.Post(Start st)
+        member this.PushTransition next = mailbox.Post(PushTransition next)
+        member this.PushAction actionName = mailbox.Post(PushAction actionName)
+        member this.OnError errorLocation = mailbox.Post(OnError errorLocation)
+        member this.GenerateMap() = mailbox.Post GenerateMap
+        member this.Finish() = mailbox.PostAndReply Finish

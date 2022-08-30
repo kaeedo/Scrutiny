@@ -1,4 +1,5 @@
 ﻿module Scrutiny.Tests
+
 open Expecto
 
 [<EntryPoint>]

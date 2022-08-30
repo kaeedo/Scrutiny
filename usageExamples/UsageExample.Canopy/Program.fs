@@ -25,13 +25,15 @@ module rec Entry =
         fun (globalState: GlobalState) ->
             page {
                 name "Sign In"
+
                 onEnter (fun _ ->
                     printfn "Checking on page sign in"
                     "#header" == "Sign In")
 
                 transition ((fun _ -> task { click "#home" }) ==> home)
-                transition
-                    ((fun _ ->
+
+                transition (
+                    (fun _ ->
                         task {
                             globalState.Username <- "kaeedo"
                             "#username" << globalState.Username
@@ -40,13 +42,14 @@ module rec Entry =
                             globalState.IsSignedIn <- true
 
                             click "Sign In"
-                        }
-                    )
-                     ==> loggedInHome)
+                        })
+                    ==> loggedInHome
+                )
 
                 action (fun _ ->
                     "#username" << "MyUsername"
                     "#username" == "MyUsername")
+
                 action (fun _ ->
                     "#number" << "42"
                     "#number" == "42")
@@ -54,7 +57,11 @@ module rec Entry =
                 action (fun _ ->
                     let username = read "#username"
                     let number = read "#number"
-                    if String.IsNullOrWhiteSpace(username) || String.IsNullOrWhiteSpace(number) then
+
+                    if
+                        String.IsNullOrWhiteSpace(username)
+                        || String.IsNullOrWhiteSpace(number)
+                    then
                         click "Sign In"
                     else
                         "#username" << ""
@@ -73,27 +80,23 @@ module rec Entry =
 
                 localState (LoggedInComment())
 
-                transition ((fun _ ->
-                    task {
-                        click "#home"
-                    }
-                    ) ==> loggedInHome)
+                transition ((fun _ -> task { click "#home" }) ==> loggedInHome)
 
                 action (fun ls ->
                     click "#openModal"
                     ls.Comment <- "This is my super comment"
                     "#comment" << ls.Comment
-                    click "#modalFooterSave"
-                )
+                    click "#modalFooterSave")
 
                 onEnter (fun _ ->
                     printfn "Checking comment is logged in"
                     displayed "#openModal")
 
-                onExit (fun ls -> 
-                    "#commentsUl>li" *= sprintf "%s wrote:%s%s" globalState.Username Environment.NewLine ls.Comment
-                    printfn "Exiting comment logged in"
-                )
+                onExit (fun ls ->
+                    "#commentsUl>li"
+                    *= sprintf "%s wrote:%s%s" globalState.Username Environment.NewLine ls.Comment
+
+                    printfn "Exiting comment logged in")
             }
 
     let loggedInHome =
@@ -101,16 +104,21 @@ module rec Entry =
             page {
                 name "Logged in Home"
 
-                transition ((fun _ -> task { click "#comment" }) ==> loggedInComment)
+                transition (
+                    (fun _ -> task { click "#comment" })
+                    ==> loggedInComment
+                )
+
                 transition ((fun _ -> task { click "#logout" }) ==> home)
 
                 // minimumVisits 10
-                
+
                 onEnter (fun _ ->
                     printfn "Checking on page home logged in"
                     displayed "#welcomeText"
-                    "#welcomeText" == sprintf "Welcome %s" globalState.Username
-                )
+
+                    "#welcomeText"
+                    == sprintf "Welcome %s" globalState.Username)
 
                 exitAction (fun _ ->
                     printfn "Exiting!"
@@ -121,6 +129,7 @@ module rec Entry =
         fun (globalState: GlobalState) ->
             page {
                 name "Comment"
+
                 onEnter (fun _ ->
                     printfn "Checking on page comment"
                     "#header" == "Comments")
@@ -135,6 +144,7 @@ module rec Entry =
         fun (globalState: GlobalState) ->
             page {
                 name "Home"
+
                 onEnter (fun _ ->
                     printfn "Checking on page home"
                     "#header" == "Home")
@@ -142,16 +152,16 @@ module rec Entry =
                 transition ((fun _ -> task { click "#comment" }) ==> comment)
                 transition ((fun _ -> task { click "#signin" }) ==> signIn)
 
-                onExit (fun _ ->
-                    printfn "Exiting home"
-                )
+                onExit (fun _ -> printfn "Exiting home")
             }
 
     [<EntryPoint>]
     let main argv =
         printfn "Setting up browser drivers. This might take awhile"
         //DriverManager().SetUpDriver(ChromeConfig()) |> ignore
-        DriverManager().SetUpDriver(FirefoxConfig()) |> ignore
+        DriverManager().SetUpDriver(FirefoxConfig())
+        |> ignore
+
         printfn "Finished setting up browser drivers"
 
         let options = FirefoxOptions()
@@ -159,8 +169,7 @@ module rec Entry =
         do cOptions.AddAdditionalCapability("acceptInsecureCerts", true, true)
         do options.AddAdditionalCapability("acceptInsecureCerts", true, true)
 
-        if System.Environment.GetEnvironmentVariable("CI") = "true"
-        then
+        if System.Environment.GetEnvironmentVariable("CI") = "true" then
             do cOptions.AddArgument "headless"
             do cOptions.AddArgument "no-sandbox"
             do options.AddArgument "-headless"
@@ -170,32 +179,35 @@ module rec Entry =
 
         let config =
             { ScrutinyConfig.Default with
-                  Seed = 553931187
-                  MapOnly = false
-                  ComprehensiveActions = true
-                  ComprehensiveStates = true
-                  ScrutinyResultFilePath = Path.Join(Directory.GetCurrentDirectory(), "myResult.html") }
+                Seed = 553931187
+                MapOnly = false
+                ComprehensiveActions = true
+                ComprehensiveStates = true
+                ScrutinyResultFilePath = Path.Join(Directory.GetCurrentDirectory(), "myResult.html") }
 
-        "Scrutiny" &&& fun _ ->
-            (task {
-                printfn "opening url"
-                url "https://127.0.0.1:5001/home"
-                let! results = scrutinize config (GlobalState()) home
+        "Scrutiny"
+        &&& fun _ ->
+                (task {
+                    printfn "opening url"
+                    url "https://127.0.0.1:5001/home"
+                    let! results = scrutinize config (GlobalState()) home
 
-                return 
-                    if results.Steps |> Seq.length <> 9
-                    then raise (Exception($"Expected 9 steps, but was {results.Steps |> Seq.length}"))
-                    else ()
-            }).GetAwaiter().GetResult()
+                    return
+                        if results.Steps |> Seq.length <> 9 then
+                            raise (Exception($"Expected 9 steps, but was {results.Steps |> Seq.length}"))
+                        else
+                            ()
+                })
+                    .GetAwaiter()
+                    .GetResult()
 
         switchTo browser
 
         onFail (fun _ ->
             quit browser
-            raise (exn "Failed")
-        )
+            raise (exn "Failed"))
 
-        run()
+        run ()
         quit browser
 
         0
