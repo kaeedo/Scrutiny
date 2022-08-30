@@ -135,10 +135,13 @@ module Scrutiny =
 
     let private navigateStateMachine reporter config allStates globalState startState =
         let random = Random(config.Seed)
-        let findPath = Navigator.shortestPathFunction allStates
+
+        let findPath =
+            Navigator.shortestPathFunction allStates
 
         let nextNode (visitMap: Map<PageState<'a, 'b>, int>) =
-            let possiblePageState = visitMap |> Map.filter (fun _ v -> v >= 1)
+            let possiblePageState =
+                visitMap |> Map.filter (fun _ v -> v >= 1)
 
             let shouldContinue =
                 if config.ComprehensiveStates then
@@ -156,13 +159,15 @@ module Scrutiny =
 
         let rec clickAround (visitMap: Map<PageState<'a, 'b>, int>) (currentPath: PageState<'a, 'b> list) =
             task {
-                let visitMap = decrementNumberOfVisits visitMap currentPath.Head
+                let visitMap =
+                    decrementNumberOfVisits visitMap currentPath.Head
 
                 if currentPath.Length = 1 then
                     match nextNode visitMap with
                     | None -> return currentPath.Head
                     | Some nextNode ->
-                        let path = findPath currentPath.Head nextNode
+                        let path =
+                            findPath currentPath.Head nextNode
 
                         if path.Length = 1 then
                             do! performStateActions reporter config path.Head
@@ -213,13 +218,36 @@ module Scrutiny =
                     return! travelDirectly tail
             }
 
+        let rec doThing (visitMap: Map<PageState<'a, 'b>, int>) startState destinationState =
+            task {
+                let path =
+                    findPath startState destinationState
+
+                let! endingState = travelDirectly path
+
+                let updatedVisitMap =
+                    path
+                    |> List.fold
+                        (fun visitMap pageState ->
+                            visitMap
+                            |> Map.change pageState (Option.map (fun v -> v + 1)))
+                        visitMap
+
+                if updatedVisitMap |> Map.forall (fun k v -> v >= 1) then
+                    return endingState
+                else
+                    // TODO prefer unvisited nodes
+                    return! doThing updatedVisitMap endingState (updatedVisitMap |> Map.randomItem random)
+            }
+
         task {
             let pageStateVisitMap =
                 allStates
-                |> List.map (fun (g, _) -> g, 1)
+                |> List.map (fun (g, _) -> g, 0)
                 |> Map.ofList
 
-            let! finalNode = clickAround pageStateVisitMap [ startState ]
+            //let! finalNode = clickAround pageStateVisitMap [ startState ]
+            let! finalNode = doThing pageStateVisitMap startState (pageStateVisitMap |> Map.randomItem random)
 
             match findExit config allStates with
             | None -> return ()
@@ -257,7 +285,9 @@ module Scrutiny =
 
             let startState = startFn globalState
 
-            let allStates = Navigator.constructAdjacencyGraph startState globalState
+            let allStates =
+                Navigator.constructAdjacencyGraph startState globalState
+
             reporter.Start(allStates, startState)
 
             try
@@ -271,7 +301,9 @@ module Scrutiny =
         }
 
     let scrutinize<'a, 'b> config =
-        let reporter = Reporter<'a, 'b>(config.ScrutinyResultFilePath) :> IReporter<'a, 'b>
+        let reporter =
+            Reporter<'a, 'b>(config.ScrutinyResultFilePath) :> IReporter<'a, 'b>
+
         baseScrutinize<'a, 'b> reporter config
 
     let page = PageBuilder()
@@ -279,4 +311,5 @@ module Scrutiny =
     /// Alias for page, just in case you want a different term for your page states
     let state = page
 
-    let scrutinizeWithDefaultConfig<'a, 'b> = scrutinize<'a, 'b> ScrutinyConfig.Default
+    let scrutinizeWithDefaultConfig<'a, 'b> =
+        scrutinize<'a, 'b> ScrutinyConfig.Default
