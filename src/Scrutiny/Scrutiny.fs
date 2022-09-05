@@ -139,62 +139,6 @@ module Scrutiny =
         let findPath =
             Navigator.shortestPathFunction allStates
 
-        let nextNode (visitMap: Map<PageState<'a, 'b>, int>) =
-            let possiblePageState =
-                visitMap |> Map.filter (fun _ v -> v >= 1)
-
-            let shouldContinue =
-                if config.ComprehensiveStates then
-                    not possiblePageState.IsEmpty
-                else
-                    possiblePageState.Count > (allStates.Length / 2)
-
-            if shouldContinue then
-                Some(Map.randomItem random possiblePageState)
-            else
-                None
-
-        let decrementNumberOfVisits (visitMap: Map<PageState<'a, 'b>, int>) (pageState: PageState<'a, 'b>) =
-            visitMap.Change(pageState, Option.map (fun c -> c - 1))
-
-        let rec clickAround (visitMap: Map<PageState<'a, 'b>, int>) (currentPath: PageState<'a, 'b> list) =
-            task {
-                let visitMap =
-                    decrementNumberOfVisits visitMap currentPath.Head
-
-                if currentPath.Length = 1 then
-                    match nextNode visitMap with
-                    | None -> return currentPath.Head
-                    | Some nextNode ->
-                        let path =
-                            findPath currentPath.Head nextNode
-
-                        if path.Length = 1 then
-                            do! performStateActions reporter config path.Head
-                            return path.Head
-                        else
-                            printPath config.Logger path
-
-                            return! clickAround visitMap path
-
-                else
-                    let head = currentPath.Head
-                    let tail = currentPath.Tail
-
-                    let (current, next) =
-                        currentPath
-                        |> Seq.pairwise
-                        |> Seq.find (fun (current, _) -> current = head)
-
-                    do! performStateActions reporter config current
-
-                    do!
-                        (current, next)
-                        |> transitionToNextState reporter config globalState
-
-                    return! clickAround visitMap tail
-            }
-
         let rec travelDirectly (currentPath: PageState<'a, 'b> list) =
             task {
                 if currentPath.Length = 1 then
@@ -218,7 +162,7 @@ module Scrutiny =
                     return! travelDirectly tail
             }
 
-        let rec doThing (visitMap: Map<PageState<'a, 'b>, int>) startState destinationState =
+        let rec clickAround (visitMap: Map<PageState<'a, 'b>, int>) startState destinationState =
             task {
                 let path =
                     findPath startState destinationState
@@ -236,8 +180,7 @@ module Scrutiny =
                 if updatedVisitMap |> Map.forall (fun k v -> v >= 1) then
                     return endingState
                 else
-                    // TODO prefer unvisited nodes
-                    return! doThing updatedVisitMap endingState (updatedVisitMap |> Map.randomItem random)
+                    return! clickAround updatedVisitMap endingState (updatedVisitMap |> Map.weightedRandomItem random)
             }
 
         task {
@@ -246,8 +189,7 @@ module Scrutiny =
                 |> List.map (fun (g, _) -> g, 0)
                 |> Map.ofList
 
-            //let! finalNode = clickAround pageStateVisitMap [ startState ]
-            let! finalNode = doThing pageStateVisitMap startState (pageStateVisitMap |> Map.randomItem random)
+            let! finalNode = clickAround pageStateVisitMap startState (pageStateVisitMap |> Map.randomItem random)
 
             match findExit config allStates with
             | None -> return ()
