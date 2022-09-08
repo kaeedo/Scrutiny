@@ -1,6 +1,7 @@
 ﻿namespace UsageExample.Playwright
 
 open System
+open System.Threading.Tasks
 open Microsoft.Playwright
 open Scrutiny
 
@@ -149,18 +150,16 @@ module rec ScrutinyStateMachine =
 
                 onExit (fun ls ->
                     task {
-                        let! comments = globalState.Page.QuerySelectorAllAsync("id=commentsUl>li")
+                        let! comments = globalState.Page.QuerySelectorAllAsync("#commentsUl>li")
                         let comments = comments |> List.ofSeq
 
+                        let! writtenComments = Task.WhenAll(comments |> List.map (fun c -> c.InnerTextAsync()))
+
                         let writtenComment =
-                            comments
-                            |> List.tryFind (fun c ->
-                                (task {
-                                    let! text = c.InnerTextAsync()
-                                    return text = $"%s{globalState.Username} wrote:\n%s{ls.Comment}"
-                                })
-                                    .GetAwaiter()
-                                    .GetResult())
+                            writtenComments
+                            |> Array.tryFind (fun wc ->
+                                wc.Contains(globalState.Username)
+                                && wc.Contains(ls.Comment))
 
                         Assert.True(writtenComment.IsSome)
                         globalState.Logger "Exiting comment logged in"
