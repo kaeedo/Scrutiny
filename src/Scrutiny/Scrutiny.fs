@@ -136,8 +136,7 @@ module Scrutiny =
     let private navigateStateMachine reporter config allStates globalState startState =
         let random = Random(config.Seed)
 
-        let findPath =
-            Navigator.shortestPathFunction allStates
+        let findPath = Navigator.shortestPathFunction allStates
 
         let rec travelDirectly (currentPath: PageState<'a, 'b> list) =
             task {
@@ -164,8 +163,7 @@ module Scrutiny =
 
         let rec clickAround (visitMap: Map<PageState<'a, 'b>, int>) startState destinationState =
             task {
-                let path =
-                    findPath startState destinationState
+                let path = findPath startState destinationState
 
                 let! endingState = travelDirectly path
 
@@ -227,8 +225,7 @@ module Scrutiny =
 
             let startState = startFn globalState
 
-            let allStates =
-                Navigator.constructAdjacencyGraph startState globalState
+            let allStates = Navigator.constructAdjacencyGraph startState globalState
 
             reporter.Start(allStates, startState)
 
@@ -243,8 +240,7 @@ module Scrutiny =
         }
 
     let scrutinize<'a, 'b> config =
-        let reporter =
-            Reporter<'a, 'b>(config.ScrutinyResultFilePath) :> IReporter<'a, 'b>
+        let reporter = Reporter<'a, 'b>(config.ScrutinyResultFilePath) :> IReporter<'a, 'b>
 
         baseScrutinize<'a, 'b> reporter config
 
@@ -253,5 +249,4 @@ module Scrutiny =
     /// Alias for page, just in case you want a different term for your page states
     let state = page
 
-    let scrutinizeWithDefaultConfig<'a, 'b> =
-        scrutinize<'a, 'b> ScrutinyConfig.Default
+    let scrutinizeWithDefaultConfig<'a, 'b> = scrutinize<'a, 'b> ScrutinyConfig.Default
