@@ -10,21 +10,21 @@ form.addEventListener('submit', (e) => {
     const hasNumber = numbersOnly.test(numberInput.value);
 
     if (hasUsername && hasNumber) {
-        document.cookie =`username=${username.value};`;
+        document.cookie = `username=${username.value};`;
         window.location = '/home';
     } else {
         form.style.border = 'red 1px solid';
         errorMessage.style.display = 'block';
-        document.cookie =`username=; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
+        document.cookie = `username=; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
     }
 });
 
-numberInput.onchange = () => {
+numberInput.oninput = () => {
     form.style.border = 'none';
     errorMessage.style.display = 'none';
 };
 
-username.onchange = () => {
+username.oninput = () => {
     form.style.border = 'none';
     errorMessage.style.display = 'none';
 };

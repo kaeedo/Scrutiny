@@ -15,30 +15,41 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
     let logger msg = outputHelper.WriteLine(msg)
     let playwright = Playwright.CreateAsync().GetAwaiter().GetResult()
 
-    [<Fact>]
+    [<Theory>]
+    [<InlineData>]
+    [<InlineData>]
+    [<InlineData>]
+    [<InlineData>]
+    [<InlineData>]
+    [<InlineData>]
+    [<InlineData>]
+    [<InlineData>]
+    [<InlineData>]
+    [<InlineData>]
     member this.``Run Scrutiny Test``() =
         task {
             let isHeadless = Environment.GetEnvironmentVariable("CI") = "true"
 
             let launchOptions = BrowserTypeLaunchOptions()
             launchOptions.Headless <- isHeadless
+            //launchOptions.SlowMo <- 500f
 
             let! browser = playwright.Firefox.LaunchAsync(launchOptions)
             let! context = browser.NewContextAsync(BrowserNewContextOptions(IgnoreHTTPSErrors = true))
+
             let! page = context.NewPageAsync()
 
             let! _ = page.GotoAsync("https://127.0.0.1:5001/home")
 
             let config =
                 { ScrutinyConfig.Default with
-                    Seed = 553931187
+                    //Seed = 553931187
                     MapOnly = false
                     ComprehensiveActions = true
                     ComprehensiveStates = true }
 
             let! result = scrutinize config (GlobalState(page, logger)) ScrutinyStateMachine.home
-
-            Assert.Equal(9, result.Steps |> Seq.length)
+            Assert.True(result.Steps |> Seq.length >= 5)
             Assert.Equal(5, result.Graph.Length)
         }
 

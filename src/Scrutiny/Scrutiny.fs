@@ -178,7 +178,8 @@ module Scrutiny =
                 if updatedVisitMap |> Map.forall (fun k v -> v >= 1) then
                     return endingState
                 else
-                    return! clickAround updatedVisitMap endingState (updatedVisitMap |> Map.weightedRandomItem random)
+                    let mapForDestination = updatedVisitMap |> Map.remove endingState
+                    return! clickAround updatedVisitMap endingState (mapForDestination |> Map.weightedRandomItem random)
             }
 
         task {
