@@ -49,16 +49,11 @@ module rec ScrutinyStateMachine =
                     ==> home
                 )
 
-                transition (
+                transitionWith (
+                    [ "Fill out username"
+                      "Fill out number" ],
                     (fun _ ->
                         task {
-                            globalState.Logger "Sign in transition: Filling in username"
-                            globalState.Username <- "kaeedo"
-                            do! globalState.Page.FillAsync("id=username", globalState.Username)
-
-                            globalState.Logger "Sign in transition: Filling in number"
-                            do! globalState.Page.FillAsync("id=number", globalState.Number.ToString())
-
                             globalState.IsSignedIn <- true
 
                             globalState.Logger "Sign in transition: clicking text=sign in"
@@ -67,26 +62,33 @@ module rec ScrutinyStateMachine =
                     ==> loggedInHome
                 )
 
-                action (fun _ ->
-                    task {
-                        globalState.Logger "Sign in action: filling username"
-                        do! globalState.Page.FillAsync("id=username", "MyUsername")
+                actionN (
+                    "Fill out username",
+                    fun _ ->
+                        task {
+                            globalState.Logger "Sign in action: filling username"
+                            globalState.Username <- "kaeedo"
+                            do! globalState.Page.FillAsync("id=username", globalState.Username)
 
-                        globalState.Logger "Sign in action: getting username"
+                            globalState.Logger "Sign in action: getting username"
 
-                        let! username = globalState.GetInputValueAsync("id=username")
-                        Assert.Equal("MyUsername", username)
-                    })
+                            let! username = globalState.GetInputValueAsync("id=username")
+                            Assert.Equal(globalState.Username, username)
+                        }
+                )
 
-                action (fun _ ->
-                    task {
-                        globalState.Logger "Sign in action: filling number"
-                        do! globalState.Page.FillAsync("id=number", "42")
+                actionN (
+                    "Fill out number",
+                    fun _ ->
+                        task {
+                            globalState.Logger "Sign in action: filling number"
+                            do! globalState.Page.FillAsync("id=number", "42")
 
-                        globalState.Logger "Sign in action: getting number"
-                        let! number = globalState.GetInputValueAsync("id=number")
-                        Assert.Equal("42", number)
-                    })
+                            globalState.Logger "Sign in action: getting number"
+                            let! number = globalState.GetInputValueAsync("id=number")
+                            Assert.Equal("42", number)
+                        }
+                )
 
                 action (fun _ ->
                     task {
