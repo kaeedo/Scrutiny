@@ -28,11 +28,12 @@ module Scrutiny =
              |> List.map (fun p -> p.Name)
              |> String.concat " --> ")
 
-    let private buildActionName (ci: CallerInformation) =
-        if ci.LineNumber > 0 then
-            $"Member: {ci.MemberName}, Line #: {ci.LineNumber}, File: {ci.FilePath}"
-        else
-            $"{ci.FilePath}.{ci.MemberName}"
+    let private buildActionName (ci: CallerInformation) (actionName: string option) =
+        match actionName, ci.LineNumber > 0  with
+        | Some name, true -> $"Action: %s{name}, Member: %s{ci.MemberName}, Line #: %i{ci.LineNumber}, File: %s{ci.FilePath}"
+        | Some name, false -> $"Action: %s{name}, %s{ci.FilePath}.%s{ci.MemberName}"
+        | None, true -> $"Member: %s{ci.MemberName}, Line #: %i{ci.LineNumber}, File: %s{ci.FilePath}"
+        | None, false -> $"%s{ci.FilePath}.%s{ci.MemberName}"
 
     let private simpleTraverse (tasks: (unit -> Task<unit>) list) : unit -> Task<unit> =
         match tasks with
@@ -46,14 +47,32 @@ module Scrutiny =
                         return! element ()
                     })
 
+    let rec private runTheActions (reporter: IReporter<'a, 'b>) (config: ScrutinyConfig) (actions: (CallerInformation * (string option * string list * ('b -> Task<unit>))) list) =
+        actions
+        |> List.map (fun (ci, (actionName, dependantActions, action)) ->
+            fun () ->
+                task {
+                    let rrrr =
+                        dependantActions
+                        |> List.map(fun da ->
+                        )
+
+                    reporter.PushAction(buildActionName ci actionName)
+                    return! (action state.LocalState)
+                })
+        |> simpleTraverse
+        |> fun fn -> fn ()
+
     let private runActions (reporter: IReporter<'a, 'b>) (config: ScrutinyConfig) (state: PageState<'a, 'b>) =
         if config.ComprehensiveActions then
             state.Actions
             |> List.map (fun (ci, a) ->
                 fun () ->
                     task {
-                        reporter.PushAction(buildActionName ci)
-                        return! (a state.LocalState)
+                        let actionName, dependantActions, action = a
+
+                        reporter.PushAction(buildActionName ci actionName)
+                        return! (action state.LocalState)
                     })
             |> simpleTraverse
             |> fun fn -> fn ()
@@ -74,8 +93,9 @@ module Scrutiny =
             |> List.map (fun (ci, a) ->
                 fun () ->
                     task {
-                        reporter.PushAction(buildActionName ci)
-                        return! (a state.LocalState)
+                        let actionName, dependantActions, action = a
+                        reporter.PushAction(buildActionName ci actionName)
+                        return! (action state.LocalState)
                     })
             |> simpleTraverse
             |> fun fn -> fn ()
