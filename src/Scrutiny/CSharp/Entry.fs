@@ -80,6 +80,7 @@ module internal ScrutinyCSharp =
                 |> Seq.find (fun (ps, _) -> ps.Name = transitionToAttr.Name)
                 |> fst
 
+            [], // TODO FIXME revisit once api is stabilized
             { Transition.TransitionFn = buildMethod method constructedPageState
               ToState = fun _ -> toState })
 
@@ -165,7 +166,9 @@ module internal ScrutinyCSharp =
                                   LineNumber = -1
                                   FilePath = m.ReflectedType.Name }
 
-                            callerInfo, buildMethod m constructed)
+                            let builtMethod = buildMethod m constructed
+                            // TODO FIXME revisit once api stabilized
+                            callerInfo, (None, [], builtMethod))
                       Transitions = [] }
 
                 ps, constructed)

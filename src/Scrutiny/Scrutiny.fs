@@ -127,13 +127,22 @@ module Scrutiny =
     let private transitionToNextState (reporter: IReporter<_, _>) config globalState (current, next) =
         task {
             try
-                let transition =
+                let (dependantActions, transition) =
                     current.Transitions
-                    |> Seq.find (fun t ->
+                    |> Seq.find (fun (_, t) ->
                         let state = t.ToState globalState
                         state.Name = next.Name)
 
                 reporter.PushTransition next
+
+                let dependantActions =
+                    dependantActions
+                    |> List.map (fun da ->
+                        current.Actions
+                        |> List.find (fun (_, (sa, _, _)) -> sa.Value = da))
+                    |> runTheActions reporter config current
+
+                do! dependantActions ()
 
                 do! transition.TransitionFn current.LocalState
             with exn ->
