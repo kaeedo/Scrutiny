@@ -29,8 +29,9 @@ module Scrutiny =
              |> String.concat " --> ")
 
     let private buildActionName (ci: CallerInformation) (actionName: string option) =
-        match actionName, ci.LineNumber > 0  with
-        | Some name, true -> $"Action: %s{name}, Member: %s{ci.MemberName}, Line #: %i{ci.LineNumber}, File: %s{ci.FilePath}"
+        match actionName, ci.LineNumber > 0 with
+        | Some name, true ->
+            $"Action: %s{name}, Member: %s{ci.MemberName}, Line #: %i{ci.LineNumber}, File: %s{ci.FilePath}"
         | Some name, false -> $"Action: %s{name}, %s{ci.FilePath}.%s{ci.MemberName}"
         | None, true -> $"Member: %s{ci.MemberName}, Line #: %i{ci.LineNumber}, File: %s{ci.FilePath}"
         | None, false -> $"%s{ci.FilePath}.%s{ci.MemberName}"
@@ -47,40 +48,44 @@ module Scrutiny =
                         return! element ()
                     })
 
-    let rec private runTheActions (reporter: IReporter<'a, 'b>) (config: ScrutinyConfig) (actions: (CallerInformation * (string option * string list * ('b -> Task<unit>))) list) =
+    let rec private runTheActions
+        (reporter: IReporter<'a, 'b>)
+        (config: ScrutinyConfig)
+        (state: PageState<'a, 'b>)
+        (actions: (CallerInformation * (string option * string list * ('b -> Task<unit>))) list)
+        =
         actions
         |> List.map (fun (ci, (actionName, dependantActions, action)) ->
             fun () ->
                 task {
-                    let rrrr =
+                    let runDependantActions =
                         dependantActions
-                        |> List.map(fun da ->
-                        )
+                        |> List.map (fun da ->
+                            let action =
+                                state.Actions
+                                |> List.find (fun (_, (sa, _, _)) -> sa.Value = da)
+
+                            runTheActions reporter config state [ action ])
+                        |> simpleTraverse
+
+                    do! runDependantActions ()
 
                     reporter.PushAction(buildActionName ci actionName)
                     return! (action state.LocalState)
                 })
         |> simpleTraverse
-        |> fun fn -> fn ()
 
     let private runActions (reporter: IReporter<'a, 'b>) (config: ScrutinyConfig) (state: PageState<'a, 'b>) =
         if config.ComprehensiveActions then
             state.Actions
-            |> List.map (fun (ci, a) ->
-                fun () ->
-                    task {
-                        let actionName, dependantActions, action = a
-
-                        reporter.PushAction(buildActionName ci actionName)
-                        return! (action state.LocalState)
-                    })
-            |> simpleTraverse
+            |> runTheActions reporter config state
             |> fun fn -> fn ()
         else
             let random = Random(config.Seed)
 
             let amount =
                 random.Next(
+                    // TODO get rid of 'if'. What happens when no actions anyways?
                     if state.Actions.Length > 1 then
                         state.Actions.Length
                     else
@@ -90,14 +95,7 @@ module Scrutiny =
             state.Actions
             |> List.sortBy (fun _ -> random.Next())
             |> List.take amount
-            |> List.map (fun (ci, a) ->
-                fun () ->
-                    task {
-                        let actionName, dependantActions, action = a
-                        reporter.PushAction(buildActionName ci actionName)
-                        return! (action state.LocalState)
-                    })
-            |> simpleTraverse
+            |> runTheActions reporter config state
             |> fun fn -> fn ()
 
     let private convertException (e: exn) : SerializableException =
