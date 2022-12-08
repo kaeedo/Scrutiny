@@ -41,9 +41,8 @@ module internal Navigator =
         let getTransitions node : PageState<'a, 'b> list =
             node.Transitions
             |> List.map (fun t ->
-                let asd = snd t
-                asd.ToState globalState
-            )
+                let transition = snd t
+                transition.ToState globalState)
 
         let mutable final = []
         let nodes2Visit = Queue<PageState<'a, 'b>>()
