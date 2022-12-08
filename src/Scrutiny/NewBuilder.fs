@@ -3,6 +3,10 @@
 open System.Runtime.CompilerServices
 open System.Threading.Tasks
 
+type TransitionBuilder() =
+    member this.Zero() = id
+//member this.Yield
+
 
 // TODO make constructors private
 type Name = Name of string
@@ -79,27 +83,6 @@ type Page2Builder() =
           Actions = []
           ExitActions = [] } // TODO. states can have many exit actions. one is chosen at random anyway.
 
-    // [<CustomOperation("name")>]
-    // member _.Name(state, handler) : PageState<'a, 'b> = { state with Name = handler }
-
-    // [<CustomOperation("localState")>]
-    // member _.LocalState(state, handler) : PageState<'a, 'b> = { state with LocalState = handler }
-
-    // [<CustomOperation("onEnter")>]
-    // member _.OnEnter(state, handler: 'b -> unit) : PageState<'a, 'b> =
-    //     let handler = fun localState -> Task.FromResult(handler localState)
-    //     { state with OnEnter = handler }
-    //
-    // [<CustomOperation("onEnter")>]
-    // member _.OnEnter(state, handler: 'b -> Task<unit>) : PageState<'a, 'b> = { state with OnEnter = handler }
-
-    // [<CustomOperation("onExit")>]
-    // member _.OnExit(state, handler: 'b -> unit) : PageState<'a, 'b> =
-    //     let handler = fun localState -> Task.FromResult(handler localState)
-    //     { state with OnExit = handler }
-    //
-    // [<CustomOperation("onExit")>]
-    // member _.OnExit(state, handler: 'b -> Task<unit>) : PageState<'a, 'b> = { state with OnExit = handler }
 
     //-----------------
     // Transitions
@@ -283,16 +266,3 @@ type Page2Builder() =
             Some name, dependencies, handler
 
         { state with Actions = (callerInformation, handler) :: state.Actions }
-
-//-----------------
-// Exit actions
-//-----------------
-
-// [<CustomOperation("exitAction")>]
-// member _.ExitAction(state, handler: 'b -> unit) : PageState<'a, 'b> =
-//     let handler = fun localState -> Task.FromResult(handler localState)
-//     { state with ExitActions = handler :: state.ExitActions }
-//
-// [<CustomOperation("exitAction")>]
-// member _.ExitAction(state, handler: 'b -> Task<unit>) : PageState<'a, 'b> =
-//     { state with ExitActions = handler :: state.ExitActions }
