@@ -3,9 +3,36 @@
 open System.Runtime.CompilerServices
 open System.Threading.Tasks
 
+type TransitionFunc<'b> = TransitionFunc of ('b -> Task<unit>)
+type ToState<'a, 'b> = ToState of ('a -> PageState<'a, 'b>)
+
+//type RequiredAction = RequiredAction of string
+
 type TransitionBuilder() =
     member this.Zero() = id
-//member this.Yield
+
+    member this.Yield(transitionFunc: TransitionFunc<'b>) : Transition<'a, 'b> -> Transition<'a, 'b> =
+        fun state ->
+            let (TransitionFunc fn) = transitionFunc
+            { state with TransitionFn = fn }
+
+    member this.Yield(toState: ToState<'a, 'b>) : Transition<'a, 'b> -> Transition<'a, 'b> =
+        fun state ->
+            let (ToState toState) = toState
+            { state with ToState = toState }
+    //member this.Yield(requiredAction: )
+
+    member this.Combine(f, g) =
+        fun (state: Transition<'a, 'b>) -> g (f state)
+
+    member this.Delay f = fun state -> (f ()) state
+
+
+
+    member _.Yield _ : Transition<'a, 'b> =
+        { Transition.TransitionFn = fun _ -> Task.FromResult()
+          ToState = fun _ -> Unchecked.defaultof<PageState<'a, 'b>> }
+
 
 
 // TODO make constructors private
@@ -13,17 +40,11 @@ type Name = Name of string
 
 type LocalState<'b> = LocalState of 'b
 
-type OnEnter<'b> =
-    | OnEnterTAsync of ('b -> Task<unit>)
-    | OnEnter of ('b -> unit)
+type OnEnter<'b> = OnEnter of ('b -> Task<unit>)
 
-type OnExit<'b> =
-    | OnExitTAsync of ('b -> Task<unit>)
-    | OnExit of ('b -> unit)
+type OnExit<'b> = OnExit of ('b -> Task<unit>)
 
-type ExitAction<'b> =
-    | ExitActionTAsync of ('b -> Task<unit>)
-    | ExitAction of ('b -> unit)
+type ExitAction<'b> = ExitAction of ('b -> Task<unit>)
 
 type Page2Builder() =
     member this.Zero() = id
@@ -40,30 +61,26 @@ type Page2Builder() =
 
     member this.Yield(onEnter: OnEnter<'b>) : PageState<'a, 'b> -> PageState<'a, 'b> =
         fun state ->
-            let fn =
-                match onEnter with
-                | OnEnterTAsync tfn -> tfn
-                | OnEnter fn -> fun localState -> Task.FromResult(fn localState)
+            let (OnEnter tfn) = onEnter
 
-            { state with OnEnter = fn }
+            { state with OnEnter = tfn }
 
     member this.Yield(onExit: OnExit<'b>) : PageState<'a, 'b> -> PageState<'a, 'b> =
         fun state ->
-            let fn =
-                match onExit with
-                | OnExitTAsync tfn -> tfn
-                | OnExit fn -> fun localState -> Task.FromResult(fn localState)
+            let (OnExit fn) = onExit
 
             { state with OnExit = fn }
 
     member this.Yield(exitAction: ExitAction<'b>) : PageState<'a, 'b> -> PageState<'a, 'b> =
         fun state ->
-            let fn =
-                match exitAction with
-                | ExitActionTAsync tfn -> tfn
-                | ExitAction fn -> fun localState -> Task.FromResult(fn localState)
+            let (ExitAction fn) = exitAction
 
             { state with ExitActions = fn :: state.ExitActions }
+
+    member this.Yield(transition: Transition<'a, 'b>) : PageState<'a, 'b> -> PageState<'a, 'b> =
+        fun state ->
+            // TODO string list for required actions
+            { state with Transitions = ([], transition) :: state.Transitions }
 
 
 
