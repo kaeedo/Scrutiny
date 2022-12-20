@@ -80,8 +80,8 @@ module internal ScrutinyCSharp =
                 |> Seq.find (fun (ps, _) -> ps.Name = transitionToAttr.Name)
                 |> fst
 
-            [], // TODO FIXME revisit once api is stabilized
-            { Transition.TransitionFn = buildMethod method constructedPageState
+            { Transition.DependantActions = [] // TODO FIXME revisit once api is stabilized
+              TransitionFn = buildMethod method constructedPageState
               ToState = fun _ -> toState })
 
     let private buildMethodWithAttribute attr constructedPageState =

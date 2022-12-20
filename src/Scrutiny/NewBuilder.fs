@@ -1,117 +1,74 @@
 ﻿namespace Scrutiny
 
-open System.Runtime.CompilerServices
+open System
 open System.Threading.Tasks
-
-type TransitionFunc<'b> = TransitionFunc of ('b -> Task<unit>)
-type ToState<'a, 'b> = ToState of ('a -> PageState<'a, 'b>)
 
 //type RequiredAction = RequiredAction of string
 
 type TransitionBuilder() =
-    member this.Zero() = id
-
-    member this.Yield(transitionFunc: TransitionFunc<'b>) : Transition<'a, 'b> -> Transition<'a, 'b> =
-        fun state ->
-            let (TransitionFunc fn) = transitionFunc
-            { state with TransitionFn = fn }
-
-    member this.Yield(toState: ToState<'a, 'b>) : Transition<'a, 'b> -> Transition<'a, 'b> =
-        fun state ->
-            let (ToState toState) = toState
-            { state with ToState = toState }
-    //member this.Yield(requiredAction: )
-
-    member this.Combine(f, g) =
-        fun (state: Transition<'a, 'b>) -> g (f state)
-
-    member this.Delay f = fun state -> (f ()) state
-
-
-
-    member _.Yield _ : Transition<'a, 'b> =
-        { Transition.TransitionFn = fun _ -> Task.FromResult()
+    member inline _.Yield(()) =
+        { Transition.DependantActions = []
+          TransitionFn = fun _ -> Task.FromResult()
           ToState = fun _ -> Unchecked.defaultof<PageState<'a, 'b>> }
 
+    [<CustomOperation("dependantActions")>]
+    member inline _.DependantActions(previous, actions) : Transition<'a, 'b> =
+        { previous with DependantActions = actions }
 
 
-// TODO make constructors private
-type Name = Name of string
-
-type LocalState<'b> = LocalState of 'b
-
-type OnEnter<'b> = OnEnter of ('b -> Task<unit>)
-
-type OnExit<'b> = OnExit of ('b -> Task<unit>)
-
-type ExitAction<'b> = ExitAction of ('b -> Task<unit>)
+// https://github.com/sleepyfran/sharp-point
+// https://sleepyfran.github.io/blog/posts/fsharp/ce-in-fsharp/
+[<RequireQualifiedAccess>]
+type PageStateProperties<'a, 'b> =
+    | Name of string
+    | Transition of Transition<'a, 'b>
 
 type Page2Builder() =
-    member this.Zero() = id
+    member inline _.Yield(()) = ()
 
-    member this.Yield(name: Name) : PageState<'a, 'b> -> PageState<'a, 'b> =
-        fun state ->
-            let (Name name) = name
-            { state with Name = name }
+    member inline _.Yield(transition: Transition<'a, 'b>) =
+        PageStateProperties.Transition transition
 
-    member this.Yield(localState: LocalState<'b>) : PageState<'a, 'b> -> PageState<'a, 'b> =
-        fun state ->
-            let (LocalState localState) = localState
-            { state with LocalState = localState }
+    member inline _.Delay(f: unit -> PageStateProperties<'a, 'b> list) = f ()
+    member inline _.Delay(f: unit -> PageStateProperties<'a, 'b>) = [ f () ]
 
-    member this.Yield(onEnter: OnEnter<'b>) : PageState<'a, 'b> -> PageState<'a, 'b> =
-        fun state ->
-            let (OnEnter tfn) = onEnter
+    member inline _.Combine(newProp: PageStateProperties<'a, 'b>, previousProp: PageStateProperties<'a, 'b> list) =
+        newProp :: previousProp
 
-            { state with OnEnter = tfn }
+    member inline x.Run(props: PageStateProperties<'a, 'b> list) =
+        props
+        |> List.fold
+            (fun ps prop ->
+                match prop with
+                | PageStateProperties.Name name -> { ps with Name = name }
+                | PageStateProperties.Transition transition -> { ps with Transitions = transition :: ps.Transitions })
+            { PageState.Name = String.Empty
+              LocalState = Unchecked.defaultof<'b>
+              OnEnter = fun _ -> Task.FromResult()
+              OnExit = fun _ -> Task.FromResult()
+              Transitions = []
+              Actions = []
+              ExitActions = [] }
 
-    member this.Yield(onExit: OnExit<'b>) : PageState<'a, 'b> -> PageState<'a, 'b> =
-        fun state ->
-            let (OnExit fn) = onExit
+    member inline x.Run(prop: PageStateProperties<'a, 'b>) = x.Run([ prop ])
 
-            { state with OnExit = fn }
+    [<CustomOperation("name")>]
+    member inline _.Name((), name: string) = PageStateProperties.Name name
 
-    member this.Yield(exitAction: ExitAction<'b>) : PageState<'a, 'b> -> PageState<'a, 'b> =
-        fun state ->
-            let (ExitAction fn) = exitAction
-
-            { state with ExitActions = fn :: state.ExitActions }
-
-    member this.Yield(transition: Transition<'a, 'b>) : PageState<'a, 'b> -> PageState<'a, 'b> =
-        fun state ->
-            // TODO string list for required actions
-            { state with Transitions = ([], transition) :: state.Transitions }
-
-
-
-    member this.Combine(f, g) =
-        fun (state: PageState<'a, 'b>) -> g (f state)
-
-    member this.Delay f = fun state -> (f ()) state
+    member inline x.For(prop: PageStateProperties<'a, 'b>, f: unit -> PageStateProperties<'a, 'b> list) =
+        x.Combine(prop, f ())
 
 
 
-    member _.Yield _ : PageState<'a, 'b> =
-        { PageState.Name = ""
-          LocalState = Unchecked.defaultof<'b>
-          OnEnter = fun _ -> Task.FromResult()
-          OnExit = fun _ -> Task.FromResult()
-          Transitions = []
-          Actions = []
-          ExitActions = [] } // TODO. states can have many exit actions. one is chosen at random anyway.
-
-
+(*
     //-----------------
     // Transitions
     //-----------------
 
     [<CustomOperation("transition")>]
     member _.Transitions(state, handler) : PageState<'a, 'b> =
-        { state with Transitions = ([], handler) :: state.Transitions }
+        { state with Transitions = handler :: state.Transitions } // TODO string list for required actions
 
-    [<CustomOperation("transitionWith")>]
-    member _.Transitions(state, (handler: string list * Transition<'a, 'b>)) : PageState<'a, 'b> =
-        { state with Transitions = handler :: state.Transitions }
 
     //-----------------
     // Actions
@@ -283,3 +240,4 @@ type Page2Builder() =
             Some name, dependencies, handler
 
         { state with Actions = (callerInformation, handler) :: state.Actions }
+        *)

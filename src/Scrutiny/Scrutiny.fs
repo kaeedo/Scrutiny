@@ -127,16 +127,16 @@ module Scrutiny =
     let private transitionToNextState (reporter: IReporter<_, _>) config globalState (current, next) =
         task {
             try
-                let (dependantActions, transition) =
+                let transition =
                     current.Transitions
-                    |> Seq.find (fun (_, t) ->
+                    |> Seq.find (fun t ->
                         let state = t.ToState globalState
                         state.Name = next.Name)
 
                 reporter.PushTransition next
 
                 let dependantActions =
-                    dependantActions
+                    transition.DependantActions
                     |> List.map (fun da ->
                         current.Actions
                         |> List.find (fun (_, (sa, _, _)) -> sa.Value = da))
@@ -278,3 +278,18 @@ module Scrutiny =
     let state = page
 
     let scrutinizeWithDefaultConfig<'a, 'b> = scrutinize<'a, 'b> ScrutinyConfig.Default
+
+
+    let hjeksrgfkjshergvbkserg =
+        let newBuilder = Page2Builder()
+        let trraa = TransitionBuilder()
+
+
+        let ta =
+            newBuilder {
+                name "wefwefwe"
+                trraa { dependantActions [ ""; "fwef" ] }
+                trraa { dependantActions [ ""; "fsd" ] }
+            }
+
+        1

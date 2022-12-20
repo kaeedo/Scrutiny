@@ -41,10 +41,14 @@ type PageBuilder() =
 
     [<CustomOperation("transition")>]
     member _.Transitions(state, handler) : PageState<'a, 'b> =
-        { state with Transitions = ([], handler) :: state.Transitions }
+        { state with Transitions = handler :: state.Transitions }
 
     [<CustomOperation("transitionWith")>]
     member _.Transitions(state, (handler: string list * Transition<'a, 'b>)) : PageState<'a, 'b> =
+        let handler =
+            let da = fst handler
+            { snd handler with DependantActions = da }
+
         { state with Transitions = handler :: state.Transitions }
 
     //-----------------
