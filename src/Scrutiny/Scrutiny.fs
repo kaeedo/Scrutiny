@@ -279,17 +279,15 @@ module Scrutiny =
 
     let scrutinizeWithDefaultConfig<'a, 'b> = scrutinize<'a, 'b> ScrutinyConfig.Default
 
-
     let hjeksrgfkjshergvbkserg =
         let newBuilder = Page2Builder()
         let trraa = TransitionBuilder()
-
 
         let ta =
             newBuilder {
                 name "wefwefwe"
                 trraa { dependantActions [ ""; "fwef" ] }
-                trraa { dependantActions [ ""; "fsd" ] }
+            //trraa { dependantActions [ ""; "fsd" ] }
             }
 
         1

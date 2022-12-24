@@ -3,17 +3,49 @@
 open System
 open System.Threading.Tasks
 
-//type RequiredAction = RequiredAction of string
+[<RequireQualifiedAccess>]
+type TransitionProperties<'a, 'b> =
+    | DependantActions of string list
+    | TransitionFn of ('b -> Task<unit>) // TODO rename?
+    | ToState of ('a -> PageState<'a, 'b>) // TODO rename?
 
 type TransitionBuilder() =
-    member inline _.Yield(()) =
-        { Transition.DependantActions = []
-          TransitionFn = fun _ -> Task.FromResult()
-          ToState = fun _ -> Unchecked.defaultof<PageState<'a, 'b>> }
+    member inline _.Yield(()) = ()
+
+    member inline _.Delay(f: unit -> TransitionProperties<'a, 'b> list) = f ()
+    member inline _.Delay(f: unit -> TransitionProperties<'a, 'b>) = [ f () ]
+
+    member inline _.Combine(newProp: TransitionProperties<'a, 'b>, previousProp: TransitionProperties<'a, 'b> list) =
+        newProp :: previousProp
+
+    member inline x.Run(props: TransitionProperties<'a, 'b> list) =
+        props
+        |> List.fold
+            (fun tp prop ->
+                match prop with
+                | TransitionProperties.DependantActions actions -> { tp with DependantActions = actions }
+                | TransitionProperties.TransitionFn transitionFn -> { tp with TransitionFn = transitionFn }
+                | TransitionProperties.ToState toState -> { tp with ToState = toState })
+            { Transition.DependantActions = []
+              TransitionFn = fun _ -> Task.FromResult()
+              ToState = fun _ -> Unchecked.defaultof<PageState<'a, 'b>> }
+
+    member inline x.Run(prop: TransitionProperties<'a, 'b>) = x.Run([ prop ])
+
+    member inline x.For(prop: TransitionProperties<'a, 'b>, f: unit -> TransitionProperties<'a, 'b> list) =
+        x.Combine(prop, f ())
+
+    member inline x.For(prop: TransitionProperties<'a, 'b>, f: unit -> TransitionProperties<'a, 'b>) = [ prop; f () ]
 
     [<CustomOperation("dependantActions")>]
-    member inline _.DependantActions(previous, actions) : Transition<'a, 'b> =
-        { previous with DependantActions = actions }
+    member inline _.DependantActions(_, actions) =
+        TransitionProperties.DependantActions actions
+
+    [<CustomOperation("via")>] // TODO rename?
+    member inline _.Via(_, viaFn) = TransitionProperties.TransitionFn viaFn
+
+    [<CustomOperation("to")>] // TODO rename?
+    member inline _.To(_, toState) = TransitionProperties.ToState toState
 
 
 // https://github.com/sleepyfran/sharp-point
@@ -57,6 +89,8 @@ type Page2Builder() =
 
     member inline x.For(prop: PageStateProperties<'a, 'b>, f: unit -> PageStateProperties<'a, 'b> list) =
         x.Combine(prop, f ())
+
+    member inline x.For(prop: PageStateProperties<'a, 'b>, f: unit -> PageStateProperties<'a, 'b>) = [ prop; f () ]
 
 
 
