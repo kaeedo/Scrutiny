@@ -6,7 +6,8 @@ open System.Threading.Tasks
 [<RequireQualifiedAccess>]
 type TransitionProperties<'a, 'b> =
     | DependantActions of string list
-    | ViaFn of ('b -> Task<unit>)
+    | ViaFn of ('b -> unit)
+    | ViaFnTAsync of ('b -> Task<unit>)
     | Destination of ('a -> PageState<'a, 'b>)
 
 type TransitionBuilder() =
@@ -24,7 +25,11 @@ type TransitionBuilder() =
             (fun tp prop ->
                 match prop with
                 | TransitionProperties.DependantActions actions -> { tp with DependantActions = actions }
-                | TransitionProperties.ViaFn viaFn -> { tp with ViaFn = viaFn }
+                | TransitionProperties.ViaFn viaFn ->
+                    let viaFnTAsync = fun localState -> Task.FromResult(viaFn localState)
+
+                    { tp with ViaFn = viaFnTAsync }
+                | TransitionProperties.ViaFnTAsync viaFnTAsync -> { tp with ViaFn = viaFnTAsync }
                 | TransitionProperties.Destination destinationState -> { tp with Destination = destinationState })
             { Transition.DependantActions = []
               ViaFn = fun _ -> Task.FromResult()
@@ -43,6 +48,10 @@ type TransitionBuilder() =
 
     [<CustomOperation("via")>]
     member inline _.Via(_, viaFn) = TransitionProperties.ViaFn viaFn
+
+    [<CustomOperation("via")>]
+    member inline _.Via(_, viaFnTAsync) =
+        TransitionProperties.ViaFnTAsync viaFnTAsync
 
     [<CustomOperation("destination")>]
     member inline _.Destination(_, destinationState) =
