@@ -42,8 +42,8 @@ type CallerInformation =
 
 type Transition<'a, 'b> =
     { DependantActions: string list
-      TransitionFn: 'b -> Task<unit>
-      ToState: 'a -> PageState<'a, 'b> }
+      ViaFn: 'b -> Task<unit>
+      Destination: 'a -> PageState<'a, 'b> }
 
 and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
     { Name: string

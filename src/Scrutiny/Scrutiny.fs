@@ -130,7 +130,7 @@ module Scrutiny =
                 let transition =
                     current.Transitions
                     |> Seq.find (fun t ->
-                        let state = t.ToState globalState
+                        let state = t.Destination globalState
                         state.Name = next.Name)
 
                 reporter.PushTransition next
@@ -144,7 +144,7 @@ module Scrutiny =
 
                 do! dependantActions ()
 
-                do! transition.TransitionFn current.LocalState
+                do! transition.ViaFn current.LocalState
             with exn ->
                 handleError exn (Transition(current.Name, next.Name, convertException exn)) reporter config current
         }

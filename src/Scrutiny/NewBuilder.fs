@@ -6,8 +6,8 @@ open System.Threading.Tasks
 [<RequireQualifiedAccess>]
 type TransitionProperties<'a, 'b> =
     | DependantActions of string list
-    | TransitionFn of ('b -> Task<unit>) // TODO rename?
-    | ToState of ('a -> PageState<'a, 'b>) // TODO rename?
+    | ViaFn of ('b -> Task<unit>)
+    | Destination of ('a -> PageState<'a, 'b>)
 
 type TransitionBuilder() =
     member inline _.Yield(()) = ()
@@ -24,11 +24,11 @@ type TransitionBuilder() =
             (fun tp prop ->
                 match prop with
                 | TransitionProperties.DependantActions actions -> { tp with DependantActions = actions }
-                | TransitionProperties.TransitionFn transitionFn -> { tp with TransitionFn = transitionFn }
-                | TransitionProperties.ToState toState -> { tp with ToState = toState })
+                | TransitionProperties.ViaFn viaFn -> { tp with ViaFn = viaFn }
+                | TransitionProperties.Destination destinationState -> { tp with Destination = destinationState })
             { Transition.DependantActions = []
-              TransitionFn = fun _ -> Task.FromResult()
-              ToState = fun _ -> Unchecked.defaultof<PageState<'a, 'b>> }
+              ViaFn = fun _ -> Task.FromResult()
+              Destination = fun _ -> Unchecked.defaultof<PageState<'a, 'b>> }
 
     member inline x.Run(prop: TransitionProperties<'a, 'b>) = x.Run([ prop ])
 
@@ -41,11 +41,12 @@ type TransitionBuilder() =
     member inline _.DependantActions(_, actions) =
         TransitionProperties.DependantActions actions
 
-    [<CustomOperation("via")>] // TODO rename?
-    member inline _.Via(_, viaFn) = TransitionProperties.TransitionFn viaFn
+    [<CustomOperation("via")>]
+    member inline _.Via(_, viaFn) = TransitionProperties.ViaFn viaFn
 
-    [<CustomOperation("to")>] // TODO rename?
-    member inline _.To(_, toState) = TransitionProperties.ToState toState
+    [<CustomOperation("destination")>]
+    member inline _.Destination(_, destinationState) =
+        TransitionProperties.Destination destinationState
 
 
 // https://github.com/sleepyfran/sharp-point

@@ -81,8 +81,8 @@ module internal ScrutinyCSharp =
                 |> fst
 
             { Transition.DependantActions = [] // TODO FIXME revisit once api is stabilized
-              TransitionFn = buildMethod method constructedPageState
-              ToState = fun _ -> toState })
+              ViaFn = buildMethod method constructedPageState
+              Destination = fun _ -> toState })
 
     let private buildMethodWithAttribute attr constructedPageState =
         if
