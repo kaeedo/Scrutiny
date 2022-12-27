@@ -4,13 +4,13 @@ open System
 open System.Threading.Tasks
 
 [<RequireQualifiedAccess>]
-type TransitionProperties<'a, 'b> =
+type internal TransitionProperties<'a, 'b> =
     | DependantActions of string list
     | ViaFn of ('b -> unit)
     | ViaFnTAsync of ('b -> Task<unit>)
     | Destination of ('a -> PageState<'a, 'b>)
 
-type TransitionBuilder() =
+type internal TransitionBuilder() =
     member inline _.Yield(()) = ()
 
     member inline _.Delay(f: unit -> TransitionProperties<'a, 'b> list) = f ()
@@ -57,15 +57,63 @@ type TransitionBuilder() =
     member inline _.Destination(_, destinationState) =
         TransitionProperties.Destination destinationState
 
+[<RequireQualifiedAccess>]
+type internal ActionProperties<'b> =
+    | Name of string
+    | DependantActions of string list
+    | Action of CallerInformation * ('b -> unit)
+    | ActionTAsync of CallerInformation * ('b -> Task<unit>)
+
+type internal ActionBuilder() =
+    member inline _.Yield(()) = ()
+    member inline _.Delay(f: unit -> ActionProperties<'b> list) = f ()
+    member inline _.Delay(f: unit -> ActionProperties<'b>) = [ f () ]
+
+    member inline _.Combine(newProp: ActionProperties<'b>, previousProp: ActionProperties<'b> list) =
+        newProp :: previousProp
+
+    member inline x.Run(props: ActionProperties<'b> list) =
+        props
+        |> List.fold
+            (fun ap prop ->
+                match prop with
+                | ActionProperties.Name name -> { ap with Action.Name = name }
+                | ActionProperties.DependantActions da -> { ap with DependantActions = da }
+                | ActionProperties.Action (ci, action) ->
+                    let actionTAsync = fun localState -> Task.FromResult(action localState)
+
+                    { ap with
+                        CallerInformation = ci
+                        ActionFn = actionTAsync }
+                | ActionProperties.ActionTAsync (ci, action) ->
+                    { ap with
+                        CallerInformation = ci
+                        ActionFn = action })
+            { Action.CallerInformation =
+                { CallerInformation.MemberName = String.Empty
+                  LineNumber = 0
+                  FilePath = String.Empty }
+              Name = String.Empty
+              DependantActions = []
+              ActionFn = fun _ -> Task.FromResult() }
+
+    member inline x.Run(prop: ActionProperties<'b>) = x.Run([ prop ])
+
+    member inline x.For(prop: ActionProperties<'b>, f: unit -> ActionProperties<'b> list) = x.Combine(prop, f ())
+
+    member inline x.For(prop: ActionProperties<'b>, f: unit -> ActionProperties<'b>) = [ prop; f () ]
+
+    [<CustomOperation("name")>]
+    member inline _.Name(_, name) = ActionProperties.Name name
 
 // https://github.com/sleepyfran/sharp-point
 // https://sleepyfran.github.io/blog/posts/fsharp/ce-in-fsharp/
 [<RequireQualifiedAccess>]
-type PageStateProperties<'a, 'b> =
+type internal PageStateProperties<'a, 'b> =
     | Name of string
     | Transition of Transition<'a, 'b>
 
-type Page2Builder() =
+type internal Page2Builder() =
     member inline _.Yield(()) = ()
 
     member inline _.Yield(transition: Transition<'a, 'b>) =

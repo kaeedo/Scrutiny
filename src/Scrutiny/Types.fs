@@ -40,6 +40,12 @@ type CallerInformation =
       LineNumber: int
       FilePath: string }
 
+type Action<'b> =
+    { CallerInformation: CallerInformation
+      Name: string
+      DependantActions: string list
+      ActionFn: 'b -> Task<unit> }
+
 type Transition<'a, 'b> =
     { DependantActions: string list
       ViaFn: 'b -> Task<unit>
