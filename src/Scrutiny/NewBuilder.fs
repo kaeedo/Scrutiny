@@ -1,13 +1,13 @@
 ﻿namespace Scrutiny
 
 open System
+open System.Runtime.CompilerServices
 open System.Threading.Tasks
 
 [<RequireQualifiedAccess>]
 type internal TransitionProperties<'a, 'b> =
     | DependantActions of string list
-    | ViaFn of ('b -> unit)
-    | ViaFnTAsync of ('b -> Task<unit>)
+    | ViaFn of ('b -> Task<unit>)
     | Destination of ('a -> PageState<'a, 'b>)
 
 type internal TransitionBuilder() =
@@ -25,11 +25,7 @@ type internal TransitionBuilder() =
             (fun tp prop ->
                 match prop with
                 | TransitionProperties.DependantActions actions -> { tp with DependantActions = actions }
-                | TransitionProperties.ViaFn viaFn ->
-                    let viaFnTAsync = fun localState -> Task.FromResult(viaFn localState)
-
-                    { tp with ViaFn = viaFnTAsync }
-                | TransitionProperties.ViaFnTAsync viaFnTAsync -> { tp with ViaFn = viaFnTAsync }
+                | TransitionProperties.ViaFn viaFnTAsync -> { tp with ViaFn = viaFnTAsync }
                 | TransitionProperties.Destination destinationState -> { tp with Destination = destinationState })
             { Transition.DependantActions = []
               ViaFn = fun _ -> Task.FromResult()
@@ -47,11 +43,12 @@ type internal TransitionBuilder() =
         TransitionProperties.DependantActions actions
 
     [<CustomOperation("via")>]
-    member inline _.Via(_, viaFn) = TransitionProperties.ViaFn viaFn
+    member inline _.Via(_, viaFn) =
+        let viaFn = fun localState -> Task.FromResult(viaFn localState)
+        TransitionProperties.ViaFn viaFn
 
     [<CustomOperation("via")>]
-    member inline _.Via(_, viaFnTAsync) =
-        TransitionProperties.ViaFnTAsync viaFnTAsync
+    member inline _.Via(_, viaFnTAsync) = TransitionProperties.ViaFn viaFnTAsync
 
     [<CustomOperation("destination")>]
     member inline _.Destination(_, destinationState) =
@@ -61,8 +58,7 @@ type internal TransitionBuilder() =
 type internal ActionProperties<'b> =
     | Name of string
     | DependantActions of string list
-    | Action of CallerInformation * ('b -> unit)
-    | ActionTAsync of CallerInformation * ('b -> Task<unit>)
+    | Action of CallerInformation * ('b -> Task<unit>)
 
 type internal ActionBuilder() =
     member inline _.Yield(()) = ()
@@ -80,12 +76,6 @@ type internal ActionBuilder() =
                 | ActionProperties.Name name -> { ap with Action.Name = name }
                 | ActionProperties.DependantActions da -> { ap with DependantActions = da }
                 | ActionProperties.Action (ci, action) ->
-                    let actionTAsync = fun localState -> Task.FromResult(action localState)
-
-                    { ap with
-                        CallerInformation = ci
-                        ActionFn = actionTAsync }
-                | ActionProperties.ActionTAsync (ci, action) ->
                     { ap with
                         CallerInformation = ci
                         ActionFn = action })
@@ -105,6 +95,44 @@ type internal ActionBuilder() =
 
     [<CustomOperation("name")>]
     member inline _.Name(_, name) = ActionProperties.Name name
+
+    [<CustomOperation("dependantActions")>]
+    member inline _.DependantActions(_, actions) =
+        ActionProperties.DependantActions actions
+
+    [<CustomOperation("action")>]
+    member inline _.Action
+        (
+            _,
+            action: 'b -> unit,
+            [<CallerMemberName>] ?memberName: string,
+            [<CallerLineNumber>] ?lineNumber: int,
+            [<CallerFilePath>] ?filePath: string
+        ) =
+        let callerInformation =
+            { CallerInformation.MemberName = defaultArg memberName String.Empty
+              LineNumber = defaultArg lineNumber 0
+              FilePath = defaultArg filePath String.Empty }
+
+        let action = fun localState -> Task.FromResult(action localState)
+
+        ActionProperties.Action(callerInformation, action)
+
+    [<CustomOperation("action")>]
+    member inline _.Action
+        (
+            _,
+            action: 'b -> Task<unit>,
+            [<CallerMemberName>] ?memberName: string,
+            [<CallerLineNumber>] ?lineNumber: int,
+            [<CallerFilePath>] ?filePath: string
+        ) =
+        let callerInformation =
+            { CallerInformation.MemberName = defaultArg memberName String.Empty
+              LineNumber = defaultArg lineNumber 0
+              FilePath = defaultArg filePath String.Empty }
+
+        ActionProperties.Action(callerInformation, action)
 
 // https://github.com/sleepyfran/sharp-point
 // https://sleepyfran.github.io/blog/posts/fsharp/ce-in-fsharp/
