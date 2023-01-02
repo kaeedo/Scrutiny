@@ -10,8 +10,7 @@ type PageBuilder() =
           OnEnter = fun _ -> Task.FromResult()
           OnExit = fun _ -> Task.FromResult()
           Transitions = []
-          Actions = []
-          ExitActions = [] } // TODO. states can have many exit actions. one is chosen at random anyway.
+          Actions = [] } // TODO. states can have many exit actions. one is chosen at random anyway.
 
     [<CustomOperation("name")>]
     member _.Name(state, handler) : PageState<'a, 'b> = { state with Name = handler }
@@ -72,10 +71,7 @@ type PageBuilder() =
 
         let handler = fun localState -> Task.FromResult(handler localState)
 
-        { state with
-            Actions =
-                (callerInformation, (None, [], handler))
-                :: state.Actions }
+        { state with Actions = state.Actions }
 
     // Unnamed action with task
     [<CustomOperation("action")>]
@@ -92,10 +88,7 @@ type PageBuilder() =
               LineNumber = defaultArg lineNumber 0
               FilePath = defaultArg filePath "" }
 
-        { state with
-            Actions =
-                (callerInformation, (None, [], handler))
-                :: state.Actions }
+        { state with Actions = state.Actions }
 
     // Unnamed action without task with dependencies
     [<CustomOperation("actionWith")>]
@@ -116,7 +109,7 @@ type PageBuilder() =
             let dependencies, handler = handler
             None, dependencies, (fun localState -> Task.FromResult(handler localState))
 
-        { state with Actions = (callerInformation, handler) :: state.Actions }
+        { state with Actions = state.Actions }
 
     // Unnamed action with task with dependencies
     [<CustomOperation("actionWith")>]
@@ -133,10 +126,7 @@ type PageBuilder() =
               LineNumber = defaultArg lineNumber 0
               FilePath = defaultArg filePath "" }
 
-        { state with
-            Actions =
-                (callerInformation, (None, (fst handler), (snd handler)))
-                :: state.Actions }
+        { state with Actions = state.Actions }
 
     // Named action without task
     [<CustomOperation("actionN")>]
@@ -157,7 +147,7 @@ type PageBuilder() =
             let name = fst handler
             Some name, [], (fun localState -> Task.FromResult((snd handler) localState))
 
-        { state with Actions = (callerInformation, handler) :: state.Actions }
+        { state with Actions = state.Actions }
 
     // Named action with task
     [<CustomOperation("actionN")>]
@@ -178,7 +168,7 @@ type PageBuilder() =
             let name = fst handler
             Some name, [], snd handler
 
-        { state with Actions = (callerInformation, handler) :: state.Actions }
+        { state with Actions = state.Actions }
 
     // Named action without task with dependencies
     [<CustomOperation("actionNWith")>]
@@ -199,7 +189,7 @@ type PageBuilder() =
             let name, dependencies, handler = handler
             Some name, dependencies, (fun localState -> Task.FromResult(handler localState))
 
-        { state with Actions = (callerInformation, handler) :: state.Actions }
+        { state with Actions = state.Actions }
 
     // Named action with task with dependencies
     [<CustomOperation("actionNWith")>]
@@ -220,17 +210,4 @@ type PageBuilder() =
             let name, dependencies, handler = handler
             Some name, dependencies, handler
 
-        { state with Actions = (callerInformation, handler) :: state.Actions }
-
-    //-----------------
-    // Exit actions
-    //-----------------
-
-    [<CustomOperation("exitAction")>]
-    member _.ExitAction(state, handler: 'b -> unit) : PageState<'a, 'b> =
-        let handler = fun localState -> Task.FromResult(handler localState)
-        { state with ExitActions = handler :: state.ExitActions }
-
-    [<CustomOperation("exitAction")>]
-    member _.ExitAction(state, handler: 'b -> Task<unit>) : PageState<'a, 'b> =
-        { state with ExitActions = handler :: state.ExitActions }
+        { state with Actions = state.Actions }

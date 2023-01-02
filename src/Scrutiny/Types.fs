@@ -44,6 +44,7 @@ type Action<'b> =
     { CallerInformation: CallerInformation
       Name: string
       DependantActions: string list
+      IsExit: bool
       ActionFn: 'b -> Task<unit> }
 
 type Transition<'a, 'b> =
@@ -54,14 +55,13 @@ type Transition<'a, 'b> =
 and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
     { Name: string
       LocalState: 'b
+      // OnAction?
       OnEnter: 'b -> Task<unit>
       OnExit: 'b -> Task<unit>
       // TODO can we make this not mutable?
       // It's required right now because of the C# builder
       mutable Transitions: (Transition<'a, 'b>) list
-      Actions: (CallerInformation * (string option * string list * ('b -> Task<unit>))) list
-      // OnAction?
-      ExitActions: ('b -> Task<unit>) list }
+      Actions: Action<'b> list }
 
     interface IComparable<PageState<'a, 'b>> with
         member this.CompareTo other = compare this.Name other.Name

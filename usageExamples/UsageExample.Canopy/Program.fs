@@ -120,9 +120,9 @@ module rec Entry =
                     "#welcomeText"
                     == sprintf "Welcome %s" globalState.Username)
 
-                exitAction (fun _ ->
+                (*exitAction (fun _ ->
                     printfn "Exiting!"
-                    click "#logout")
+                    click "#logout")*)
             }
 
     let comment =

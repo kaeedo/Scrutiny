@@ -28,13 +28,10 @@ module Scrutiny =
              |> List.map (fun p -> p.Name)
              |> String.concat " --> ")
 
-    let private buildActionName (ci: CallerInformation) (actionName: string option) =
-        match actionName, ci.LineNumber > 0 with
-        | Some name, true ->
-            $"Action: %s{name}, Member: %s{ci.MemberName}, Line #: %i{ci.LineNumber}, File: %s{ci.FilePath}"
-        | Some name, false -> $"Action: %s{name}, %s{ci.FilePath}.%s{ci.MemberName}"
-        | None, true -> $"Member: %s{ci.MemberName}, Line #: %i{ci.LineNumber}, File: %s{ci.FilePath}"
-        | None, false -> $"%s{ci.FilePath}.%s{ci.MemberName}"
+    let private buildActionName (ci: CallerInformation) (actionName: string) =
+        match ci.LineNumber > 0 with
+        | true -> $"Action: %s{actionName}, Member: %s{ci.MemberName}, Line #: %i{ci.LineNumber}, File: %s{ci.FilePath}"
+        | false -> $"Action: %s{actionName}, %s{ci.FilePath}.%s{ci.MemberName}"
 
     let private simpleTraverse (tasks: (unit -> Task<unit>) list) : unit -> Task<unit> =
         match tasks with
@@ -52,26 +49,26 @@ module Scrutiny =
         (reporter: IReporter<'a, 'b>)
         (config: ScrutinyConfig)
         (state: PageState<'a, 'b>)
-        (actions: (CallerInformation * (string option * string list * ('b -> Task<unit>))) list)
+        (actions: Action<'b> list)
         =
         actions
-        |> List.map (fun (ci, (actionName, dependantActions, action)) ->
+        |> List.map (fun a ->
             fun () ->
                 task {
                     let runDependantActions =
-                        dependantActions
+                        a.DependantActions
                         |> List.map (fun da ->
                             let action =
                                 state.Actions
-                                |> List.find (fun (_, (sa, _, _)) -> sa.Value = da)
+                                |> List.find (fun sa -> sa.Name = da)
 
                             runTheActions reporter config state [ action ])
                         |> simpleTraverse
 
                     do! runDependantActions ()
 
-                    reporter.PushAction(buildActionName ci actionName)
-                    return! (action state.LocalState)
+                    reporter.PushAction(buildActionName a.CallerInformation a.Name)
+                    return! (a.ActionFn state.LocalState)
                 })
         |> simpleTraverse
 
@@ -139,7 +136,7 @@ module Scrutiny =
                     transition.DependantActions
                     |> List.map (fun da ->
                         current.Actions
-                        |> List.find (fun (_, (sa, _, _)) -> sa.Value = da))
+                        |> List.find (fun sa -> sa.Name = da))
                     |> runTheActions reporter config current
 
                 do! dependantActions ()
@@ -152,9 +149,12 @@ module Scrutiny =
     let private findExit (config: ScrutinyConfig) (allStates: AdjacencyGraph<PageState<'a, 'b>>) =
         let random = Random(config.Seed)
 
+        let exitActions (node: PageState<'a, 'b>) =
+            node.Actions |> List.filter (fun a -> a.IsExit)
+
         let exitNode =
             allStates
-            |> Seq.filter (fun (node, _) -> node.ExitActions |> Seq.isEmpty |> not)
+            |> Seq.filter (fun (node, _) -> (exitActions node) |> Seq.isEmpty |> not)
             |> Seq.sortBy (fun _ -> random.Next())
             |> Seq.tryHead
 
@@ -226,11 +226,14 @@ module Scrutiny =
 
                         let! exitNode = travelDirectly path
 
+                        let exitActions (node: PageState<'a, 'b>) =
+                            node.Actions |> List.filter (fun a -> a.IsExit)
+
                         let a =
-                            exitNode.ExitActions
+                            exitActions exitNode
                             |> Seq.sortBy (fun _ -> random.Next())
                             |> Seq.tryHead
-                            |> Option.map (fun ea -> (ea exitNode.LocalState))
+                            |> Option.map (fun ea -> (ea.ActionFn exitNode.LocalState))
 
                         match a with
                         | None -> return ()

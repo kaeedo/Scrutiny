@@ -24,7 +24,7 @@ type internal TransitionBuilder() =
         |> List.fold
             (fun tp prop ->
                 match prop with
-                | TransitionProperties.DependantActions actions -> { tp with DependantActions = actions }
+                | TransitionProperties.DependantActions actions -> { tp with Transition.DependantActions = actions }
                 | TransitionProperties.ViaFn viaFnTAsync -> { tp with ViaFn = viaFnTAsync }
                 | TransitionProperties.Destination destinationState -> { tp with Destination = destinationState })
             { Transition.DependantActions = []
@@ -59,6 +59,7 @@ type internal ActionProperties<'b> =
     | Name of string
     | DependantActions of string list
     | Action of CallerInformation * ('b -> Task<unit>)
+    | IsExit
 
 type internal ActionBuilder() =
     member inline _.Yield(()) = ()
@@ -75,6 +76,7 @@ type internal ActionBuilder() =
                 match prop with
                 | ActionProperties.Name name -> { ap with Action.Name = name }
                 | ActionProperties.DependantActions da -> { ap with DependantActions = da }
+                | ActionProperties.IsExit -> { ap with IsExit = true }
                 | ActionProperties.Action (ci, action) ->
                     { ap with
                         CallerInformation = ci
@@ -85,6 +87,7 @@ type internal ActionBuilder() =
                   FilePath = String.Empty }
               Name = String.Empty
               DependantActions = []
+              IsExit = false
               ActionFn = fun _ -> Task.FromResult() }
 
     member inline x.Run(prop: ActionProperties<'b>) = x.Run([ prop ])
@@ -99,6 +102,9 @@ type internal ActionBuilder() =
     [<CustomOperation("dependantActions")>]
     member inline _.DependantActions(_, actions) =
         ActionProperties.DependantActions actions
+
+    [<CustomOperation("isExit")>]
+    member inline _.IsExit(_) = ActionProperties.IsExit
 
     [<CustomOperation("action")>]
     member inline _.Action
@@ -140,12 +146,18 @@ type internal ActionBuilder() =
 type internal PageStateProperties<'a, 'b> =
     | Name of string
     | Transition of Transition<'a, 'b>
+    | Action of Scrutiny.Action<'b>
+    | LocalState of 'b
+    | OnEnter of ('b -> Task<unit>)
+    | OnExit of ('b -> Task<unit>)
 
 type internal Page2Builder() =
     member inline _.Yield(()) = ()
 
     member inline _.Yield(transition: Transition<'a, 'b>) =
         PageStateProperties.Transition transition
+
+    member inline _.Yield(action: Scrutiny.Action<'b>) = PageStateProperties.Action action
 
     member inline _.Delay(f: unit -> PageStateProperties<'a, 'b> list) = f ()
     member inline _.Delay(f: unit -> PageStateProperties<'a, 'b>) = [ f () ]
@@ -158,206 +170,43 @@ type internal Page2Builder() =
         |> List.fold
             (fun ps prop ->
                 match prop with
-                | PageStateProperties.Name name -> { ps with Name = name }
-                | PageStateProperties.Transition transition -> { ps with Transitions = transition :: ps.Transitions })
+                | PageStateProperties.Name name -> { ps with PageState.Name = name }
+                | PageStateProperties.Transition transition -> { ps with Transitions = transition :: ps.Transitions }
+                | PageStateProperties.Action action -> { ps with Actions = action :: ps.Actions }
+                | PageStateProperties.LocalState ls -> { ps with LocalState = ls }
+                | PageStateProperties.OnEnter onEnterFn -> { ps with OnEnter = onEnterFn }
+                | PageStateProperties.OnExit onExitFn -> { ps with OnExit = onExitFn })
             { PageState.Name = String.Empty
               LocalState = Unchecked.defaultof<'b>
               OnEnter = fun _ -> Task.FromResult()
               OnExit = fun _ -> Task.FromResult()
               Transitions = []
-              Actions = []
-              ExitActions = [] }
+              Actions = [] }
 
     member inline x.Run(prop: PageStateProperties<'a, 'b>) = x.Run([ prop ])
-
-    [<CustomOperation("name")>]
-    member inline _.Name((), name: string) = PageStateProperties.Name name
 
     member inline x.For(prop: PageStateProperties<'a, 'b>, f: unit -> PageStateProperties<'a, 'b> list) =
         x.Combine(prop, f ())
 
     member inline x.For(prop: PageStateProperties<'a, 'b>, f: unit -> PageStateProperties<'a, 'b>) = [ prop; f () ]
 
+    [<CustomOperation("name")>]
+    member inline _.Name((), name: string) = PageStateProperties.Name name
 
+    [<CustomOperation("onEnter")>]
+    member inline _.OnEnter((), onEnterFn: 'b -> unit) =
+        PageStateProperties.OnEnter(fun localState -> Task.FromResult(onEnterFn localState))
 
-(*
-    //-----------------
-    // Transitions
-    //-----------------
+    [<CustomOperation("onEnter")>]
+    member inline _.OnEnter((), onEnterFn: 'b -> Task<unit>) = PageStateProperties.OnEnter onEnterFn
 
-    [<CustomOperation("transition")>]
-    member _.Transitions(state, handler) : PageState<'a, 'b> =
-        { state with Transitions = handler :: state.Transitions } // TODO string list for required actions
+    [<CustomOperation("onExit")>]
+    member inline _.OnExit((), onExitFn: 'b -> unit) =
+        PageStateProperties.OnExit(fun localState -> Task.FromResult(onExitFn localState))
 
+    [<CustomOperation("onExit")>]
+    member inline _.OnExit((), onExitFn: 'b -> Task<unit>) = PageStateProperties.OnExit onExitFn
 
-    //-----------------
-    // Actions
-    //-----------------
-
-    // Unnamed action without task
-    [<CustomOperation("action")>]
-    member _.Actions
-        (
-            state,
-            handler: 'b -> unit,
-            [<CallerMemberName>] ?memberName: string,
-            [<CallerLineNumber>] ?lineNumber: int,
-            [<CallerFilePath>] ?filePath: string
-        ) : PageState<'a, 'b> =
-        let callerInformation =
-            { CallerInformation.MemberName = defaultArg memberName ""
-              LineNumber = defaultArg lineNumber 0
-              FilePath = defaultArg filePath "" }
-
-        let handler = fun localState -> Task.FromResult(handler localState)
-
-        { state with
-            Actions =
-                (callerInformation, (None, [], handler))
-                :: state.Actions }
-
-    // Unnamed action with task
-    [<CustomOperation("action")>]
-    member _.Actions
-        (
-            state,
-            handler: 'b -> Task<unit>,
-            [<CallerMemberName>] ?memberName: string,
-            [<CallerLineNumber>] ?lineNumber: int,
-            [<CallerFilePath>] ?filePath: string
-        ) : PageState<'a, 'b> =
-        let callerInformation =
-            { CallerInformation.MemberName = defaultArg memberName ""
-              LineNumber = defaultArg lineNumber 0
-              FilePath = defaultArg filePath "" }
-
-        { state with
-            Actions =
-                (callerInformation, (None, [], handler))
-                :: state.Actions }
-
-    // Unnamed action without task with dependencies
-    [<CustomOperation("actionWith")>]
-    member _.Actions
-        (
-            state,
-            handler: (string list) * ('b -> unit),
-            [<CallerMemberName>] ?memberName: string,
-            [<CallerLineNumber>] ?lineNumber: int,
-            [<CallerFilePath>] ?filePath: string
-        ) : PageState<'a, 'b> =
-        let callerInformation =
-            { CallerInformation.MemberName = defaultArg memberName ""
-              LineNumber = defaultArg lineNumber 0
-              FilePath = defaultArg filePath "" }
-
-        let handler =
-            let dependencies, handler = handler
-            None, dependencies, (fun localState -> Task.FromResult(handler localState))
-
-        { state with Actions = (callerInformation, handler) :: state.Actions }
-
-    // Unnamed action with task with dependencies
-    [<CustomOperation("actionWith")>]
-    member _.Actions
-        (
-            state,
-            handler: string list * ('b -> Task<unit>),
-            [<CallerMemberName>] ?memberName: string,
-            [<CallerLineNumber>] ?lineNumber: int,
-            [<CallerFilePath>] ?filePath: string
-        ) : PageState<'a, 'b> =
-        let callerInformation =
-            { CallerInformation.MemberName = defaultArg memberName ""
-              LineNumber = defaultArg lineNumber 0
-              FilePath = defaultArg filePath "" }
-
-        { state with
-            Actions =
-                (callerInformation, (None, (fst handler), (snd handler)))
-                :: state.Actions }
-
-    // Named action without task
-    [<CustomOperation("actionN")>]
-    member _.Actions
-        (
-            state,
-            handler: string * ('b -> unit),
-            [<CallerMemberName>] ?memberName: string,
-            [<CallerLineNumber>] ?lineNumber: int,
-            [<CallerFilePath>] ?filePath: string
-        ) : PageState<'a, 'b> =
-        let callerInformation =
-            { CallerInformation.MemberName = defaultArg memberName ""
-              LineNumber = defaultArg lineNumber 0
-              FilePath = defaultArg filePath "" }
-
-        let handler =
-            let name = fst handler
-            Some name, [], (fun localState -> Task.FromResult((snd handler) localState))
-
-        { state with Actions = (callerInformation, handler) :: state.Actions }
-
-    // Named action with task
-    [<CustomOperation("actionN")>]
-    member _.Actions
-        (
-            state,
-            handler: string * ('b -> Task<unit>),
-            [<CallerMemberName>] ?memberName: string,
-            [<CallerLineNumber>] ?lineNumber: int,
-            [<CallerFilePath>] ?filePath: string
-        ) : PageState<'a, 'b> =
-        let callerInformation =
-            { CallerInformation.MemberName = defaultArg memberName ""
-              LineNumber = defaultArg lineNumber 0
-              FilePath = defaultArg filePath "" }
-
-        let handler =
-            let name = fst handler
-            Some name, [], snd handler
-
-        { state with Actions = (callerInformation, handler) :: state.Actions }
-
-    // Named action without task with dependencies
-    [<CustomOperation("actionNWith")>]
-    member _.Actions
-        (
-            state,
-            handler: string * string list * ('b -> unit),
-            [<CallerMemberName>] ?memberName: string,
-            [<CallerLineNumber>] ?lineNumber: int,
-            [<CallerFilePath>] ?filePath: string
-        ) : PageState<'a, 'b> =
-        let callerInformation =
-            { CallerInformation.MemberName = defaultArg memberName ""
-              LineNumber = defaultArg lineNumber 0
-              FilePath = defaultArg filePath "" }
-
-        let handler =
-            let name, dependencies, handler = handler
-            Some name, dependencies, (fun localState -> Task.FromResult(handler localState))
-
-        { state with Actions = (callerInformation, handler) :: state.Actions }
-
-    // Named action with task with dependencies
-    [<CustomOperation("actionNWith")>]
-    member _.Actions
-        (
-            state,
-            handler: string * string list * ('b -> Task<unit>),
-            [<CallerMemberName>] ?memberName: string,
-            [<CallerLineNumber>] ?lineNumber: int,
-            [<CallerFilePath>] ?filePath: string
-        ) : PageState<'a, 'b> =
-        let callerInformation =
-            { CallerInformation.MemberName = defaultArg memberName ""
-              LineNumber = defaultArg lineNumber 0
-              FilePath = defaultArg filePath "" }
-
-        let handler =
-            let name, dependencies, handler = handler
-            Some name, dependencies, handler
-
-        { state with Actions = (callerInformation, handler) :: state.Actions }
-        *)
+    [<CustomOperation("localState")>]
+    member inline _.LocalState((), localState: 'b) =
+        PageStateProperties.LocalState localState

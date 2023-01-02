@@ -155,20 +155,22 @@ module internal ScrutinyCSharp =
                       LocalState = obj ()
                       OnEnter = buildMethodWithAttribute typeof<OnEnterAttribute> constructed
                       OnExit = buildMethodWithAttribute typeof<OnExitAttribute> constructed
-                      ExitActions =
+                      // TODO FIXME revisit once api stabilized
+                      (*ExitActions =
                         getMethodsWithAttribute typeof<ExitActionAttribute> constructed
-                        |> List.map (fun m -> buildMethod m constructed)
+                        |> List.map (fun m -> buildMethod m constructed)*)
                       Actions =
-                        getMethodsWithAttribute typeof<ActionAttribute> constructed
-                        |> List.map (fun m ->
-                            let callerInfo =
-                                { CallerInformation.MemberName = m.Name
-                                  LineNumber = -1
-                                  FilePath = m.ReflectedType.Name }
+                          getMethodsWithAttribute typeof<ActionAttribute> constructed
+                          |> List.map (fun m ->
+                              let callerInfo =
+                                  { CallerInformation.MemberName = m.Name
+                                    LineNumber = -1
+                                    FilePath = m.ReflectedType.Name }
 
-                            let builtMethod = buildMethod m constructed
-                            // TODO FIXME revisit once api stabilized
-                            callerInfo, (None, [], builtMethod))
+                              let builtMethod = buildMethod m constructed
+                              // TODO FIXME revisit once api stabilized
+                              //callerInfo, (None, [], builtMethod)
+                              Unchecked.defaultof<Scrutiny.Action<obj>>)
                       Transitions = [] }
 
                 ps, constructed)

@@ -198,13 +198,13 @@ module rec ScrutinyStateMachine =
                         Assert.Equal(sprintf "Welcome %s" globalState.Username, welcomeText)
                     })
 
-                exitAction (fun _ ->
+            (*exitAction (fun _ ->
                     task {
                         globalState.Logger "Exiting!"
                         let! welcomeText = globalState.Page.QuerySelectorAsync("id=welcomeText")
                         Assert.NotNull(welcomeText)
                         do! globalState.Page.ClickAsync("id=logout")
-                    })
+                    })*)
             }
 
     let comment =
@@ -232,7 +232,7 @@ module rec ScrutinyStateMachine =
 
                 onExit (fun _ -> globalState.Logger "Exiting comment")
 
-                exitAction (fun _ -> task { do! globalState.Page.CloseAsync() })
+            (*exitAction (fun _ -> task { do! globalState.Page.CloseAsync() })*)
             }
 
     let home =
