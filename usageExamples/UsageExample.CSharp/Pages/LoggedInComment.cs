@@ -54,7 +54,7 @@ namespace UsageExample.CSharp.Pages
         }
 
 
-        [ExitAction]
+        [Action(IsExit = true)]
         public async Task ExitAction()
         {
             globalState.Logger.WriteLine("Exiting!");

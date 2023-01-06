@@ -32,7 +32,7 @@ namespace UsageExample.CSharp.Pages
             Assert.Equal($"Welcome {globalState.Username}", welcomeText);
         }
 
-        [ExitAction]
+        [Action(IsExit = true)]
         public async Task ExitAction()
         {
             globalState.Logger.WriteLine("Exiting!");

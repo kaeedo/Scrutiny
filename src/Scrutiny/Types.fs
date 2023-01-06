@@ -58,9 +58,7 @@ and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
       // OnAction?
       OnEnter: 'b -> Task<unit>
       OnExit: 'b -> Task<unit>
-      // TODO can we make this not mutable?
-      // It's required right now because of the C# builder
-      mutable Transitions: (Transition<'a, 'b>) list
+      Transitions: (Transition<'a, 'b>) list
       Actions: Action<'b> list }
 
     interface IComparable<PageState<'a, 'b>> with

@@ -30,7 +30,7 @@ namespace UsageExample.CSharp.Pages
             globalState.Logger.WriteLine("Exiting home");
         }
 
-        [ExitAction]
+        [Action(IsExit = true)]
         public async Task ExitAction()
         {
             globalState.Logger.WriteLine("Exiting!");

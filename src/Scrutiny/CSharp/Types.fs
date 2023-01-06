@@ -15,7 +15,7 @@ type Configuration() =
         Directory.GetCurrentDirectory()
         + "/ScrutinyResult.html" with get, set
 
-    member val Logger = Action<string>(fun s -> printfn "%s" s) with get, set
+    member val Logger = System.Action<string>(fun s -> printfn "%s" s) with get, set
 
     member x.ToScrutinyConfig() =
         { ScrutinyConfig.Seed = x.Seed
@@ -32,7 +32,7 @@ type Configuration() =
             ComprehensiveActions = config.ComprehensiveActions,
             ComprehensiveStates = config.ComprehensiveStates,
             ScrutinyResultFilePath = config.ScrutinyResultFilePath,
-            Logger = Action<string>(config.Logger)
+            Logger = System.Action<string>(config.Logger)
         )
 
 type Step internal (name: string, actions: string seq) =

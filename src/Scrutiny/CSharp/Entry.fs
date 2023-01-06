@@ -42,16 +42,10 @@ module internal ScrutinyCSharp =
                     |> Seq.isEmpty
                     |> not
 
-                let hasExitActions =
-                    m.GetCustomAttributes<ExitActionAttribute>(true)
-                    |> Seq.isEmpty
-                    |> not
-
                 hasTransitions
                 || hasOnEnters
                 || hasOnExits
-                || hasActions
-                || hasExitActions)
+                || hasActions)
             |> Seq.filter (fun m -> m.GetParameters() |> Array.length > 0)
 
         constructed, invalidMethods
@@ -80,7 +74,12 @@ module internal ScrutinyCSharp =
                 |> Seq.find (fun (ps, _) -> ps.Name = transitionToAttr.Name)
                 |> fst
 
-            { Transition.DependantActions = [] // TODO FIXME revisit once api is stabilized
+            let dependantActions =
+                method.GetCustomAttributes<DependantActionAttribute>(true)
+                |> Seq.map (fun da -> da.Name)
+                |> Seq.toList
+
+            { Transition.DependantActions = dependantActions
               ViaFn = buildMethod method constructedPageState
               Destination = fun _ -> toState })
 
@@ -155,10 +154,6 @@ module internal ScrutinyCSharp =
                       LocalState = obj ()
                       OnEnter = buildMethodWithAttribute typeof<OnEnterAttribute> constructed
                       OnExit = buildMethodWithAttribute typeof<OnExitAttribute> constructed
-                      // TODO FIXME revisit once api stabilized
-                      (*ExitActions =
-                        getMethodsWithAttribute typeof<ExitActionAttribute> constructed
-                        |> List.map (fun m -> buildMethod m constructed)*)
                       Actions =
                           getMethodsWithAttribute typeof<ActionAttribute> constructed
                           |> List.map (fun m ->
@@ -168,9 +163,21 @@ module internal ScrutinyCSharp =
                                     FilePath = m.ReflectedType.Name }
 
                               let builtMethod = buildMethod m constructed
-                              // TODO FIXME revisit once api stabilized
-                              //callerInfo, (None, [], builtMethod)
-                              Unchecked.defaultof<Scrutiny.Action<obj>>)
+
+                              let isExit = m.GetCustomAttribute<ActionAttribute>(true).IsExit
+
+                              let dependantActions =
+                                  m.GetCustomAttributes<DependantActionAttribute>(true)
+                                  |> Seq.map (fun da -> da.Name)
+                                  |> Seq.toList
+
+                              let stateAction: Scrutiny.Action<obj> =
+                                    { CallerInformation = callerInfo
+                                      Name = m.Name
+                                      DependantActions = dependantActions
+                                      IsExit = isExit
+                                      ActionFn = builtMethod }
+                              stateAction)
                       Transitions = [] }
 
                 ps, constructed)
@@ -180,8 +187,7 @@ module internal ScrutinyCSharp =
         |> List.map (fun (ps, constructed) ->
             let transitionsForPageState = buildTransition constructed defs
 
-            ps.Transitions <- transitionsForPageState
-            ps)
+            { ps with Transitions = transitionsForPageState })
 
     let start<'startState> gs (config: Configuration) : Task<ScrutinizedStates> =
         task {

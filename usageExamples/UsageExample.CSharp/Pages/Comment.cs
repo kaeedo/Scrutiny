@@ -24,7 +24,7 @@ namespace UsageExample.CSharp.Pages
             Assert.Equal("Comments", headerText);
         }
 
-        [ExitAction]
+        [Action(IsExit = true)]
         public async Task ExitAction()
         {
             globalState.Logger.WriteLine("Exiting!");

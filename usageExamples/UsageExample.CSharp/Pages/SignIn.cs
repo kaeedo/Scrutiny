@@ -71,7 +71,7 @@ namespace UsageExample.CSharp.Pages
             Assert.Equal("42", number);
         }
 
-        [ExitAction]
+        [Action(IsExit = true)]
         public async Task ExitAction()
         {
             globalState.Logger.WriteLine("Exiting!");
@@ -86,7 +86,7 @@ namespace UsageExample.CSharp.Pages
 
             var signInButtonSelector = "css=button >> text=Sign In";
 
-            if(string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(number))
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(number))
             {
                 await globalState.Page.ClickAsync(signInButtonSelector);
             }
