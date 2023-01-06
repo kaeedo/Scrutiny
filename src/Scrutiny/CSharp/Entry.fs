@@ -61,7 +61,7 @@ module internal ScrutinyCSharp =
                 if m.ReturnType = typeof<Task> then
                     do! m.Invoke(constructed, [||]) :?> Task
                 else
-                    do m.Invoke(constructed, [||])
+                    do m.Invoke(constructed, [||]) |> ignore
             }
 
     let private buildTransition constructedPageState defs =
