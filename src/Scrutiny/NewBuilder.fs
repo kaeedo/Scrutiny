@@ -74,14 +74,14 @@ type internal ActionBuilder() =
         |> List.fold
             (fun ap prop ->
                 match prop with
-                | ActionProperties.Name name -> { ap with Action.Name = name }
+                | ActionProperties.Name name -> { ap with StateAction.Name = name }
                 | ActionProperties.DependantActions da -> { ap with DependantActions = da }
                 | ActionProperties.IsExit -> { ap with IsExit = true }
                 | ActionProperties.Action (ci, action) ->
                     { ap with
                         CallerInformation = ci
                         ActionFn = action })
-            { Action.CallerInformation =
+            { StateAction.CallerInformation =
                 { CallerInformation.MemberName = String.Empty
                   LineNumber = 0
                   FilePath = String.Empty }
@@ -146,7 +146,7 @@ type internal ActionBuilder() =
 type internal PageStateProperties<'a, 'b> =
     | Name of string
     | Transition of Transition<'a, 'b>
-    | Action of Scrutiny.Action<'b>
+    | Action of StateAction<'b>
     | LocalState of 'b
     | OnEnter of ('b -> Task<unit>)
     | OnExit of ('b -> Task<unit>)
@@ -157,7 +157,7 @@ type internal Page2Builder() =
     member inline _.Yield(transition: Transition<'a, 'b>) =
         PageStateProperties.Transition transition
 
-    member inline _.Yield(action: Scrutiny.Action<'b>) = PageStateProperties.Action action
+    member inline _.Yield(action: StateAction<'b>) = PageStateProperties.Action action
 
     member inline _.Delay(f: unit -> PageStateProperties<'a, 'b> list) = f ()
     member inline _.Delay(f: unit -> PageStateProperties<'a, 'b>) = [ f () ]
@@ -191,22 +191,22 @@ type internal Page2Builder() =
     member inline x.For(prop: PageStateProperties<'a, 'b>, f: unit -> PageStateProperties<'a, 'b>) = [ prop; f () ]
 
     [<CustomOperation("name")>]
-    member inline _.Name((), name: string) = PageStateProperties.Name name
+    member inline _.Name(_, name: string) = PageStateProperties.Name name
 
     [<CustomOperation("onEnter")>]
-    member inline _.OnEnter((), onEnterFn: 'b -> unit) =
+    member inline _.OnEnter(_, onEnterFn: 'b -> unit) =
         PageStateProperties.OnEnter(fun localState -> Task.FromResult(onEnterFn localState))
 
     [<CustomOperation("onEnter")>]
-    member inline _.OnEnter((), onEnterFn: 'b -> Task<unit>) = PageStateProperties.OnEnter onEnterFn
+    member inline _.OnEnter(_, onEnterFn: 'b -> Task<unit>) = PageStateProperties.OnEnter onEnterFn
 
     [<CustomOperation("onExit")>]
-    member inline _.OnExit((), onExitFn: 'b -> unit) =
+    member inline _.OnExit(_, onExitFn: 'b -> unit) =
         PageStateProperties.OnExit(fun localState -> Task.FromResult(onExitFn localState))
 
     [<CustomOperation("onExit")>]
-    member inline _.OnExit((), onExitFn: 'b -> Task<unit>) = PageStateProperties.OnExit onExitFn
+    member inline _.OnExit(_, onExitFn: 'b -> Task<unit>) = PageStateProperties.OnExit onExitFn
 
     [<CustomOperation("localState")>]
-    member inline _.LocalState((), localState: 'b) =
+    member inline _.LocalState(_, localState: 'b) =
         PageStateProperties.LocalState localState

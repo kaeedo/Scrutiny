@@ -171,7 +171,7 @@ module internal ScrutinyCSharp =
                                   |> Seq.map (fun da -> da.Name)
                                   |> Seq.toList
 
-                              let stateAction: Scrutiny.Action<obj> =
+                              let stateAction: StateAction<obj> =
                                     { CallerInformation = callerInfo
                                       Name = m.Name
                                       DependantActions = dependantActions

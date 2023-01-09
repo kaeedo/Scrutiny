@@ -49,7 +49,7 @@ module Scrutiny =
         (reporter: IReporter<'a, 'b>)
         (config: ScrutinyConfig)
         (state: PageState<'a, 'b>)
-        (actions: Action<'b> list)
+        (actions: StateAction<'b> list)
         =
         actions
         |> List.map (fun a ->
@@ -284,13 +284,50 @@ module Scrutiny =
 
     let hjeksrgfkjshergvbkserg =
         let newBuilder = Page2Builder()
-        let trraa = TransitionBuilder()
+        let transition = TransitionBuilder()
+        let action = ActionBuilder()
 
-        let ta =
-            newBuilder {
-                name "wefwefwe"
-                trraa { dependantActions [ ""; "fwef" ] }
-            //trraa { dependantActions [ ""; "fsd" ] }
-            }
+        let rec ta =
+            fun _ ->
+                newBuilder {
+                    name "wefwefwe"
+
+                    transition {
+                        dependantActions [ ""; "fwef" ]
+                        via (fun _ -> ())
+                        destination rewg
+                    }
+
+                    transition {
+                        dependantActions [ ""; "fwef" ]
+                        via (fun _ -> ())
+                        destination rewg
+                    }
+
+                    action {
+                        name "erg"
+                        dependantActions []
+                        action (fun _ -> ())
+                    }
+
+                    action {
+                        name "edfbg"
+                        isExit
+                        action (fun _ -> ())
+                    }
+
+                    //onEnter (fun _ -> ())
+                //trraa { dependantActions [ ""; "fsd" ] }
+                }
+
+        and rewg =
+            fun _ ->
+                newBuilder {
+                    name "gergb"
+                    transition {
+                        via (fun _ -> ())
+                        destination ta
+                    }
+                }
 
         1

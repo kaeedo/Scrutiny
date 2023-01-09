@@ -40,7 +40,7 @@ type CallerInformation =
       LineNumber: int
       FilePath: string }
 
-type Action<'b> =
+type StateAction<'b> =
     { CallerInformation: CallerInformation
       Name: string
       DependantActions: string list
@@ -59,7 +59,7 @@ and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
       OnEnter: 'b -> Task<unit>
       OnExit: 'b -> Task<unit>
       Transitions: (Transition<'a, 'b>) list
-      Actions: Action<'b> list }
+      Actions: StateAction<'b> list }
 
     interface IComparable<PageState<'a, 'b>> with
         member this.CompareTo other = compare this.Name other.Name
