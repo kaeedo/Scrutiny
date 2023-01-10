@@ -93,7 +93,7 @@ module rec TestPages =
 
     let page1 =
         fun _ ->
-            newBuilder {
+            page {
                 name "Page1"
 
                 transition {
@@ -104,7 +104,7 @@ module rec TestPages =
 
     let page2 =
         fun _ ->
-            newBuilder {
+            page {
                 name "Page2"
 
                 transition {
@@ -120,7 +120,7 @@ module rec TestPages =
 
     let page3 =
         fun _ ->
-            newBuilder {
+            page {
                 name "Page3"
 
                 transition {
@@ -136,7 +136,7 @@ module rec TestPages =
 
     let page4 =
         fun _ ->
-            newBuilder {
+            page {
                 name "Page4"
 
                 transition {
@@ -152,7 +152,7 @@ module rec TestPages =
 
     let page5 =
         fun _ ->
-            newBuilder {
+            page {
                 name "Page5"
 
                 transition {

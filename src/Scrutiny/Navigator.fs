@@ -34,16 +34,13 @@ module internal Navigator =
         (nodes, edges)
 
     // TODO: Refactor this to recursion?
-    let constructAdjacencyGraph<'a, 'b>
-        (startState: PageState<'a, 'b>)
-        (globalState: 'a)
-        : AdjacencyGraph<PageState<'a, 'b>> =
-        let getTransitions node : PageState<'a, 'b> list =
+    let constructAdjacencyGraph<'a> (startState: PageState<'a>) (globalState: 'a) : AdjacencyGraph<PageState<'a>> =
+        let getTransitions node : PageState<'a> list =
             node.Transitions
             |> List.map (fun t -> t.Destination globalState)
 
         let mutable final = []
-        let nodes2Visit = Queue<PageState<'a, 'b>>()
+        let nodes2Visit = Queue<PageState<'a>>()
         nodes2Visit.Enqueue(startState)
 
         while nodes2Visit.Count > 0 do

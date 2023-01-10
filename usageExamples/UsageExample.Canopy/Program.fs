@@ -23,7 +23,7 @@ type LoggedInComment() =
 module rec Entry =
     let signIn =
         fun (globalState: GlobalState) ->
-            newBuilder {
+            page {
                 name "Sign In"
 
                 onEnter (fun _ ->
@@ -82,16 +82,16 @@ module rec Entry =
 
     let loggedInComment =
         fun (globalState: GlobalState) ->
-            newBuilder {
-                name "Logged In Comment"
+            let ls = LoggedInComment()
 
-                localState (LoggedInComment())
+            page {
+                name "Logged In Comment"
 
                 onEnter (fun _ ->
                     printfn "Checking comment is logged in"
                     displayed "#openModal")
 
-                onExit (fun (ls: LoggedInComment) ->
+                onExit (fun _ ->
                     "#commentsUl>li"
                     *= sprintf "%s wrote:%s%s" globalState.Username Environment.NewLine ls.Comment
 
@@ -103,7 +103,7 @@ module rec Entry =
                 }
 
                 action {
-                    fn (fun (ls: LoggedInComment) ->
+                    fn (fun _ ->
                         click "#openModal"
                         ls.Comment <- "This is my super comment"
                         "#comment" << ls.Comment
@@ -113,7 +113,7 @@ module rec Entry =
 
     let loggedInHome =
         fun (globalState: GlobalState) ->
-            newBuilder {
+            page {
                 name "Logged in Home"
 
                 onEnter (fun _ ->
@@ -140,7 +140,7 @@ module rec Entry =
 
     let comment =
         fun (globalState: GlobalState) ->
-            newBuilder {
+            page {
                 name "Comment"
 
                 onEnter (fun _ ->
@@ -162,7 +162,7 @@ module rec Entry =
 
     let home =
         fun (globalState: GlobalState) ->
-            newBuilder {
+            page {
                 name "Home"
 
                 onEnter (fun _ ->

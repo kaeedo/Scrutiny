@@ -40,43 +40,42 @@ type CallerInformation =
       LineNumber: int
       FilePath: string }
 
-type StateAction<'b> =
+type StateAction =
     { CallerInformation: CallerInformation
       Name: string
       DependantActions: string list
       IsExit: bool
-      ActionFn: 'b -> Task<unit> }
+      ActionFn: unit -> Task<unit> }
 
-type Transition<'a, 'b> =
+type Transition<'a> =
     { DependantActions: string list
-      ViaFn: 'b -> Task<unit>
-      Destination: 'a -> PageState<'a, 'b> }
+      ViaFn: unit -> Task<unit>
+      Destination: 'a -> PageState<'a> }
 
-and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
+and [<CustomComparison; CustomEquality>] PageState<'a> =
     { Name: string
-      LocalState: 'b
       // OnAction?
-      OnEnter: 'b -> Task<unit>
-      OnExit: 'b -> Task<unit>
-      Transitions: (Transition<'a, 'b>) list
-      Actions: StateAction<'b> list }
+      OnEnter: unit -> Task<unit>
+      OnExit: unit -> Task<unit>
+      Transitions: (Transition<'a>) list
+      Actions: StateAction list }
 
-    interface IComparable<PageState<'a, 'b>> with
+    interface IComparable<PageState<'a>> with
         member this.CompareTo other = compare this.Name other.Name
 
     interface IComparable with
         member this.CompareTo obj =
             match obj with
             | null -> 1
-            | :? PageState<'a, 'b> as other -> (this :> IComparable<_>).CompareTo other
+            | :? PageState<'a> as other -> (this :> IComparable<_>).CompareTo other
             | _ -> invalidArg "obj" "not a PageState"
 
-    interface IEquatable<PageState<'a, 'b>> with
+    interface IEquatable<PageState<'a>> with
         member this.Equals other = this.Name = other.Name
 
     override this.Equals obj =
         match obj with
-        | :? PageState<'a, 'b> as other -> (this :> IEquatable<_>).Equals other
+        | :? PageState<'a> as other -> (this :> IEquatable<_>).Equals other
         | _ -> false
 
     override this.GetHashCode() = hash this.Name
@@ -91,11 +90,11 @@ type ErrorLocation =
     | State of string * SerializableException
     | Transition of string * string * SerializableException
 
-type Step<'a, 'b> =
-    { PageState: PageState<'a, 'b>
+type Step<'a> =
+    { PageState: PageState<'a>
       Actions: string seq
       Error: ErrorLocation option }
 
-type ScrutinizedStates<'a, 'b> =
-    { Graph: AdjacencyGraph<PageState<'a, 'b>>
-      Steps: Step<'a, 'b> seq }
+type ScrutinizedStates<'a> =
+    { Graph: AdjacencyGraph<PageState<'a>>
+      Steps: Step<'a> seq }

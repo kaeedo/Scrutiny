@@ -151,33 +151,33 @@ module internal ScrutinyCSharp =
             |> Seq.map (fun constructed ->
                 let ps =
                     { PageState.Name = constructed.GetType().Name
-                      LocalState = obj ()
                       OnEnter = buildMethodWithAttribute typeof<OnEnterAttribute> constructed
                       OnExit = buildMethodWithAttribute typeof<OnExitAttribute> constructed
                       Actions =
-                          getMethodsWithAttribute typeof<ActionAttribute> constructed
-                          |> List.map (fun m ->
-                              let callerInfo =
-                                  { CallerInformation.MemberName = m.Name
-                                    LineNumber = -1
-                                    FilePath = m.ReflectedType.Name }
+                        getMethodsWithAttribute typeof<ActionAttribute> constructed
+                        |> List.map (fun m ->
+                            let callerInfo =
+                                { CallerInformation.MemberName = m.Name
+                                  LineNumber = -1
+                                  FilePath = m.ReflectedType.Name }
 
-                              let builtMethod = buildMethod m constructed
+                            let builtMethod = buildMethod m constructed
 
-                              let isExit = m.GetCustomAttribute<ActionAttribute>(true).IsExit
+                            let isExit = m.GetCustomAttribute<ActionAttribute>(true).IsExit
 
-                              let dependantActions =
-                                  m.GetCustomAttributes<DependantActionAttribute>(true)
-                                  |> Seq.map (fun da -> da.Name)
-                                  |> Seq.toList
+                            let dependantActions =
+                                m.GetCustomAttributes<DependantActionAttribute>(true)
+                                |> Seq.map (fun da -> da.Name)
+                                |> Seq.toList
 
-                              let stateAction: StateAction<obj> =
-                                    { CallerInformation = callerInfo
-                                      Name = m.Name
-                                      DependantActions = dependantActions
-                                      IsExit = isExit
-                                      ActionFn = builtMethod }
-                              stateAction)
+                            let stateAction: StateAction =
+                                { CallerInformation = callerInfo
+                                  Name = m.Name
+                                  DependantActions = dependantActions
+                                  IsExit = isExit
+                                  ActionFn = builtMethod }
+
+                            stateAction)
                       Transitions = [] }
 
                 ps, constructed)

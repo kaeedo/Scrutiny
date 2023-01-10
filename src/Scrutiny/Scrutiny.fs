@@ -7,7 +7,7 @@ open Scrutiny.Utilities
 
 [<AutoOpen>]
 module Scrutiny =
-    let private handleError exn errorLocation (reporter: IReporter<_, _>) config current =
+    let private handleError exn errorLocation (reporter: IReporter<_>) config current =
         let message =
             $"System under test failed scrutiny.
         To re-run this exact test, specify the seed in the config with the value: '%i{config.Seed}'.
@@ -46,10 +46,10 @@ module Scrutiny =
                     })
 
     let rec private runTheActions
-        (reporter: IReporter<'a, 'b>)
+        (reporter: IReporter<'a>)
         (config: ScrutinyConfig)
-        (state: PageState<'a, 'b>)
-        (actions: StateAction<'b> list)
+        (state: PageState<'a>)
+        (actions: StateAction list)
         =
         actions
         |> List.map (fun a ->
@@ -68,11 +68,11 @@ module Scrutiny =
                     do! runDependantActions ()
 
                     reporter.PushAction(buildActionName a.CallerInformation a.Name)
-                    return! (a.ActionFn state.LocalState)
+                    return! (a.ActionFn())
                 })
         |> simpleTraverse
 
-    let private runActions (reporter: IReporter<'a, 'b>) (config: ScrutinyConfig) (state: PageState<'a, 'b>) =
+    let private runActions (reporter: IReporter<'a>) (config: ScrutinyConfig) (state: PageState<'a>) =
         if config.ComprehensiveActions then
             state.Actions
             |> runTheActions reporter config state
@@ -111,17 +111,17 @@ module Scrutiny =
 
         convertInner e
 
-    let private performStateActions (reporter: IReporter<_, _>) config current =
+    let private performStateActions (reporter: IReporter<_>) config current =
         task {
             try
-                do! current.OnEnter current.LocalState
+                do! current.OnEnter()
                 do! runActions reporter config current
-                do! current.OnExit current.LocalState
+                do! current.OnExit()
             with exn ->
                 handleError exn (State(current.Name, convertException exn)) reporter config current
         }
 
-    let private transitionToNextState (reporter: IReporter<_, _>) config globalState (current, next) =
+    let private transitionToNextState (reporter: IReporter<_>) config globalState (current, next) =
         task {
             try
                 let transition =
@@ -141,15 +141,15 @@ module Scrutiny =
 
                 do! dependantActions ()
 
-                do! transition.ViaFn current.LocalState
+                do! transition.ViaFn()
             with exn ->
                 handleError exn (Transition(current.Name, next.Name, convertException exn)) reporter config current
         }
 
-    let private findExit (config: ScrutinyConfig) (allStates: AdjacencyGraph<PageState<'a, 'b>>) =
+    let private findExit (config: ScrutinyConfig) (allStates: AdjacencyGraph<PageState<'a>>) =
         let random = Random(config.Seed)
 
-        let exitActions (node: PageState<'a, 'b>) =
+        let exitActions (node: PageState<'a>) =
             node.Actions |> List.filter (fun a -> a.IsExit)
 
         let exitNode =
@@ -165,7 +165,7 @@ module Scrutiny =
 
         let findPath = Navigator.shortestPathFunction allStates
 
-        let rec travelDirectly (currentPath: PageState<'a, 'b> list) =
+        let rec travelDirectly (currentPath: PageState<'a> list) =
             task {
                 if currentPath.Length = 1 then
                     do! performStateActions reporter config currentPath.Head
@@ -188,7 +188,7 @@ module Scrutiny =
                     return! travelDirectly tail
             }
 
-        let rec clickAround (visitMap: Map<PageState<'a, 'b>, int>) startState destinationState =
+        let rec clickAround (visitMap: Map<PageState<'a>, int>) startState destinationState =
             task {
                 let path = findPath startState destinationState
 
@@ -226,14 +226,14 @@ module Scrutiny =
 
                         let! exitNode = travelDirectly path
 
-                        let exitActions (node: PageState<'a, 'b>) =
+                        let exitActions (node: PageState<'a>) =
                             node.Actions |> List.filter (fun a -> a.IsExit)
 
                         let a =
                             exitActions exitNode
                             |> Seq.sortBy (fun _ -> random.Next())
                             |> Seq.tryHead
-                            |> Option.map (fun ea -> (ea.ActionFn exitNode.LocalState))
+                            |> Option.map (fun ea -> (ea.ActionFn()))
 
                         match a with
                         | None -> return ()
@@ -244,11 +244,11 @@ module Scrutiny =
         }
 
 
-    let private baseScrutinize<'a, 'b>
-        (reporter: IReporter<'a, 'b>)
+    let private baseScrutinize<'a>
+        (reporter: IReporter<'a>)
         (config: ScrutinyConfig)
         (globalState: 'a)
-        (startFn: 'a -> PageState<'a, 'b>)
+        (startFn: 'a -> PageState<'a>)
         =
         task {
             config.Logger
@@ -271,17 +271,15 @@ module Scrutiny =
         }
 
     let scrutinize<'a, 'b> config =
-        let reporter = Reporter<'a, 'b>(config.ScrutinyResultFilePath) :> IReporter<'a, 'b>
+        let reporter = Reporter<'a>(config.ScrutinyResultFilePath) :> IReporter<'a>
 
-        baseScrutinize<'a, 'b> reporter config
+        baseScrutinize<'a> reporter config
 
-    let page = PageBuilder()
+    let page = Page2Builder()
+    let transition = TransitionBuilder()
+    let action = ActionBuilder()
 
     /// Alias for page, just in case you want a different term for your page states
     let state = page
-
-    let newBuilder = Page2Builder()
-    let transition = TransitionBuilder()
-    let action = ActionBuilder()
 
     let scrutinizeWithDefaultConfig<'a, 'b> = scrutinize<'a, 'b> ScrutinyConfig.Default

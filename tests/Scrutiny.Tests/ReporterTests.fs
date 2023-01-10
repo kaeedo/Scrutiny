@@ -1,6 +1,5 @@
 module ReporterTests
 
-open System
 open Expecto
 open Scrutiny
 open Swensen.Unquote
@@ -14,43 +13,79 @@ module rec TestPages =
                 name "Home"
                 onEnter (ignore)
 
-                transition (ignoreTask ==> comment)
-                transition (ignoreTask ==> signIn)
+                transition {
+                    via ignoreTask
+                    destination comment
+                }
 
-                action (ignore) String.Empty 0 String.Empty
-                action (ignore) String.Empty 0 String.Empty
+                transition {
+                    via ignoreTask
+                    destination signIn
+                }
+
+                action { fn ignore }
+                action { fn ignore }
             }
 
     let comment =
         fun _ ->
             page {
                 name "Comment"
-                transition (ignoreTask ==> home)
-                transition (ignoreTask ==> signIn)
+
+                transition {
+                    via ignoreTask
+                    destination home
+                }
+
+                transition {
+                    via ignoreTask
+                    destination signIn
+                }
             }
 
     let signIn =
         fun _ ->
             page {
                 name "Sign In"
-                transition (ignoreTask ==> home)
-                transition (ignoreTask ==> loggedInHome)
-                action (ignore) String.Empty 0 String.Empty
+
+                transition {
+                    via ignoreTask
+                    destination home
+                }
+
+                transition {
+                    via ignoreTask
+                    destination loggedInHome
+                }
+
+                action { fn ignore }
             }
 
     let loggedInComment =
         fun _ ->
             page {
                 name "Logged in Comment"
-                transition (ignoreTask ==> loggedInHome)
+
+                transition {
+                    via ignoreTask
+                    destination loggedInHome
+                }
             }
 
     let loggedInHome =
         fun _ ->
             page {
                 name "Logged in Home"
-                transition (ignoreTask ==> home)
-                transition (ignoreTask ==> loggedInComment)
+
+                transition {
+                    via ignoreTask
+                    destination home
+                }
+
+                transition {
+                    via ignoreTask
+                    destination loggedInComment
+                }
             }
 
 [<Tests>]
@@ -58,8 +93,8 @@ let reporterTests =
     testList
         "Reporter Tests"
         [ Tests.test "Should set graph" {
-              let reporter: IReporter<unit, obj> =
-                  Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
+              let reporter: IReporter<unit> =
+                  Reporter<unit>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit>
 
               let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
 
@@ -82,8 +117,8 @@ let reporterTests =
           }
 
           Tests.test "Should add actions" {
-              let reporter: IReporter<unit, obj> =
-                  Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
+              let reporter: IReporter<unit> =
+                  Reporter<unit>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit>
 
               let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
 
@@ -100,8 +135,8 @@ let reporterTests =
           }
 
           Tests.test "Should add transitions" {
-              let reporter: IReporter<unit, obj> =
-                  Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
+              let reporter: IReporter<unit> =
+                  Reporter<unit>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit>
 
               let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
 
@@ -125,8 +160,8 @@ let reporterTests =
           }
 
           Tests.test "Should set error" {
-              let reporter: IReporter<unit, obj> =
-                  Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
+              let reporter: IReporter<unit> =
+                  Reporter<unit>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit>
 
               let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
 
@@ -154,8 +189,8 @@ let reporterTests =
           }
 
           Tests.test "Should write results to file with state error" {
-              let reporter: IReporter<unit, obj> =
-                  Reporter<unit, obj>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit, obj>
+              let reporter: IReporter<unit> =
+                  Reporter<unit>(ScrutinyConfig.Default.ScrutinyResultFilePath) :> IReporter<unit>
 
               let ag = Navigator.constructAdjacencyGraph (TestPages.home ()) ()
 

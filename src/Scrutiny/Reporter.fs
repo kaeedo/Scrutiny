@@ -6,25 +6,25 @@ open System.Text.Json
 open System.Text.Json.Serialization
 
 type private ReporterMessage<'a, 'b> =
-    | Start of AdjacencyGraph<PageState<'a, 'b>> * PageState<'a, 'b>
-    | PushTransition of PageState<'a, 'b>
+    | Start of AdjacencyGraph<PageState<'a>> * PageState<'a>
+    | PushTransition of PageState<'a>
     | PushAction of string
     | OnError of ErrorLocation
     | GenerateMap
-    | Finish of AsyncReplyChannel<ScrutinizedStates<'a, 'b>>
+    | Finish of AsyncReplyChannel<ScrutinizedStates<'a>>
 
 [<RequireQualifiedAccess>]
-type internal IReporter<'a, 'b> =
-    abstract Start: (AdjacencyGraph<PageState<'a, 'b>> * PageState<'a, 'b>) -> unit
-    abstract PushTransition: PageState<'a, 'b> -> unit
+type internal IReporter<'a> =
+    abstract Start: (AdjacencyGraph<PageState<'a>> * PageState<'a>) -> unit
+    abstract PushTransition: PageState<'a> -> unit
     abstract PushAction: string -> unit
     abstract OnError: ErrorLocation -> unit
     abstract GenerateMap: unit -> unit
-    abstract Finish: unit -> ScrutinizedStates<'a, 'b>
+    abstract Finish: unit -> ScrutinizedStates<'a>
 
 [<RequireQualifiedAccess>]
-type internal Reporter<'a, 'b>(filePath: string) =
-    let assembly = typeof<Reporter<'a, 'b>>.Assembly
+type internal Reporter<'a>(filePath: string) =
+    let assembly = typeof<Reporter<'a>>.Assembly
 
     let html =
         use htmlStream =
@@ -44,7 +44,7 @@ type internal Reporter<'a, 'b>(filePath: string) =
 
         fileInfo.DirectoryName, fileName
 
-    let generateMap (graph: ScrutinizedStates<_, _>) =
+    let generateMap (graph: ScrutinizedStates<_>) =
         let options = JsonSerializerOptions()
         options.Converters.Add(JsonFSharpConverter())
         options.ReferenceHandler <- ReferenceHandler.Preserve
@@ -62,7 +62,7 @@ type internal Reporter<'a, 'b>(filePath: string) =
 
     let mailbox =
         MailboxProcessor.Start(fun inbox ->
-            let rec loop (state: ScrutinizedStates<'a, 'b>) =
+            let rec loop (state: ScrutinizedStates<'a>) =
                 async {
                     match! inbox.Receive() with
                     | Start (ag, startState) ->
@@ -119,7 +119,7 @@ type internal Reporter<'a, 'b>(filePath: string) =
                 { ScrutinizedStates.Graph = []
                   Steps = [] })
 
-    interface IReporter<'a, 'b> with
+    interface IReporter<'a> with
         member this.Start st = mailbox.Post(Start st)
         member this.PushTransition next = mailbox.Post(PushTransition next)
         member this.PushAction actionName = mailbox.Post(PushAction actionName)

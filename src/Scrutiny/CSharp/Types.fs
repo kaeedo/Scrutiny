@@ -39,7 +39,7 @@ type Step internal (name: string, actions: string seq) =
     member val PageStateName = name
     member val PerformedActions = actions
 
-type ScrutinizedStates internal (graph: AdjacencyGraph<PageState<_, _>>, steps: Step<_, _> seq) =
+type ScrutinizedStates internal (graph: AdjacencyGraph<PageState<_>>, steps: Step<_> seq) =
     let steps =
         steps
         |> Seq.map (fun s -> Step(s.PageState.Name, s.Actions))
