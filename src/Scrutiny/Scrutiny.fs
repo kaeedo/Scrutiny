@@ -280,54 +280,8 @@ module Scrutiny =
     /// Alias for page, just in case you want a different term for your page states
     let state = page
 
+    let newBuilder = Page2Builder()
+    let transition = TransitionBuilder()
+    let action = ActionBuilder()
+
     let scrutinizeWithDefaultConfig<'a, 'b> = scrutinize<'a, 'b> ScrutinyConfig.Default
-
-    let hjeksrgfkjshergvbkserg =
-        let newBuilder = Page2Builder()
-        let transition = TransitionBuilder()
-        let action = ActionBuilder()
-
-        let rec ta =
-            fun _ ->
-                newBuilder {
-                    name "wefwefwe"
-
-                    transition {
-                        dependantActions [ ""; "fwef" ]
-                        via (fun _ -> ())
-                        destination rewg
-                    }
-
-                    transition {
-                        dependantActions [ ""; "fwef" ]
-                        via (fun _ -> ())
-                        destination rewg
-                    }
-
-                    action {
-                        name "erg"
-                        dependantActions []
-                        action (fun _ -> ())
-                    }
-
-                    action {
-                        name "edfbg"
-                        isExit
-                        action (fun _ -> ())
-                    }
-
-                    //onEnter (fun _ -> ())
-                //trraa { dependantActions [ ""; "fsd" ] }
-                }
-
-        and rewg =
-            fun _ ->
-                newBuilder {
-                    name "gergb"
-                    transition {
-                        via (fun _ -> ())
-                        destination ta
-                    }
-                }
-
-        1

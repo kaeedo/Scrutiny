@@ -5,12 +5,12 @@ open System.Runtime.CompilerServices
 open System.Threading.Tasks
 
 [<RequireQualifiedAccess>]
-type internal TransitionProperties<'a, 'b> =
+type TransitionProperties<'a, 'b> =
     | DependantActions of string list
     | ViaFn of ('b -> Task<unit>)
     | Destination of ('a -> PageState<'a, 'b>)
 
-type internal TransitionBuilder() =
+type TransitionBuilder() =
     member inline _.Yield(()) = ()
 
     member inline _.Delay(f: unit -> TransitionProperties<'a, 'b> list) = f ()
@@ -55,13 +55,13 @@ type internal TransitionBuilder() =
         TransitionProperties.Destination destinationState
 
 [<RequireQualifiedAccess>]
-type internal ActionProperties<'b> =
+type ActionProperties<'b> =
     | Name of string
     | DependantActions of string list
-    | Action of CallerInformation * ('b -> Task<unit>)
+    | Fn of CallerInformation * ('b -> Task<unit>)
     | IsExit
 
-type internal ActionBuilder() =
+type ActionBuilder() =
     member inline _.Yield(()) = ()
     member inline _.Delay(f: unit -> ActionProperties<'b> list) = f ()
     member inline _.Delay(f: unit -> ActionProperties<'b>) = [ f () ]
@@ -77,7 +77,7 @@ type internal ActionBuilder() =
                 | ActionProperties.Name name -> { ap with StateAction.Name = name }
                 | ActionProperties.DependantActions da -> { ap with DependantActions = da }
                 | ActionProperties.IsExit -> { ap with IsExit = true }
-                | ActionProperties.Action (ci, action) ->
+                | ActionProperties.Fn (ci, action) ->
                     { ap with
                         CallerInformation = ci
                         ActionFn = action })
@@ -106,8 +106,8 @@ type internal ActionBuilder() =
     [<CustomOperation("isExit")>]
     member inline _.IsExit(_) = ActionProperties.IsExit
 
-    [<CustomOperation("action")>]
-    member inline _.Action
+    [<CustomOperation("fn")>]
+    member inline _.Fn
         (
             _,
             action: 'b -> unit,
@@ -122,7 +122,7 @@ type internal ActionBuilder() =
 
         let action = fun localState -> Task.FromResult(action localState)
 
-        ActionProperties.Action(callerInformation, action)
+        ActionProperties.Fn(callerInformation, action)
 
     [<CustomOperation("action")>]
     member inline _.Action
@@ -138,12 +138,12 @@ type internal ActionBuilder() =
               LineNumber = defaultArg lineNumber 0
               FilePath = defaultArg filePath String.Empty }
 
-        ActionProperties.Action(callerInformation, action)
+        ActionProperties.Fn(callerInformation, action)
 
 // https://github.com/sleepyfran/sharp-point
 // https://sleepyfran.github.io/blog/posts/fsharp/ce-in-fsharp/
 [<RequireQualifiedAccess>]
-type internal PageStateProperties<'a, 'b> =
+type PageStateProperties<'a, 'b> =
     | Name of string
     | Transition of Transition<'a, 'b>
     | Action of StateAction<'b>
@@ -151,7 +151,7 @@ type internal PageStateProperties<'a, 'b> =
     | OnEnter of ('b -> Task<unit>)
     | OnExit of ('b -> Task<unit>)
 
-type internal Page2Builder() =
+type Page2Builder() =
     member inline _.Yield(()) = ()
 
     member inline _.Yield(transition: Transition<'a, 'b>) =

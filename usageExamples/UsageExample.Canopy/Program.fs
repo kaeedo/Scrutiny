@@ -23,17 +23,22 @@ type LoggedInComment() =
 module rec Entry =
     let signIn =
         fun (globalState: GlobalState) ->
-            page {
+            newBuilder {
                 name "Sign In"
 
                 onEnter (fun _ ->
                     printfn "Checking on page sign in"
                     "#header" == "Sign In")
 
-                transition ((fun _ -> task { click "#home" }) ==> home)
+                onExit (fun _ -> printfn "Exiting sign in")
 
-                transition (
-                    (fun _ ->
+                transition {
+                    via (fun _ -> task { click "#home" })
+                    destination home
+                }
+
+                transition {
+                    via (fun _ ->
                         task {
                             globalState.Username <- "kaeedo"
                             "#username" << globalState.Username
@@ -43,75 +48,75 @@ module rec Entry =
 
                             click "Sign In"
                         })
-                    ==> loggedInHome
-                )
 
-                action (fun _ ->
-                    "#username" << "MyUsername"
-                    "#username" == "MyUsername")
+                    destination loggedInHome
+                }
 
-                action (fun _ ->
-                    "#number" << "42"
-                    "#number" == "42")
+                action {
+                    fn (fun _ ->
+                        "#username" << "MyUsername"
+                        "#username" == "MyUsername")
+                }
 
-                action (fun _ ->
-                    let username = read "#username"
-                    let number = read "#number"
+                action {
+                    fn (fun _ ->
+                        "#number" << "42"
+                        "#number" == "42")
+                }
 
-                    if
-                        String.IsNullOrWhiteSpace(username)
-                        || String.IsNullOrWhiteSpace(number)
-                    then
-                        click "Sign In"
-                    else
-                        "#username" << ""
-                        click "Sign In"
+                action {
+                    fn (fun _ ->
+                        let username = read "#username"
+                        let number = read "#number"
 
-                    displayed "#ErrorMessage")
+                        if
+                            String.IsNullOrWhiteSpace(username)
+                            || String.IsNullOrWhiteSpace(number)
+                        then
+                            click "Sign In"
+                        else
+                            "#username" << ""
+                            click "Sign In"
 
-                onExit (fun _ -> printfn "Exiting sign in")
+                        displayed "#ErrorMessage")
+                }
             }
 
     let loggedInComment =
         fun (globalState: GlobalState) ->
-
-            page {
+            newBuilder {
                 name "Logged In Comment"
 
                 localState (LoggedInComment())
-
-                transition ((fun _ -> task { click "#home" }) ==> loggedInHome)
-
-                action (fun ls ->
-                    click "#openModal"
-                    ls.Comment <- "This is my super comment"
-                    "#comment" << ls.Comment
-                    click "#modalFooterSave")
 
                 onEnter (fun _ ->
                     printfn "Checking comment is logged in"
                     displayed "#openModal")
 
-                onExit (fun ls ->
+                onExit (fun (ls: LoggedInComment) ->
                     "#commentsUl>li"
                     *= sprintf "%s wrote:%s%s" globalState.Username Environment.NewLine ls.Comment
 
                     printfn "Exiting comment logged in")
+
+                transition {
+                    via (fun _ -> task { click "#home" })
+                    destination loggedInHome
+                }
+
+                action {
+                    fn (fun (ls: LoggedInComment) ->
+                        click "#openModal"
+                        ls.Comment <- "This is my super comment"
+                        "#comment" << ls.Comment
+                        click "#modalFooterSave")
+                }
             }
 
     let loggedInHome =
         fun (globalState: GlobalState) ->
-            page {
+            newBuilder {
                 name "Logged in Home"
-
-                transition (
-                    (fun _ -> task { click "#comment" })
-                    ==> loggedInComment
-                )
-
-                transition ((fun _ -> task { click "#logout" }) ==> home)
-
-                // minimumVisits 10
 
                 onEnter (fun _ ->
                     printfn "Checking on page home logged in"
@@ -120,39 +125,63 @@ module rec Entry =
                     "#welcomeText"
                     == sprintf "Welcome %s" globalState.Username)
 
-                (*exitAction (fun _ ->
+                transition {
+                    via (fun _ -> task { click "#comment" })
+                    destination loggedInComment
+                }
+
+                transition {
+                    via (fun _ -> task { click "#logout" })
+                    destination home
+                }
+
+            (*exitAction (fun _ ->
                     printfn "Exiting!"
                     click "#logout")*)
             }
 
     let comment =
         fun (globalState: GlobalState) ->
-            page {
+            newBuilder {
                 name "Comment"
 
                 onEnter (fun _ ->
                     printfn "Checking on page comment"
                     "#header" == "Comments")
 
-                transition ((fun _ -> task { click "#home" }) ==> home)
-                transition ((fun _ -> task { click "#signin" }) ==> signIn)
-
                 onExit (fun _ -> printfn "Exiting comment")
+
+                transition {
+                    via (fun _ -> task { click "#home" })
+                    destination home
+                }
+
+                transition {
+                    via (fun _ -> task { click "#signin" })
+                    destination signIn
+                }
             }
 
     let home =
         fun (globalState: GlobalState) ->
-            page {
+            newBuilder {
                 name "Home"
 
                 onEnter (fun _ ->
                     printfn "Checking on page home"
                     "#header" == "Home")
 
-                transition ((fun _ -> task { click "#comment" }) ==> comment)
-                transition ((fun _ -> task { click "#signin" }) ==> signIn)
-
                 onExit (fun _ -> printfn "Exiting home")
+
+                transition {
+                    via (fun _ -> task { click "#comment" })
+                    destination comment
+                }
+
+                transition {
+                    via (fun _ -> task { click "#signin" })
+                    destination signIn
+                }
             }
 
     [<EntryPoint>]
