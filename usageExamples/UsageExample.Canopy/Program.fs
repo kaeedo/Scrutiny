@@ -33,21 +33,19 @@ module rec Entry =
                 onExit (fun _ -> printfn "Exiting sign in")
 
                 transition {
-                    via (fun _ -> task { click "#home" })
+                    via (fun _ -> click "#home")
                     destination home
                 }
 
                 transition {
                     via (fun _ ->
-                        task {
-                            globalState.Username <- "kaeedo"
-                            "#username" << globalState.Username
-                            "#number" << globalState.Number.ToString()
+                        globalState.Username <- "kaeedo"
+                        "#username" << globalState.Username
+                        "#number" << globalState.Number.ToString()
 
-                            globalState.IsSignedIn <- true
+                        globalState.IsSignedIn <- true
 
-                            click "Sign In"
-                        })
+                        click "Sign In")
 
                     destination loggedInHome
                 }
@@ -100,7 +98,7 @@ module rec Entry =
                     printfn "Exiting comment logged in")
 
                 transition {
-                    via (fun _ -> task { click "#home" })
+                    via (fun _ -> click "#home")
                     destination loggedInHome
                 }
 
@@ -126,12 +124,12 @@ module rec Entry =
                     == sprintf "Welcome %s" globalState.Username)
 
                 transition {
-                    via (fun _ -> task { click "#comment" })
+                    via (fun _ -> click "#comment")
                     destination loggedInComment
                 }
 
                 transition {
-                    via (fun _ -> task { click "#logout" })
+                    via (fun _ -> click "#logout")
                     destination home
                 }
 
@@ -152,12 +150,12 @@ module rec Entry =
                 onExit (fun _ -> printfn "Exiting comment")
 
                 transition {
-                    via (fun _ -> task { click "#home" })
+                    via (fun _ -> click "#home")
                     destination home
                 }
 
                 transition {
-                    via (fun _ -> task { click "#signin" })
+                    via (fun _ -> click "#signin")
                     destination signIn
                 }
             }
@@ -174,12 +172,12 @@ module rec Entry =
                 onExit (fun _ -> printfn "Exiting home")
 
                 transition {
-                    via (fun _ -> task { click "#comment" })
+                    via (fun _ -> click "#comment")
                     destination comment
                 }
 
                 transition {
-                    via (fun _ -> task { click "#signin" })
+                    via (fun _ -> click "#signin")
                     destination signIn
                 }
             }
@@ -216,19 +214,18 @@ module rec Entry =
 
         "Scrutiny"
         &&& fun _ ->
-                (task {
-                    printfn "opening url"
-                    url "https://127.0.0.1:5001/home"
-                    let! results = scrutinize config (GlobalState()) home
+                printfn "opening url"
+                url "https://127.0.0.1:5001/home"
 
-                    return
-                        if results.Steps |> Seq.length <> 9 then
-                            raise (Exception($"Expected 9 steps, but was {results.Steps |> Seq.length}"))
-                        else
-                            ()
-                })
-                    .GetAwaiter()
-                    .GetResult()
+                let results =
+                    (scrutinize config (GlobalState()) home)
+                        .GetAwaiter()
+                        .GetResult()
+
+                if results.Steps |> Seq.length <> 9 then
+                    raise (Exception($"Expected 9 steps, but was {results.Steps |> Seq.length}"))
+                else
+                    ()
 
         switchTo browser
 

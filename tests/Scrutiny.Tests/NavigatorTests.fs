@@ -5,7 +5,6 @@ open Expecto
 open Scrutiny
 open Swensen.Unquote
 open FsCheck
-open Scrutiny
 
 let shuffle (r: Random) xs = xs |> Seq.sortBy (fun _ -> r.Next())
 
@@ -94,41 +93,77 @@ module rec TestPages =
 
     let page1 =
         fun _ ->
-            page {
+            newBuilder {
                 name "Page1"
-                transition (ignoreTask ==> page2)
+
+                transition {
+                    via ignoreTask
+                    destination page2
+                }
             }
 
     let page2 =
         fun _ ->
-            page {
+            newBuilder {
                 name "Page2"
-                transition (ignoreTask ==> page1)
-                transition (ignoreTask ==> page3)
+
+                transition {
+                    via ignoreTask
+                    destination page1
+                }
+
+                transition {
+                    via ignoreTask
+                    destination page3
+                }
             }
 
     let page3 =
         fun _ ->
-            page {
+            newBuilder {
                 name "Page3"
-                transition (ignoreTask ==> page4)
-                transition (ignoreTask ==> page5)
+
+                transition {
+                    via ignoreTask
+                    destination page4
+                }
+
+                transition {
+                    via ignoreTask
+                    destination page5
+                }
             }
 
     let page4 =
         fun _ ->
-            page {
+            newBuilder {
                 name "Page4"
-                transition (ignoreTask ==> page3)
-                transition (ignoreTask ==> page5)
+
+                transition {
+                    via ignoreTask
+                    destination page3
+                }
+
+                transition {
+                    via ignoreTask
+                    destination page5
+                }
             }
 
     let page5 =
         fun _ ->
-            page {
+            newBuilder {
                 name "Page5"
-                transition (ignoreTask ==> page2)
-                transition (ignoreTask ==> page3)
+
+                transition {
+                    via ignoreTask
+                    destination page2
+                }
+
+                transition {
+                    via ignoreTask
+                    destination page3
+                }
             }
 
 [<Tests>]

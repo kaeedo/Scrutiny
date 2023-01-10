@@ -11,15 +11,15 @@ type TransitionProperties<'a, 'b> =
     | Destination of ('a -> PageState<'a, 'b>)
 
 type TransitionBuilder() =
-    member inline _.Yield(()) = ()
+    member _.Yield(()) = ()
 
-    member inline _.Delay(f: unit -> TransitionProperties<'a, 'b> list) = f ()
-    member inline _.Delay(f: unit -> TransitionProperties<'a, 'b>) = [ f () ]
+    member _.Delay(f: unit -> TransitionProperties<'a, 'b> list) = f ()
+    member _.Delay(f: unit -> TransitionProperties<'a, 'b>) = [ f () ]
 
-    member inline _.Combine(newProp: TransitionProperties<'a, 'b>, previousProp: TransitionProperties<'a, 'b> list) =
+    member _.Combine(newProp: TransitionProperties<'a, 'b>, previousProp: TransitionProperties<'a, 'b> list) =
         newProp :: previousProp
 
-    member inline x.Run(props: TransitionProperties<'a, 'b> list) =
+    member x.Run(props: TransitionProperties<'a, 'b> list) =
         props
         |> List.fold
             (fun tp prop ->
@@ -31,27 +31,27 @@ type TransitionBuilder() =
               ViaFn = fun _ -> Task.FromResult()
               Destination = fun _ -> Unchecked.defaultof<PageState<'a, 'b>> }
 
-    member inline x.Run(prop: TransitionProperties<'a, 'b>) = x.Run([ prop ])
+    member x.Run(prop: TransitionProperties<'a, 'b>) = x.Run([ prop ])
 
-    member inline x.For(prop: TransitionProperties<'a, 'b>, f: unit -> TransitionProperties<'a, 'b> list) =
+    member x.For(prop: TransitionProperties<'a, 'b>, f: unit -> TransitionProperties<'a, 'b> list) =
         x.Combine(prop, f ())
 
-    member inline x.For(prop: TransitionProperties<'a, 'b>, f: unit -> TransitionProperties<'a, 'b>) = [ prop; f () ]
+    member x.For(prop: TransitionProperties<'a, 'b>, f: unit -> TransitionProperties<'a, 'b>) = [ prop; f () ]
 
     [<CustomOperation("dependantActions")>]
-    member inline _.DependantActions(_, actions) =
+    member _.DependantActions(_, actions) =
         TransitionProperties.DependantActions actions
 
     [<CustomOperation("via")>]
-    member inline _.Via(_, viaFn) =
+    member _.Via(_, viaFn) =
         let viaFn = fun localState -> Task.FromResult(viaFn localState)
         TransitionProperties.ViaFn viaFn
 
     [<CustomOperation("via")>]
-    member inline _.Via(_, viaFnTAsync) = TransitionProperties.ViaFn viaFnTAsync
+    member _.Via(_, viaFnTAsync) = TransitionProperties.ViaFn viaFnTAsync
 
     [<CustomOperation("destination")>]
-    member inline _.Destination(_, destinationState) =
+    member _.Destination(_, destinationState) =
         TransitionProperties.Destination destinationState
 
 [<RequireQualifiedAccess>]
@@ -62,14 +62,13 @@ type ActionProperties<'b> =
     | IsExit
 
 type ActionBuilder() =
-    member inline _.Yield(()) = ()
-    member inline _.Delay(f: unit -> ActionProperties<'b> list) = f ()
-    member inline _.Delay(f: unit -> ActionProperties<'b>) = [ f () ]
+    member _.Yield(()) = ()
+    member _.Delay(f: unit -> ActionProperties<'b> list) = f ()
+    member _.Delay(f: unit -> ActionProperties<'b>) = [ f () ]
 
-    member inline _.Combine(newProp: ActionProperties<'b>, previousProp: ActionProperties<'b> list) =
-        newProp :: previousProp
+    member _.Combine(newProp: ActionProperties<'b>, previousProp: ActionProperties<'b> list) = newProp :: previousProp
 
-    member inline x.Run(props: ActionProperties<'b> list) =
+    member x.Run(props: ActionProperties<'b> list) =
         props
         |> List.fold
             (fun ap prop ->
@@ -90,24 +89,24 @@ type ActionBuilder() =
               IsExit = false
               ActionFn = fun _ -> Task.FromResult() }
 
-    member inline x.Run(prop: ActionProperties<'b>) = x.Run([ prop ])
+    member x.Run(prop: ActionProperties<'b>) = x.Run([ prop ])
 
-    member inline x.For(prop: ActionProperties<'b>, f: unit -> ActionProperties<'b> list) = x.Combine(prop, f ())
+    member x.For(prop: ActionProperties<'b>, f: unit -> ActionProperties<'b> list) = x.Combine(prop, f ())
 
-    member inline x.For(prop: ActionProperties<'b>, f: unit -> ActionProperties<'b>) = [ prop; f () ]
+    member x.For(prop: ActionProperties<'b>, f: unit -> ActionProperties<'b>) = [ prop; f () ]
 
     [<CustomOperation("name")>]
-    member inline _.Name(_, name) = ActionProperties.Name name
+    member _.Name(_, name) = ActionProperties.Name name
 
     [<CustomOperation("dependantActions")>]
-    member inline _.DependantActions(_, actions) =
+    member _.DependantActions(_, actions) =
         ActionProperties.DependantActions actions
 
     [<CustomOperation("isExit")>]
-    member inline _.IsExit(_) = ActionProperties.IsExit
+    member _.IsExit(_) = ActionProperties.IsExit
 
     [<CustomOperation("fn")>]
-    member inline _.Fn
+    member _.Fn
         (
             _,
             action: 'b -> unit,
@@ -125,7 +124,7 @@ type ActionBuilder() =
         ActionProperties.Fn(callerInformation, action)
 
     [<CustomOperation("action")>]
-    member inline _.Action
+    member _.Action
         (
             _,
             action: 'b -> Task<unit>,
@@ -152,20 +151,20 @@ type PageStateProperties<'a, 'b> =
     | OnExit of ('b -> Task<unit>)
 
 type Page2Builder() =
-    member inline _.Yield(()) = ()
+    member _.Yield(()) = ()
 
-    member inline _.Yield(transition: Transition<'a, 'b>) =
+    member _.Yield(transition: Transition<'a, 'b>) =
         PageStateProperties.Transition transition
 
-    member inline _.Yield(action: StateAction<'b>) = PageStateProperties.Action action
+    member _.Yield(action: StateAction<'b>) = PageStateProperties.Action action
 
-    member inline _.Delay(f: unit -> PageStateProperties<'a, 'b> list) = f ()
-    member inline _.Delay(f: unit -> PageStateProperties<'a, 'b>) = [ f () ]
+    member _.Delay(f: unit -> PageStateProperties<'a, 'b> list) = f ()
+    member _.Delay(f: unit -> PageStateProperties<'a, 'b>) = [ f () ]
 
-    member inline _.Combine(newProp: PageStateProperties<'a, 'b>, previousProp: PageStateProperties<'a, 'b> list) =
+    member _.Combine(newProp: PageStateProperties<'a, 'b>, previousProp: PageStateProperties<'a, 'b> list) =
         newProp :: previousProp
 
-    member inline x.Run(props: PageStateProperties<'a, 'b> list) =
+    member x.Run(props: PageStateProperties<'a, 'b> list) =
         props
         |> List.fold
             (fun ps prop ->
@@ -183,30 +182,29 @@ type Page2Builder() =
               Transitions = []
               Actions = [] }
 
-    member inline x.Run(prop: PageStateProperties<'a, 'b>) = x.Run([ prop ])
+    member x.Run(prop: PageStateProperties<'a, 'b>) = x.Run([ prop ])
 
-    member inline x.For(prop: PageStateProperties<'a, 'b>, f: unit -> PageStateProperties<'a, 'b> list) =
-        x.Combine(prop, f ())
+    member x.For(prop: PageStateProperties<'a, 'b>, f: unit -> PageStateProperties<'a, 'b> list) = x.Combine(prop, f ())
 
-    member inline x.For(prop: PageStateProperties<'a, 'b>, f: unit -> PageStateProperties<'a, 'b>) = [ prop; f () ]
+    member x.For(prop: PageStateProperties<'a, 'b>, f: unit -> PageStateProperties<'a, 'b>) = [ prop; f () ]
 
     [<CustomOperation("name")>]
-    member inline _.Name(_, name: string) = PageStateProperties.Name name
+    member _.Name(_, name: string) = PageStateProperties.Name name
 
     [<CustomOperation("onEnter")>]
-    member inline _.OnEnter(_, onEnterFn: 'b -> unit) =
+    member _.OnEnter(_, onEnterFn: 'b -> unit) =
         PageStateProperties.OnEnter(fun localState -> Task.FromResult(onEnterFn localState))
 
     [<CustomOperation("onEnter")>]
-    member inline _.OnEnter(_, onEnterFn: 'b -> Task<unit>) = PageStateProperties.OnEnter onEnterFn
+    member _.OnEnter(_, onEnterFn: 'b -> Task<unit>) = PageStateProperties.OnEnter onEnterFn
 
     [<CustomOperation("onExit")>]
-    member inline _.OnExit(_, onExitFn: 'b -> unit) =
+    member _.OnExit(_, onExitFn: 'b -> unit) =
         PageStateProperties.OnExit(fun localState -> Task.FromResult(onExitFn localState))
 
     [<CustomOperation("onExit")>]
-    member inline _.OnExit(_, onExitFn: 'b -> Task<unit>) = PageStateProperties.OnExit onExitFn
+    member _.OnExit(_, onExitFn: 'b -> Task<unit>) = PageStateProperties.OnExit onExitFn
 
     [<CustomOperation("localState")>]
-    member inline _.LocalState(_, localState: 'b) =
+    member _.LocalState(_, localState: 'b) =
         PageStateProperties.LocalState localState
