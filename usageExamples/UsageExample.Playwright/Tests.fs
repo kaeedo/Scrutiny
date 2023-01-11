@@ -15,17 +15,7 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
     let logger msg = outputHelper.WriteLine(msg)
     let playwright = Playwright.CreateAsync().GetAwaiter().GetResult()
 
-    [<Theory>]
-    [<InlineData>]
-    [<InlineData>]
-    [<InlineData>]
-    [<InlineData>]
-    [<InlineData>]
-    [<InlineData>]
-    [<InlineData>]
-    [<InlineData>]
-    [<InlineData>]
-    [<InlineData>]
+    [<Fact>]
     member this.``Run Scrutiny Test``() =
         task {
             let isHeadless = Environment.GetEnvironmentVariable("CI") = "true"
@@ -43,7 +33,7 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
 
             let config =
                 { ScrutinyConfig.Default with
-                    //Seed = 553931187
+                    Seed = 553931187
                     MapOnly = false
                     ComprehensiveActions = true
                     ComprehensiveStates = true }

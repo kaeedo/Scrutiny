@@ -140,16 +140,21 @@ type ActionBuilder() =
 
 // https://github.com/sleepyfran/sharp-point
 // https://sleepyfran.github.io/blog/posts/fsharp/ce-in-fsharp/
+
 [<RequireQualifiedAccess>]
-type PageStateProperties<'a> =
+type Extra =
     | Name of string
-    | Transition of Transition<'a>
-    | Action of StateAction
     | OnEnter of (unit -> Task<unit>)
     | OnExit of (unit -> Task<unit>)
 
-type Page2Builder() =
-    member _.Yield(()) = ()
+[<RequireQualifiedAccess>]
+type PageStateProperties<'a> =
+    | Extras of Extra list
+    | Transition of Transition<'a>
+    | Action of StateAction
+
+type PageBuilder() =
+    member _.Yield(()) = PageStateProperties.Extras []
 
     member _.Yield(transition: Transition<'a>) =
         PageStateProperties.Transition transition
@@ -167,11 +172,17 @@ type Page2Builder() =
         |> List.fold
             (fun ps prop ->
                 match prop with
-                | PageStateProperties.Name name -> { ps with PageState.Name = name }
+                | PageStateProperties.Extras extras ->
+                    extras
+                    |> List.fold
+                        (fun state current ->
+                            match current with
+                            | Extra.Name n -> { state with PageState.Name = n }
+                            | Extra.OnEnter oe -> { state with PageState.OnEnter = oe }
+                            | Extra.OnExit oe -> { state with PageState.OnExit = oe })
+                        ps
                 | PageStateProperties.Transition transition -> { ps with Transitions = transition :: ps.Transitions }
-                | PageStateProperties.Action action -> { ps with Actions = action :: ps.Actions }
-                | PageStateProperties.OnEnter onEnterFn -> { ps with OnEnter = onEnterFn }
-                | PageStateProperties.OnExit onExitFn -> { ps with OnExit = onExitFn })
+                | PageStateProperties.Action action -> { ps with Actions = action :: ps.Actions })
             { PageState.Name = String.Empty
               OnEnter = fun _ -> Task.FromResult()
               OnExit = fun _ -> Task.FromResult()
@@ -185,18 +196,41 @@ type Page2Builder() =
     member x.For(prop: PageStateProperties<'a>, f: unit -> PageStateProperties<'a>) = [ prop; f () ]
 
     [<CustomOperation("name")>]
-    member _.Name(_, name: string) = PageStateProperties.Name name
+    member _.Name(previous, name: string) =
+        match previous with
+        | PageStateProperties.Extras e -> Extra.Name name :: e |> PageStateProperties.Extras
+        | psp -> psp
 
     [<CustomOperation("onEnter")>]
-    member _.OnEnter(_, onEnterFn: unit -> unit) =
-        PageStateProperties.OnEnter(fun localState -> Task.FromResult(onEnterFn localState))
+    member _.OnEnter(previous, onEnterFn: unit -> unit) =
+        match previous with
+        | PageStateProperties.Extras e ->
+            Extra.OnEnter(fun () -> Task.FromResult(onEnterFn ()))
+            :: e
+            |> PageStateProperties.Extras
+        | psp -> psp
 
     [<CustomOperation("onEnter")>]
-    member _.OnEnter(_, onEnterFn: unit -> Task<unit>) = PageStateProperties.OnEnter onEnterFn
+    member _.OnEnter(previous, onEnterFn: unit -> Task<unit>) =
+        match previous with
+        | PageStateProperties.Extras e ->
+            Extra.OnEnter onEnterFn :: e
+            |> PageStateProperties.Extras
+        | psp -> psp
 
     [<CustomOperation("onExit")>]
-    member _.OnExit(_, onExitFn: unit -> unit) =
-        PageStateProperties.OnExit(fun localState -> Task.FromResult(onExitFn localState))
+    member _.OnExit(previous, onExitFn: unit -> unit) =
+        match previous with
+        | PageStateProperties.Extras e ->
+            Extra.OnExit(fun () -> Task.FromResult(onExitFn ()))
+            :: e
+            |> PageStateProperties.Extras
+        | psp -> psp
 
     [<CustomOperation("onExit")>]
-    member _.OnExit(_, onExitFn: unit -> Task<unit>) = PageStateProperties.OnExit onExitFn
+    member _.OnExit(previous, onExitFn: unit -> Task<unit>) =
+        match previous with
+        | PageStateProperties.Extras e ->
+            Extra.OnExit onExitFn :: e
+            |> PageStateProperties.Extras
+        | psp -> psp

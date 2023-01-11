@@ -275,7 +275,7 @@ module Scrutiny =
 
         baseScrutinize<'a> reporter config
 
-    let page = Page2Builder()
+    let page = PageBuilder()
     let transition = TransitionBuilder()
     let action = ActionBuilder()
 

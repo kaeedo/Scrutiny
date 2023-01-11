@@ -1,16 +1,16 @@
 ﻿namespace UsageExample
 
-open OpenQA.Selenium.Firefox
 
 open System
+open OpenQA.Selenium.Chrome
+open OpenQA.Selenium.Firefox
 open Scrutiny
 
+open WebDriverManager
+open WebDriverManager.DriverConfigs.Impl
 open canopy.classic
 open canopy.runner.classic
 open System.IO
-open OpenQA.Selenium.Chrome
-open WebDriverManager
-open WebDriverManager.DriverConfigs.Impl
 
 type GlobalState() =
     member val IsSignedIn = false with get, set
@@ -24,13 +24,13 @@ module rec Entry =
     let signIn =
         fun (globalState: GlobalState) ->
             page {
-                name "Sign In"
 
                 onEnter (fun _ ->
                     printfn "Checking on page sign in"
                     "#header" == "Sign In")
 
                 onExit (fun _ -> printfn "Exiting sign in")
+                name "Sign In"
 
                 transition {
                     via (fun _ -> click "#home")
@@ -85,7 +85,6 @@ module rec Entry =
             let ls = LoggedInComment()
 
             page {
-                name "Logged In Comment"
 
                 onEnter (fun _ ->
                     printfn "Checking comment is logged in"
@@ -96,6 +95,8 @@ module rec Entry =
                     *= sprintf "%s wrote:%s%s" globalState.Username Environment.NewLine ls.Comment
 
                     printfn "Exiting comment logged in")
+
+                name "Logged In Comment"
 
                 transition {
                     via (fun _ -> click "#home")
@@ -114,7 +115,6 @@ module rec Entry =
     let loggedInHome =
         fun (globalState: GlobalState) ->
             page {
-                name "Logged in Home"
 
                 onEnter (fun _ ->
                     printfn "Checking on page home logged in"
@@ -122,6 +122,8 @@ module rec Entry =
 
                     "#welcomeText"
                     == sprintf "Welcome %s" globalState.Username)
+
+                name "Logged in Home"
 
                 transition {
                     via (fun _ -> click "#comment")
@@ -141,13 +143,13 @@ module rec Entry =
     let comment =
         fun (globalState: GlobalState) ->
             page {
-                name "Comment"
 
                 onEnter (fun _ ->
                     printfn "Checking on page comment"
                     "#header" == "Comments")
 
                 onExit (fun _ -> printfn "Exiting comment")
+                name "Comment"
 
                 transition {
                     via (fun _ -> click "#home")
@@ -163,13 +165,13 @@ module rec Entry =
     let home =
         fun (globalState: GlobalState) ->
             page {
-                name "Home"
 
                 onEnter (fun _ ->
                     printfn "Checking on page home"
                     "#header" == "Home")
 
                 onExit (fun _ -> printfn "Exiting home")
+                name "Home"
 
                 transition {
                     via (fun _ -> click "#comment")
@@ -185,7 +187,10 @@ module rec Entry =
     [<EntryPoint>]
     let main argv =
         printfn "Setting up browser drivers. This might take awhile"
-        //DriverManager().SetUpDriver(ChromeConfig()) |> ignore
+
+        // DriverManager().SetUpDriver(ChromeConfig())
+        // |> ignore
+
         DriverManager().SetUpDriver(FirefoxConfig())
         |> ignore
 

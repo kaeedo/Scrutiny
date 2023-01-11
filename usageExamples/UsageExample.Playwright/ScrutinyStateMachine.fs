@@ -159,6 +159,7 @@ module rec ScrutinyStateMachine =
                         globalState.Logger "Exiting comment logged in"
                     })
 
+
                 transition {
                     via (fun _ -> task { do! globalState.Page.ClickAsync("id=home") })
                     destination loggedInHome
@@ -196,6 +197,7 @@ module rec ScrutinyStateMachine =
 
                         Assert.Equal(sprintf "Welcome %s" globalState.Username, welcomeText)
                     })
+
 
                 transition {
                     via (fun _ -> task { do! globalState.Page.ClickAsync("id=comment") })
