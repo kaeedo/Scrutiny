@@ -2,8 +2,71 @@
 
 open System
 open System.IO
-open System.Text.Json
-open System.Text.Json.Serialization
+open Thoth.Json.Net
+
+[<RequireQualifiedAccess>]
+module internal Encoders =
+    let transition (t: Transition<'a>) =
+        Encode.object
+            [ "dependantActions", Encode.list (List.map Encode.string t.DependantActions)
+              "destination", Encode.string (t.Destination(Unchecked.defaultof<'a>)).Name ]
+
+    let callerInformation (ci: CallerInformation) =
+        Encode.object
+            [ "memberName", Encode.string ci.MemberName
+              "lineNumber", Encode.int ci.LineNumber
+              "filePath", Encode.string ci.FilePath ]
+
+    let action (a: StateAction) =
+        Encode.object
+            [ "dependantActions", Encode.list (List.map Encode.string a.DependantActions)
+              "name", Encode.string a.Name
+              "callerInformation", callerInformation a.CallerInformation ]
+
+    let pageState (ps: PageState<'a>) =
+        Encode.object
+            [ "name", Encode.string ps.Name
+              "transitions", Encode.list (List.map transition ps.Transitions)
+              "actions", Encode.list (List.map action ps.Actions) ]
+
+    let node (n: Node<PageState<'a>>) =
+        Encode.object
+            [ "from", pageState (fst n)
+              "destinations", Encode.list (List.map pageState (snd n)) ]
+
+    let adjacencyGraph (ag: AdjacencyGraph<PageState<'a>>) = Encode.list (List.map node ag)
+
+    let rec serializableException (se: SerializableException) =
+        Encode.object
+            [ "type", Encode.string se.Type
+              "message", Encode.string se.Message
+              "stackTrace", Encode.string se.StackTrace
+              "innerException", Encode.option serializableException se.InnerException ]
+
+    let errorLocation (el: ErrorLocation) =
+        match el with
+        | State (n, se) ->
+            Encode.object
+                [ "case", Encode.string "state"
+                  "name", Encode.string n
+                  "exception", serializableException se ]
+        | Transition (f, d, se) ->
+            Encode.object
+                [ "case", Encode.string "transition"
+                  "from", Encode.string f
+                  "destination", Encode.string d
+                  "exception", serializableException se ]
+
+    let step (s: Step<_>) =
+        Encode.object
+            [ "pageState", pageState s.PageState
+              "actions", Encode.list (List.map Encode.string s.Actions)
+              "errorLocation", Encode.option errorLocation s.Error ]
+
+    let scrutinizedState (ss: ScrutinizedStates<'a>) =
+        Encode.object
+            [ "graph", adjacencyGraph ss.Graph
+              "steps", Encode.list (List.map step ss.Steps) ]
 
 type private ReporterMessage<'a, 'b> =
     | Start of AdjacencyGraph<PageState<'a>> * PageState<'a>
@@ -44,13 +107,9 @@ type internal Reporter<'a>(filePath: string) =
 
         fileInfo.DirectoryName, fileName
 
-    let generateMap (graph: ScrutinizedStates<_>) =
-        let options = JsonSerializerOptions()
-        options.Converters.Add(JsonFSharpConverter())
-        options.ReferenceHandler <- ReferenceHandler.Preserve
-
-        let output =
-            html.Replace("\"{{REPORT}}\"", JsonSerializer.Serialize(graph, options))
+    let generateMap (graph: ScrutinizedStates<'a>) =
+        let json = Encoders.scrutinizedState graph
+        let output = html.Replace("\"{{REPORT}}\"", json.ToString())
 
         let (filePath, fileName) = file
 
@@ -89,10 +148,8 @@ type internal Reporter<'a>(filePath: string) =
                         let current = { current with Actions = [ yield! current.Actions; name ] }
 
                         let steps =
-                            seq {
-                                yield! removeLast state.Steps
-                                current
-                            }
+                            [ yield! removeLast state.Steps
+                              current ]
 
                         return! loop { state with Steps = steps }
                     | OnError el ->
@@ -100,10 +157,8 @@ type internal Reporter<'a>(filePath: string) =
                         let current = { current with Error = Some el }
 
                         let steps =
-                            seq {
-                                yield! removeLast state.Steps
-                                current
-                            }
+                            [ yield! removeLast state.Steps
+                              current ]
 
                         return! loop { state with Steps = steps }
                     | GenerateMap ->

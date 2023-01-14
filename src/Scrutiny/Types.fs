@@ -8,14 +8,9 @@ type internal ScrutinyException(message, innerException: Exception) =
     inherit Exception(message, innerException)
 
 //http://www.fssnip.net/av/title/NinetyNine-F-Problems-Problems-80-89-Graphs
-
-type internal Edge<'a> = 'a * 'a
-
-type internal Graph<'a> = 'a list * Edge<'a> list
-
 type internal Node<'a> = 'a * 'a list
 
-type internal AdjacencyGraph<'a> = 'a Node list
+type internal AdjacencyGraph<'a> = Node<'a> list
 
 type ScrutinyConfig =
     { Seed: int
@@ -92,9 +87,9 @@ type ErrorLocation =
 
 type Step<'a> =
     { PageState: PageState<'a>
-      Actions: string seq
+      Actions: string list
       Error: ErrorLocation option }
 
 type ScrutinizedStates<'a> =
     { Graph: AdjacencyGraph<PageState<'a>>
-      Steps: Step<'a> seq }
+      Steps: Step<'a> list }

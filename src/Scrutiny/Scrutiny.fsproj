@@ -39,8 +39,7 @@
     <Compile Include="CSharp\Entry.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.SystemTextJson" Version="0.17.4" />
-    <PackageReference Include="System.Text.Json" Version="6.0.2" />
-    <PackageReference Update="FSharp.Core" Version="6.0.3" />
+    <PackageReference Update="FSharp.Core" Version="7.0.0" />
+    <PackageReference Include="Thoth.Json.Net" Version="10.0.0" />
   </ItemGroup>
 </Project>
