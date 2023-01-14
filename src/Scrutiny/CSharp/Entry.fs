@@ -61,7 +61,7 @@ module internal ScrutinyCSharp =
                 if m.ReturnType = typeof<Task> then
                     do! m.Invoke(constructed, [||]) :?> Task
                 else
-                    do m.Invoke(constructed, [||]) |> ignore
+                    do m.Invoke(constructed, [||])
             }
 
     let private buildTransition constructedPageState defs =
@@ -187,7 +187,9 @@ module internal ScrutinyCSharp =
         |> List.map (fun (ps, constructed) ->
             let transitionsForPageState = buildTransition constructed defs
 
-            { ps with Transitions = transitionsForPageState })
+            ps.Transitions <- transitionsForPageState
+            ps)
+
 
     let start<'startState> gs (config: Configuration) : Task<ScrutinizedStates> =
         task {
@@ -199,7 +201,6 @@ module internal ScrutinyCSharp =
             let starting = defs |> List.find (fun d -> d.Name = t.Name)
 
             let! result = Scrutiny.scrutinize config (obj ()) (fun _ -> starting)
-
             return ScrutinizedStates(result.Graph, result.Steps)
         }
 

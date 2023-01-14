@@ -1,64 +1,63 @@
-using Scrutiny.CSharp;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
+using Scrutiny.CSharp;
 using UsageExample.CSharp.Pages;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace UsageExample.CSharp
+namespace UsageExample.CSharp;
+
+public class Tests : IDisposable
 {
-    public class Tests : IDisposable
+    private readonly ITestOutputHelper _outputHelper;
+    private readonly IPlaywright _playwright;
+
+    public Tests(ITestOutputHelper outputHelper)
     {
-        private readonly IPlaywright playwright;
-        private readonly ITestOutputHelper outputHelper;
+        outputHelper.WriteLine("Setting up browser drivers. This might take awhile");
+        Program.Main(new[] {"install"});
 
-        public Tests(ITestOutputHelper outputHelper)
+        _playwright = Playwright.CreateAsync().GetAwaiter().GetResult();
+
+        outputHelper.WriteLine("Finished setting up browser drivers");
+        _outputHelper = outputHelper;
+    }
+
+    public void Dispose()
+    {
+        _playwright?.Dispose();
+    }
+
+    [Fact]
+    public async Task WithAttrs()
+    {
+        var isHeadless = Environment.GetEnvironmentVariable("CI") == "true";
+
+        var launchOptions = new BrowserTypeLaunchOptions
         {
-            outputHelper.WriteLine("Setting up browser drivers. This might take awhile");
-            Microsoft.Playwright.Program.Main(new[] {"install"});
-            
-            playwright = Playwright.CreateAsync().GetAwaiter().GetResult();
+            Headless = isHeadless
+        };
 
-            outputHelper.WriteLine("Finished setting up browser drivers");
-            this.outputHelper = outputHelper;
-        }
+        var browser = await _playwright.Firefox.LaunchAsync(launchOptions);
+        var context = await browser.NewContextAsync(new BrowserNewContextOptions {IgnoreHTTPSErrors = true});
+        var page = await context.NewPageAsync();
 
-        [Fact]
-        public async Task WithAttrs()
+        await page.GotoAsync("https://127.0.0.1:5001/home");
+
+        var config = new Configuration
         {
-            var isHeadless = Environment.GetEnvironmentVariable("CI") == "true";
+            Seed = 553931187,
+            MapOnly = false,
+            ComprehensiveActions = true,
+            ComprehensiveStates = true
+        };
 
-            var launchOptions = new BrowserTypeLaunchOptions
-            {
-                Headless = isHeadless
-            };
-            
-            var browser = await playwright.Firefox.LaunchAsync(launchOptions);
-            var context = await browser.NewContextAsync(new BrowserNewContextOptions {IgnoreHTTPSErrors = true});
-            var page = await context.NewPageAsync();
+        var gs = new GlobalState(page, _outputHelper);
+        var result = await Scrutinize.Start<Home>(gs, config);
 
-            await page.GotoAsync("https://127.0.0.1:5001/home");
-
-            var config = new Configuration
-            {
-                Seed = 553931187,
-                MapOnly = false,
-                ComprehensiveActions = true,
-                ComprehensiveStates = true
-            };
-
-            var gs = new GlobalState(page, outputHelper);
-            var result = await Scrutinize.Start<Home>(gs, config);
-
-            Assert.Equal(7, result.Steps.Count());
-            Assert.Equal(5, result.Graph.Count());
-        }
-
-        public void Dispose()
-        {
-            playwright?.Dispose();
-        }
+        Assert.Equal(7, result.Steps.Count());
+        Assert.Equal(5, result.Graph.Count());
     }
 }

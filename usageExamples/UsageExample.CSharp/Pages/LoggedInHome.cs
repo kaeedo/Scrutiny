@@ -1,54 +1,53 @@
-﻿using Scrutiny.CSharp;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using Scrutiny.CSharp;
 using Xunit;
 
-namespace UsageExample.CSharp.Pages
+namespace UsageExample.CSharp.Pages;
+
+[PageState]
+public class LoggedInHome
 {
-    [PageState]
-    public class LoggedInHome
+    private readonly GlobalState _globalState;
+
+    public LoggedInHome(GlobalState globalState)
     {
-        private readonly GlobalState globalState;
+        _globalState = globalState;
+        globalState.Logger.WriteLine($"Constructing {nameof(LoggedInHome)}");
+    }
 
-        public LoggedInHome(GlobalState globalState)
-        {
-            this.globalState = globalState;
-            globalState.Logger.WriteLine($"Constructing {nameof(LoggedInHome)}");
-        }
+    [OnEnter]
+    public async Task OnEnter()
+    {
+        _globalState.Logger.WriteLine("Checking on page home logged in");
+        var header = await _globalState.Page.QuerySelectorAsync("id=header");
 
-        [OnEnter]
-        public async Task OnEnter()
-        {
-            globalState.Logger.WriteLine("Checking on page home logged in");
-            var header = await globalState.Page.QuerySelectorAsync("#header");
+        Assert.NotNull(header);
 
-            Assert.NotNull(header);
+        var displayState = await header.EvaluateAsync("e => e.style.display");
 
-            var displayState = await header.EvaluateAsync("e => e.style.display");
+        Assert.False(displayState.ToString() == "none");
 
-            Assert.False(displayState.ToString() == "none");
+        var welcomeText = await _globalState.Page.InnerTextAsync("id=welcomeText");
 
-            var welcomeText = await globalState.Page.InnerTextAsync("#welcomeText");
+        Assert.Equal($"Welcome {_globalState.Username}", welcomeText);
+    }
 
-            Assert.Equal($"Welcome {globalState.Username}", welcomeText);
-        }
+    [Action(IsExit = true)]
+    public async Task ExitAction()
+    {
+        _globalState.Logger.WriteLine("Exiting!");
+        await _globalState.Page.ClickAsync("id=logout");
+    }
 
-        [Action(IsExit = true)]
-        public async Task ExitAction()
-        {
-            globalState.Logger.WriteLine("Exiting!");
-            await globalState.Page.ClickAsync("#logout");
-        }
+    [TransitionTo(nameof(Home))]
+    public async Task ClickOnSignIn()
+    {
+        await _globalState.Page.ClickAsync("id=logout");
+    }
 
-        [TransitionTo(nameof(Home))]
-        public async Task ClickOnSignIn()
-        {
-            await globalState.Page.ClickAsync("#logout");
-        }
-
-        [TransitionTo(nameof(LoggedInComment))]
-        public async Task ClickOnComment()
-        {
-            await globalState.Page.ClickAsync("#comment");
-        }
+    [TransitionTo(nameof(LoggedInComment))]
+    public async Task ClickOnComment()
+    {
+        await _globalState.Page.ClickAsync("id=comment");
     }
 }

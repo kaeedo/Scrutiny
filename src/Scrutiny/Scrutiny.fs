@@ -52,6 +52,7 @@ module Scrutiny =
         (actions: StateAction list)
         =
         actions
+        |> List.filter (fun a -> not a.IsExit)
         |> List.map (fun a ->
             fun () ->
                 task {

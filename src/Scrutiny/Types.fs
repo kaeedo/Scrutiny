@@ -57,7 +57,7 @@ and [<CustomComparison; CustomEquality>] PageState<'a> =
       // OnAction?
       OnEnter: unit -> Task<unit>
       OnExit: unit -> Task<unit>
-      Transitions: (Transition<'a>) list
+      mutable Transitions: (Transition<'a>) list
       Actions: StateAction list }
 
     interface IComparable<PageState<'a>> with

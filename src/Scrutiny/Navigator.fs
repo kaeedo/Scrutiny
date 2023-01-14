@@ -33,7 +33,6 @@ module internal Navigator =
 
         (nodes, edges)
 
-    // TODO: Refactor this to recursion?
     let constructAdjacencyGraph<'a> (startState: PageState<'a>) (globalState: 'a) : AdjacencyGraph<PageState<'a>> =
         let getTransitions node : PageState<'a> list =
             node.Transitions
