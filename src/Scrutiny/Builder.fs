@@ -4,110 +4,54 @@ open System
 open System.Runtime.CompilerServices
 open System.Threading.Tasks
 
-[<RequireQualifiedAccess>]
-type TransitionProperties<'a> =
-    | DependantActions of string list
-    | ViaFn of (unit -> Task<unit>)
-    | Destination of ('a -> PageState<'a>)
-
 type TransitionBuilder() =
-    member _.Yield(()) = ()
-
-    member _.Delay(f: unit -> TransitionProperties<'a> list) = f ()
-    member _.Delay(f: unit -> TransitionProperties<'a>) = [ f () ]
-
-    member _.Combine(newProp: TransitionProperties<'a>, previousProp: TransitionProperties<'a> list) =
-        newProp :: previousProp
-
-    member x.Run(props: TransitionProperties<'a> list) =
-        props
-        |> List.fold
-            (fun tp prop ->
-                match prop with
-                | TransitionProperties.DependantActions actions -> { tp with Transition.DependantActions = actions }
-                | TransitionProperties.ViaFn viaFnTAsync -> { tp with ViaFn = viaFnTAsync }
-                | TransitionProperties.Destination destinationState -> { tp with Destination = destinationState })
-            { Transition.DependantActions = []
-              ViaFn = fun _ -> Task.FromResult()
-              Destination = fun _ -> Unchecked.defaultof<PageState<'a>> }
-
-    member x.Run(prop: TransitionProperties<'a>) = x.Run([ prop ])
-
-    member x.For(prop: TransitionProperties<'a>, f: unit -> TransitionProperties<'a> list) = x.Combine(prop, f ())
-
-    member x.For(prop: TransitionProperties<'a>, f: unit -> TransitionProperties<'a>) = [ prop; f () ]
+    member _.Yield(()) =
+        { Transition.DependantActions = []
+          ViaFn = fun _ -> Task.FromResult()
+          Destination = fun _ -> Unchecked.defaultof<PageState<'a>> }
 
     [<CustomOperation("dependantActions")>]
-    member _.DependantActions(_, actions) =
-        TransitionProperties.DependantActions actions
+    member _.DependantActions(previous, actions) =
+        { previous with Transition.DependantActions = actions }
 
     [<CustomOperation("via")>]
-    member _.Via(_, viaFn) =
-        let viaFn = fun localState -> Task.FromResult(viaFn localState)
-        TransitionProperties.ViaFn viaFn
+    member _.Via(previous, viaFn) =
+        let viaFn = fun () -> Task.FromResult(viaFn ())
+        { previous with ViaFn = viaFn }
 
     [<CustomOperation("via")>]
-    member _.Via(_, viaFnTAsync) = TransitionProperties.ViaFn viaFnTAsync
+    member _.Via(previous, viaFnTAsync) = { previous with ViaFn = viaFnTAsync }
 
     [<CustomOperation("destination")>]
-    member _.Destination(_, destinationState) =
-        TransitionProperties.Destination destinationState
-
-[<RequireQualifiedAccess>]
-type ActionProperties =
-    | Name of string
-    | DependantActions of string list
-    | Fn of CallerInformation * (unit -> Task<unit>)
-    | IsExit
+    member _.Destination(previous, destinationState) =
+        { previous with Destination = destinationState }
 
 type ActionBuilder() =
-    member _.Yield(()) = ()
-    member _.Delay(f: unit -> ActionProperties list) = f ()
-    member _.Delay(f: unit -> ActionProperties) = [ f () ]
-
-    member _.Combine(newProp: ActionProperties, previousProp: ActionProperties list) = newProp :: previousProp
-
-    member x.Run(props: ActionProperties list) =
-        props
-        |> List.fold
-            (fun ap prop ->
-                match prop with
-                | ActionProperties.Name name -> { ap with StateAction.Name = name }
-                | ActionProperties.DependantActions da -> { ap with DependantActions = da }
-                | ActionProperties.IsExit -> { ap with IsExit = true }
-                | ActionProperties.Fn (ci, action) ->
-                    { ap with
-                        CallerInformation = ci
-                        ActionFn = action })
-            { StateAction.CallerInformation =
-                { CallerInformation.MemberName = String.Empty
-                  LineNumber = 0
-                  FilePath = String.Empty }
-              Name = String.Empty
-              DependantActions = []
-              IsExit = false
-              ActionFn = fun _ -> Task.FromResult() }
-
-    member x.Run(prop: ActionProperties) = x.Run([ prop ])
-
-    member x.For(prop: ActionProperties, f: unit -> ActionProperties list) = x.Combine(prop, f ())
-
-    member x.For(prop: ActionProperties, f: unit -> ActionProperties) = [ prop; f () ]
+    member _.Yield(()) =
+        { StateAction.CallerInformation =
+            { CallerInformation.MemberName = String.Empty
+              LineNumber = 0
+              FilePath = String.Empty }
+          Name = String.Empty
+          DependantActions = []
+          IsExit = false
+          ActionFn = fun _ -> Task.FromResult() }
 
     [<CustomOperation("name")>]
-    member _.Name(_, name) = ActionProperties.Name name
+    member _.Name(previous, name) =
+        { previous with StateAction.Name = name }
 
     [<CustomOperation("dependantActions")>]
-    member _.DependantActions(_, actions) =
-        ActionProperties.DependantActions actions
+    member _.DependantActions(previous, actions) =
+        { previous with StateAction.DependantActions = actions }
 
     [<CustomOperation("isExit")>]
-    member _.IsExit(_) = ActionProperties.IsExit
+    member _.IsExit(previous) = { previous with IsExit = true }
 
     [<CustomOperation("fn")>]
     member _.Fn
         (
-            _,
+            previous,
             action: unit -> unit,
             [<CallerMemberName>] ?memberName: string,
             [<CallerLineNumber>] ?lineNumber: int,
@@ -120,12 +64,14 @@ type ActionBuilder() =
 
         let action = fun _ -> Task.FromResult(action ())
 
-        ActionProperties.Fn(callerInformation, action)
+        { previous with
+            ActionFn = action
+            CallerInformation = callerInformation }
 
     [<CustomOperation("fn")>]
     member _.Fn
         (
-            _,
+            previous,
             action: unit -> Task<unit>,
             [<CallerMemberName>] ?memberName: string,
             [<CallerLineNumber>] ?lineNumber: int,
@@ -136,7 +82,10 @@ type ActionBuilder() =
               LineNumber = defaultArg lineNumber 0
               FilePath = defaultArg filePath String.Empty }
 
-        ActionProperties.Fn(callerInformation, action)
+        { previous with
+            ActionFn = action
+            CallerInformation = callerInformation }
+
 
 // https://github.com/sleepyfran/sharp-point
 // https://sleepyfran.github.io/blog/posts/fsharp/ce-in-fsharp/
