@@ -135,9 +135,13 @@ module rec Entry =
                     destination home
                 }
 
-            (*exitAction (fun _ ->
-                    printfn "Exiting!"
-                    click "#logout")*)
+                action {
+                    isExit
+
+                    fn (fun _ ->
+                        printfn "Exiting!"
+                        click "#logout")
+                }
             }
 
     let comment =
@@ -227,8 +231,8 @@ module rec Entry =
                         .GetAwaiter()
                         .GetResult()
 
-                if results.Steps |> Seq.length <> 9 then
-                    raise (Exception($"Expected 9 steps, but was {results.Steps |> Seq.length}"))
+                if results.Steps |> Seq.length <> 16 then
+                    raise (Exception($"Expected 16 steps, but was {results.Steps |> Seq.length}"))
                 else
                     ()
 

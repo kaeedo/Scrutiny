@@ -57,7 +57,7 @@ public class Tests : IDisposable
         var gs = new GlobalState(page, _outputHelper);
         var result = await Scrutinize.Start<Home>(gs, config);
 
-        Assert.Equal(7, result.Steps.Count());
+        Assert.Equal(14, result.Steps.Count());
         Assert.Equal(5, result.Graph.Count());
     }
 }
