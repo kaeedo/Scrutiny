@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title></title>
     <style>
         /* This sets the color for "TK" nodes to a light blue green. */
-        g.type-TK > rect {
+        g.type-TK>rect {
             fill: #00ffd0;
         }
 
@@ -13,35 +14,49 @@
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             font-size: 14px;
         }
+
     </style>
 </head>
 
 <body>
-Here is one mermaid diagram:
-<pre class="mermaid">
-    stateDiagram
-       direction LR
-    
-       accTitle: This is the accessible title
-       accDescr: This is an accessible description
-    
-       classDef notMoving fill:white
-       classDef movement font-style:italic;
-       classDef badBadEvent fill:#f00,color:white,font-weight:bold,stroke-width:2px,stroke:yellow
-    
-       [*] --> Still:::notMoving
-       Still --> [*]
-       Still --> Moving:::movement
-       Moving --> Still
-       Moving --> Crash:::movement
-       Crash:::badBadEvent --> [*]
-</pre>
+
+    <pre id="graph" class="mermaid"></pre>
 
 </body>
 <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
 
-    mermaid.initialize({startOnLoad: true});
+    const scrutinizedStates = "{{REPORT}}";
+    const names =
+        scrutinizedStates.graph.map((ps, i) => {
+            const name = ps.from.name
+            return `ps${i}: ${name}\n`
+        })
+    const graphElement = document.getElementById('graph');
+
+    graphElement.innerHTML =
+        `
+stateDiagram
+    direction LR
+
+    ${names}
+
+    accTitle: This is the accessible title
+    accDescr: This is an accessible description
+
+    classDef notMoving fill:white
+    classDef movement font-style:italic;
+    classDef badBadEvent fill:#f00,color:white,font-weight:bold,stroke-width:2px,stroke:yellow
+
+    [*] --> Still:::notMoving
+    Still --> [*]
+    Still --> Moving:::movement
+    Moving --> Still
+    Moving --> Crash:::movement
+    Crash:::badBadEvent --> [*]
+`
+
+    mermaid.initialize({ startOnLoad: true });
 </script>
 
 </html>
