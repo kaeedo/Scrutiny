@@ -27,11 +27,21 @@
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
 
     const scrutinizedStates = "{{REPORT}}";
+
+    const toId = name => name.replace(/\s/g, '').toLowerCase()
+
     const names =
-        scrutinizedStates.graph.map((ps, i) => {
+        scrutinizedStates.graph.map((ps) => {
             const name = ps.from.name
-            return `ps${i}: ${name}\n`
-        })
+            return `    ${toId(name)}: ${name}`
+        }).join('\n');
+
+    const graph =
+        scrutinizedStates.graph.map((ps) => {
+            const id = toId(ps.from.name);
+            return ps.destinations.map(d => `    ${id} --> ${toId(d.name)}`).join('\n');
+        }).join('\n');
+
     const graphElement = document.getElementById('graph');
 
     graphElement.innerHTML =
@@ -39,7 +49,7 @@
 stateDiagram
     direction LR
 
-    ${names}
+${names}
 
     accTitle: This is the accessible title
     accDescr: This is an accessible description
@@ -48,13 +58,9 @@ stateDiagram
     classDef movement font-style:italic;
     classDef badBadEvent fill:#f00,color:white,font-weight:bold,stroke-width:2px,stroke:yellow
 
-    [*] --> Still:::notMoving
-    Still --> [*]
-    Still --> Moving:::movement
-    Moving --> Still
-    Moving --> Crash:::movement
-    Crash:::badBadEvent --> [*]
+${graph}
 `
+    console.log(graphElement.innerHTML)
 
     mermaid.initialize({ startOnLoad: true });
 </script>
