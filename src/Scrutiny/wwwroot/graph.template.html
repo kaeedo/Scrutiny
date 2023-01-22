@@ -20,49 +20,835 @@
 
 <body>
 
-    <pre id="graph" class="mermaid"></pre>
+    <div id="steps">
+        <span>Steps: </span>
+    </div>
+    <input id="reportRangeSlider" value="1" min="0" max="0" type="range" />
+    <pre id="graph">
+        <div id="inside"></div>
+    </pre>
+    <div id="actionsPerformed">
+        <pre id="actionsList"></pre>
+    </div>
+    <div id="errorMessage"></div>
 
 </body>
 <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
 
-    const scrutinizedStates = "{{REPORT}}";
+    const scrutinizedStates = {
+        "graph": [
+            {
+                "from": {
+                    "name": "Logged In Comment",
+                    "transitions": [
+                        {
+                            "dependantActions": [],
+                            "destination": "Logged in Home"
+                        }
+                    ],
+                    "actions": [
+                        {
+                            "dependantActions": [],
+                            "name": "",
+                            "callerInformation": {
+                                "memberName": "loggedInComment",
+                                "lineNumber": 169,
+                                "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                            }
+                        }
+                    ]
+                },
+                "destinations": [
+                    {
+                        "name": "Logged in Home",
+                        "transitions": [
+                            {
+                                "dependantActions": [],
+                                "destination": "Home"
+                            },
+                            {
+                                "dependantActions": [],
+                                "destination": "Logged In Comment"
+                            }
+                        ],
+                        "actions": []
+                    }
+                ]
+            },
+            {
+                "from": {
+                    "name": "Logged in Home",
+                    "transitions": [
+                        {
+                            "dependantActions": [],
+                            "destination": "Home"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Logged In Comment"
+                        }
+                    ],
+                    "actions": []
+                },
+                "destinations": [
+                    {
+                        "name": "Home",
+                        "transitions": [
+                            {
+                                "dependantActions": [],
+                                "destination": "Sign In"
+                            },
+                            {
+                                "dependantActions": [],
+                                "destination": "Comment"
+                            }
+                        ],
+                        "actions": []
+                    },
+                    {
+                        "name": "Logged In Comment",
+                        "transitions": [
+                            {
+                                "dependantActions": [],
+                                "destination": "Logged in Home"
+                            }
+                        ],
+                        "actions": [
+                            {
+                                "dependantActions": [],
+                                "name": "",
+                                "callerInformation": {
+                                    "memberName": "loggedInComment",
+                                    "lineNumber": 169,
+                                    "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "from": {
+                    "name": "Comment",
+                    "transitions": [
+                        {
+                            "dependantActions": [],
+                            "destination": "Sign In"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Home"
+                        }
+                    ],
+                    "actions": []
+                },
+                "destinations": [
+                    {
+                        "name": "Sign In",
+                        "transitions": [
+                            {
+                                "dependantActions": [
+                                    "Fill out username",
+                                    "Fill out number"
+                                ],
+                                "destination": "Logged in Home"
+                            },
+                            {
+                                "dependantActions": [],
+                                "destination": "Home"
+                            }
+                        ],
+                        "actions": [
+                            {
+                                "dependantActions": [],
+                                "name": "",
+                                "callerInformation": {
+                                    "memberName": "signIn",
+                                    "lineNumber": 102,
+                                    "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                                }
+                            },
+                            {
+                                "dependantActions": [],
+                                "name": "Fill out number",
+                                "callerInformation": {
+                                    "memberName": "signIn",
+                                    "lineNumber": 90,
+                                    "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                                }
+                            },
+                            {
+                                "dependantActions": [],
+                                "name": "Fill out username",
+                                "callerInformation": {
+                                    "memberName": "signIn",
+                                    "lineNumber": 74,
+                                    "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Home",
+                        "transitions": [
+                            {
+                                "dependantActions": [],
+                                "destination": "Sign In"
+                            },
+                            {
+                                "dependantActions": [],
+                                "destination": "Comment"
+                            }
+                        ],
+                        "actions": []
+                    }
+                ]
+            },
+            {
+                "from": {
+                    "name": "Sign In",
+                    "transitions": [
+                        {
+                            "dependantActions": [
+                                "Fill out username",
+                                "Fill out number"
+                            ],
+                            "destination": "Logged in Home"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Home"
+                        }
+                    ],
+                    "actions": [
+                        {
+                            "dependantActions": [],
+                            "name": "",
+                            "callerInformation": {
+                                "memberName": "signIn",
+                                "lineNumber": 102,
+                                "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                            }
+                        },
+                        {
+                            "dependantActions": [],
+                            "name": "Fill out number",
+                            "callerInformation": {
+                                "memberName": "signIn",
+                                "lineNumber": 90,
+                                "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                            }
+                        },
+                        {
+                            "dependantActions": [],
+                            "name": "Fill out username",
+                            "callerInformation": {
+                                "memberName": "signIn",
+                                "lineNumber": 74,
+                                "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                            }
+                        }
+                    ]
+                },
+                "destinations": [
+                    {
+                        "name": "Logged in Home",
+                        "transitions": [
+                            {
+                                "dependantActions": [],
+                                "destination": "Home"
+                            },
+                            {
+                                "dependantActions": [],
+                                "destination": "Logged In Comment"
+                            }
+                        ],
+                        "actions": []
+                    },
+                    {
+                        "name": "Home",
+                        "transitions": [
+                            {
+                                "dependantActions": [],
+                                "destination": "Sign In"
+                            },
+                            {
+                                "dependantActions": [],
+                                "destination": "Comment"
+                            }
+                        ],
+                        "actions": []
+                    }
+                ]
+            },
+            {
+                "from": {
+                    "name": "Home",
+                    "transitions": [
+                        {
+                            "dependantActions": [],
+                            "destination": "Sign In"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Comment"
+                        }
+                    ],
+                    "actions": []
+                },
+                "destinations": [
+                    {
+                        "name": "Sign In",
+                        "transitions": [
+                            {
+                                "dependantActions": [
+                                    "Fill out username",
+                                    "Fill out number"
+                                ],
+                                "destination": "Logged in Home"
+                            },
+                            {
+                                "dependantActions": [],
+                                "destination": "Home"
+                            }
+                        ],
+                        "actions": [
+                            {
+                                "dependantActions": [],
+                                "name": "",
+                                "callerInformation": {
+                                    "memberName": "signIn",
+                                    "lineNumber": 102,
+                                    "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                                }
+                            },
+                            {
+                                "dependantActions": [],
+                                "name": "Fill out number",
+                                "callerInformation": {
+                                    "memberName": "signIn",
+                                    "lineNumber": 90,
+                                    "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                                }
+                            },
+                            {
+                                "dependantActions": [],
+                                "name": "Fill out username",
+                                "callerInformation": {
+                                    "memberName": "signIn",
+                                    "lineNumber": 74,
+                                    "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Comment",
+                        "transitions": [
+                            {
+                                "dependantActions": [],
+                                "destination": "Sign In"
+                            },
+                            {
+                                "dependantActions": [],
+                                "destination": "Home"
+                            }
+                        ],
+                        "actions": []
+                    }
+                ]
+            }
+        ],
+        "steps": [
+            {
+                "pageState": {
+                    "name": "Home",
+                    "transitions": [
+                        {
+                            "dependantActions": [],
+                            "destination": "Sign In"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Comment"
+                        }
+                    ],
+                    "actions": []
+                },
+                "actions": [],
+                "errorLocation": null
+            },
+            {
+                "pageState": {
+                    "name": "Sign In",
+                    "transitions": [
+                        {
+                            "dependantActions": [
+                                "Fill out username",
+                                "Fill out number"
+                            ],
+                            "destination": "Logged in Home"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Home"
+                        }
+                    ],
+                    "actions": [
+                        {
+                            "dependantActions": [],
+                            "name": "",
+                            "callerInformation": {
+                                "memberName": "signIn",
+                                "lineNumber": 102,
+                                "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                            }
+                        },
+                        {
+                            "dependantActions": [],
+                            "name": "Fill out number",
+                            "callerInformation": {
+                                "memberName": "signIn",
+                                "lineNumber": 90,
+                                "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                            }
+                        },
+                        {
+                            "dependantActions": [],
+                            "name": "Fill out username",
+                            "callerInformation": {
+                                "memberName": "signIn",
+                                "lineNumber": 74,
+                                "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                            }
+                        }
+                    ]
+                },
+                "actions": [
+                    "Action: , Member: signIn, Line #: 102, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: Fill out number, Member: signIn, Line #: 90, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: Fill out username, Member: signIn, Line #: 74, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                ],
+                "errorLocation": null
+            },
+            {
+                "pageState": {
+                    "name": "Logged in Home",
+                    "transitions": [
+                        {
+                            "dependantActions": [],
+                            "destination": "Home"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Logged In Comment"
+                        }
+                    ],
+                    "actions": []
+                },
+                "actions": [
+                    "Action: Fill out username, Member: signIn, Line #: 74, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: Fill out number, Member: signIn, Line #: 90, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                ],
+                "errorLocation": null
+            },
+            {
+                "pageState": {
+                    "name": "Logged In Comment",
+                    "transitions": [
+                        {
+                            "dependantActions": [],
+                            "destination": "Logged in Home"
+                        }
+                    ],
+                    "actions": [
+                        {
+                            "dependantActions": [],
+                            "name": "",
+                            "callerInformation": {
+                                "memberName": "loggedInComment",
+                                "lineNumber": 169,
+                                "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                            }
+                        }
+                    ]
+                },
+                "actions": [
+                    "Action: , Member: loggedInComment, Line #: 169, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: , Member: loggedInComment, Line #: 169, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                ],
+                "errorLocation": null
+            },
+            {
+                "pageState": {
+                    "name": "Logged in Home",
+                    "transitions": [
+                        {
+                            "dependantActions": [],
+                            "destination": "Home"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Logged In Comment"
+                        }
+                    ],
+                    "actions": []
+                },
+                "actions": [],
+                "errorLocation": null
+            },
+            {
+                "pageState": {
+                    "name": "Home",
+                    "transitions": [
+                        {
+                            "dependantActions": [],
+                            "destination": "Sign In"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Comment"
+                        }
+                    ],
+                    "actions": []
+                },
+                "actions": [],
+                "errorLocation": null
+            },
+            {
+                "pageState": {
+                    "name": "Sign In",
+                    "transitions": [
+                        {
+                            "dependantActions": [
+                                "Fill out username",
+                                "Fill out number"
+                            ],
+                            "destination": "Logged in Home"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Home"
+                        }
+                    ],
+                    "actions": [
+                        {
+                            "dependantActions": [],
+                            "name": "",
+                            "callerInformation": {
+                                "memberName": "signIn",
+                                "lineNumber": 102,
+                                "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                            }
+                        },
+                        {
+                            "dependantActions": [],
+                            "name": "Fill out number",
+                            "callerInformation": {
+                                "memberName": "signIn",
+                                "lineNumber": 90,
+                                "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                            }
+                        },
+                        {
+                            "dependantActions": [],
+                            "name": "Fill out username",
+                            "callerInformation": {
+                                "memberName": "signIn",
+                                "lineNumber": 74,
+                                "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                            }
+                        }
+                    ]
+                },
+                "actions": [
+                    "Action: , Member: signIn, Line #: 102, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: Fill out number, Member: signIn, Line #: 90, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: Fill out username, Member: signIn, Line #: 74, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: , Member: signIn, Line #: 102, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: Fill out number, Member: signIn, Line #: 90, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: Fill out username, Member: signIn, Line #: 74, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                ],
+                "errorLocation": null
+            },
+            {
+                "pageState": {
+                    "name": "Logged in Home",
+                    "transitions": [
+                        {
+                            "dependantActions": [],
+                            "destination": "Home"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Logged In Comment"
+                        }
+                    ],
+                    "actions": []
+                },
+                "actions": [
+                    "Action: Fill out username, Member: signIn, Line #: 74, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: Fill out number, Member: signIn, Line #: 90, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                ],
+                "errorLocation": null
+            },
+            {
+                "pageState": {
+                    "name": "Logged In Comment",
+                    "transitions": [
+                        {
+                            "dependantActions": [],
+                            "destination": "Logged in Home"
+                        }
+                    ],
+                    "actions": [
+                        {
+                            "dependantActions": [],
+                            "name": "",
+                            "callerInformation": {
+                                "memberName": "loggedInComment",
+                                "lineNumber": 169,
+                                "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                            }
+                        }
+                    ]
+                },
+                "actions": [
+                    "Action: , Member: loggedInComment, Line #: 169, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: , Member: loggedInComment, Line #: 169, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                ],
+                "errorLocation": null
+            },
+            {
+                "pageState": {
+                    "name": "Logged in Home",
+                    "transitions": [
+                        {
+                            "dependantActions": [],
+                            "destination": "Home"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Logged In Comment"
+                        }
+                    ],
+                    "actions": []
+                },
+                "actions": [],
+                "errorLocation": null
+            },
+            {
+                "pageState": {
+                    "name": "Home",
+                    "transitions": [
+                        {
+                            "dependantActions": [],
+                            "destination": "Sign In"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Comment"
+                        }
+                    ],
+                    "actions": []
+                },
+                "actions": [],
+                "errorLocation": null
+            },
+            {
+                "pageState": {
+                    "name": "Sign In",
+                    "transitions": [
+                        {
+                            "dependantActions": [
+                                "Fill out username",
+                                "Fill out number"
+                            ],
+                            "destination": "Logged in Home"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Home"
+                        }
+                    ],
+                    "actions": [
+                        {
+                            "dependantActions": [],
+                            "name": "",
+                            "callerInformation": {
+                                "memberName": "signIn",
+                                "lineNumber": 102,
+                                "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                            }
+                        },
+                        {
+                            "dependantActions": [],
+                            "name": "Fill out number",
+                            "callerInformation": {
+                                "memberName": "signIn",
+                                "lineNumber": 90,
+                                "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                            }
+                        },
+                        {
+                            "dependantActions": [],
+                            "name": "Fill out username",
+                            "callerInformation": {
+                                "memberName": "signIn",
+                                "lineNumber": 74,
+                                "filePath": "G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                            }
+                        }
+                    ]
+                },
+                "actions": [
+                    "Action: , Member: signIn, Line #: 102, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: Fill out number, Member: signIn, Line #: 90, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: Fill out username, Member: signIn, Line #: 74, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: , Member: signIn, Line #: 102, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: Fill out number, Member: signIn, Line #: 90, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs",
+                    "Action: Fill out username, Member: signIn, Line #: 74, File: G:\\My Documents\\dev\\OpenSource\\Scrutiny\\usageExamples\\UsageExample.Playwright\\ScrutinyStateMachine.fs"
+                ],
+                "errorLocation": null
+            },
+            {
+                "pageState": {
+                    "name": "Home",
+                    "transitions": [
+                        {
+                            "dependantActions": [],
+                            "destination": "Sign In"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Comment"
+                        }
+                    ],
+                    "actions": []
+                },
+                "actions": [],
+                "errorLocation": null
+            },
+            {
+                "pageState": {
+                    "name": "Comment",
+                    "transitions": [
+                        {
+                            "dependantActions": [],
+                            "destination": "Sign In"
+                        },
+                        {
+                            "dependantActions": [],
+                            "destination": "Home"
+                        }
+                    ],
+                    "actions": []
+                },
+                "actions": [],
+                "errorLocation": null
+            }
+        ]
+    };
+
+    const transitions = scrutinizedStates.steps;
+    const slider = document.getElementById("reportRangeSlider");
+    slider.setAttribute("max", transitions.length.toString());
 
     const toId = name => name.replace(/\s/g, '').toLowerCase()
 
-    const names =
-        scrutinizedStates.graph.map((ps) => {
-            const name = ps.from.name
-            return `    ${toId(name)}: ${name}`
-        }).join('\n');
+    const drawGraph = (currentTransition) => {
+        const names =
+            scrutinizedStates.graph.map((ps) => {
+                const name = ps.from.name
+                return `    ${toId(name)}: ${name}`
+            }).join('\n');
 
-    const graph =
-        scrutinizedStates.graph.map((ps) => {
-            const id = toId(ps.from.name);
-            return ps.destinations.map(d => `    ${id} --> ${toId(d.name)}`).join('\n');
-        }).join('\n');
+        const graph =
+            scrutinizedStates.graph.map((ps) => {
+                const id = toId(ps.from.name);
+                return ps.destinations.map(d => `    ${id} --> ${toId(d.name)}`).join('\n');
+            }).join('\n');
 
-    const graphElement = document.getElementById('graph');
+        const classes =
+            scrutinizedStates.steps
+                .map((t, i) => {
+                    const id = toId(t.pageState.name);
 
-    graphElement.innerHTML =
-        `
+                    let stateClass = 'unvisited';
+                    if (i === currentTransition) {
+                        stateClass = 'current';
+                    } else if (i < currentTransition) {
+                        stateClass = 'visited';
+                    }
+
+                    return `    class ${id} ${stateClass}`;
+                }).join('\n');
+        ;
+
+        const graphElement = document.getElementById('graph');
+        const graphDefinition =
+            `
 stateDiagram
     direction LR
 
+    classDef unvisited fill:#ececef,color:black
+    classDef visited fill:#add8e6,color:black
+    classDef current fill:#008000,color:black
+    classDef error fill:#f00,color:white,font-weight:bold,stroke-width:2px,stroke:yellow
+
 ${names}
 
-    accTitle: This is the accessible title
-    accDescr: This is an accessible description
-
-    classDef notMoving fill:white
-    classDef movement font-style:italic;
-    classDef badBadEvent fill:#f00,color:white,font-weight:bold,stroke-width:2px,stroke:yellow
-
 ${graph}
-`
-    console.log(graphElement.innerHTML)
 
-    mermaid.initialize({ startOnLoad: true });
+${classes}
+`
+
+        mermaid.initialize({ startOnLoad: false });
+        mermaid.mermaidAPI.render('inside', graphDefinition, (svgCode) => {
+            graphElement.innerHTML = svgCode;
+        });
+    }
+
+    const actionsList = document.getElementById('actionsList');
+
+    const actionsPerformed = (currentTransition) => {
+        if (!scrutinizedStates.steps[currentTransition]) { return; }
+        const actions = scrutinizedStates.steps[currentTransition].actions;
+
+        actionsList.innerHTML = actions.join('\n');
+    }
+
+    const showError = (currentTransition) => {
+        const error = scrutinizedStates.steps[currentTransition]?.errorLocation;
+        if (!error) { return; }
+
+        actionsList.innerHTML = actions.join('\n');
+    }
+
+    slider.oninput = (e) => {
+        const stepsDiv = document.getElementById("steps");
+        stepsDiv.innerHTML = "<span>Steps:&nbsp;</span>";
+        const value = parseInt(e.target.value, 10);
+
+        const pagesUntilValue = scrutinizedStates.steps.slice(0, value);
+        pagesUntilValue.forEach((v, i) => {
+            if (i === 0) { return; }
+            const previous = scrutinizedStates.steps[i - 1];
+            const span = document.createElement("span");
+            span.innerHTML = `${previous.pageState.name} --> ${v.pageState.name},&nbsp;`;
+            stepsDiv.appendChild(span);
+        });
+
+        drawGraph(value);
+        actionsPerformed(value);
+        showError(value);
+    };
+
+    drawGraph(0);
+
+    const graphSvg = document.querySelector('#graph>svg');
+    slider.style.width = `${graphSvg.width.baseVal.value + 40}px`;
 </script>
 
 </html>
