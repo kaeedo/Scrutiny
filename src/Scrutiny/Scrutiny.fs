@@ -221,27 +221,25 @@ module Scrutiny =
             match findExit config allStates with
             | None -> return ()
             | Some (exitNode, _) ->
-                let t =
-                    task {
-                        let path = findPath finalNode exitNode
+                let path = findPath finalNode exitNode
+                let! exitNode = travelDirectly path
 
-                        let! exitNode = travelDirectly path
+                let exitFn =
+                    exitNode.Actions
+                    |> Seq.filter (fun a -> a.IsExit)
+                    |> Seq.sortBy (fun _ -> random.Next())
+                    |> Seq.tryHead
+                    |> Option.map (fun ea ->
+                        task {
+                            try
+                                do! ea.ActionFn()
+                            with exn ->
+                                handleError exn (State(exitNode.Name, convertException exn)) reporter config exitNode
+                        })
 
-                        let exitActions (node: PageState<'a>) =
-                            node.Actions |> List.filter (fun a -> a.IsExit)
-
-                        let a =
-                            exitActions exitNode
-                            |> Seq.sortBy (fun _ -> random.Next())
-                            |> Seq.tryHead
-                            |> Option.map (fun ea -> (ea.ActionFn()))
-
-                        match a with
-                        | None -> return ()
-                        | Some asd -> return! asd
-                    }
-
-                return! t
+                match exitFn with
+                | None -> return ()
+                | Some ef -> return! ef
         }
 
 

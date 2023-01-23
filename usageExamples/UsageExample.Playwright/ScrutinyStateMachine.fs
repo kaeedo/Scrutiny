@@ -201,6 +201,7 @@ module rec ScrutinyStateMachine =
 
                 transition {
                     via (fun _ -> task { do! globalState.Page.ClickAsync("id=comment") })
+
                     destination loggedInComment
                 }
 
@@ -209,14 +210,18 @@ module rec ScrutinyStateMachine =
                     destination home
                 }
 
+                action {
+                    isExit
 
-            (*exitAction (fun _ ->
-                    task {
-                        globalState.Logger "Exiting!"
-                        let! welcomeText = globalState.Page.QuerySelectorAsync("id=welcomeText")
-                        Assert.NotNull(welcomeText)
-                        do! globalState.Page.ClickAsync("id=logout")
-                    })*)
+                    fn (fun _ ->
+                        task {
+                            globalState.Logger "Exiting!"
+                            let! welcomeText = globalState.Page.QuerySelectorAsync("id=welcomeText")
+                            Assert.NotNull(welcomeText)
+
+                            do! globalState.Page.ClickAsync("id=logout")
+                        })
+                }
             }
 
     let comment =
@@ -243,9 +248,6 @@ module rec ScrutinyStateMachine =
                     via (fun _ -> task { do! globalState.Page.ClickAsync("id=signin") })
                     destination signIn
                 }
-
-
-            (*exitAction (fun _ -> task { do! globalState.Page.CloseAsync() })*)
             }
 
     let home =

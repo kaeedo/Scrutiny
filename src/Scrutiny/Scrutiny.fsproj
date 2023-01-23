@@ -22,9 +22,6 @@
     <EmbeddedResource Include="wwwroot\graph.template.html">
       <IncludeInPackage>true</IncludeInPackage>
     </EmbeddedResource>
-    <EmbeddedResource Include="wwwroot\oldgraph.template.html">
-      <IncludeInPackage>true</IncludeInPackage>
-    </EmbeddedResource>
     <Compile Include="Types.fs" />
     <Compile Include="Utilities.fs" />
     <Compile Include="Navigator.fs" />

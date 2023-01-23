@@ -5,7 +5,7 @@
     <title></title>
     <style>
         /* This sets the color for "TK" nodes to a light blue green. */
-        g.type-TK>rect {
+        g.type-TK > rect {
             fill: #00ffd0;
         }
 
@@ -20,23 +20,23 @@
 
 <body>
 
-    <div id="steps">
-        <span>Steps: </span>
-    </div>
-    <input id="reportRangeSlider" value="1" min="0" max="0" type="range" />
-    <pre id="graph">
+<div id="steps">
+    <span>Steps: </span>
+</div>
+<input id="reportRangeSlider" max="0" min="0" type="range" value="0"/>
+<pre id="graph">
         <div id="inside"></div>
     </pre>
-    <div id="actionsPerformed">
-        <pre id="actionsList"></pre>
-    </div>
-    <div id="errorMessage"></div>
+<div id="actionsPerformed">
+    <pre id="actionsList"></pre>
+</div>
+<div id="errorMessage"></div>
 
 </body>
 <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
 
-    const scrutinizedStates = "{{REPORT}}";
+    const scrutinizedStates = "{{REPORT}}"
 
     const transitions = scrutinizedStates.steps;
     const slider = document.getElementById("reportRangeSlider");
@@ -44,7 +44,7 @@
     const actionsList = document.getElementById('actionsList');
     const stepsDiv = document.getElementById("steps");
 
-    slider.setAttribute("max", transitions.length.toString());
+    slider.setAttribute("max", (transitions.length - 1).toString());
 
     const toId = name => name.replace(/\s/g, '').toLowerCase()
 
@@ -67,15 +67,17 @@
                     const id = toId(t.pageState.name);
 
                     let stateClass = 'unvisited';
-                    if (i === currentTransition) {
+                    if (i === currentTransition && !t.errorLocation) {
                         stateClass = 'current';
+                    } else if (i === currentTransition && t.errorLocation) {
+                        stateClass = 'error';
                     } else if (i < currentTransition) {
                         stateClass = 'visited';
                     }
 
                     return `    class ${id} ${stateClass}`;
                 }).join('\n');
-        ;
+
 
         const graphDefinition =
             `
@@ -94,7 +96,7 @@ ${graph}
 ${classes}
 `
 
-        mermaid.initialize({ startOnLoad: false });
+        mermaid.initialize({startOnLoad: false});
         mermaid.mermaidAPI.render('inside', graphDefinition, (svgCode) => {
             graphElement.innerHTML = svgCode;
         });
@@ -102,7 +104,9 @@ ${classes}
 
 
     const actionsPerformed = (currentTransition) => {
-        if (!scrutinizedStates.steps[currentTransition]) { return; }
+        if (!scrutinizedStates.steps[currentTransition]) {
+            return;
+        }
         const actions = scrutinizedStates.steps[currentTransition].actions;
 
         actionsList.innerHTML = actions.join('\n');
@@ -110,30 +114,53 @@ ${classes}
 
     const showError = (currentTransition) => {
         const error = scrutinizedStates.steps[currentTransition]?.errorLocation;
-        if (!error) { return; }
+        if (!error) {
+            return;
+        }
 
-        actionsList.innerHTML = actions.join('\n');
+        const errorCase = error.case === 'state' ? `Error occured in state: ${error.name}` : `Error occured in transition from ${error.from} to ${error.destination}`;
+        const writeError = error => {
+            let writtenError = `Type: ${error.type}
+Message: ${error.message}
+Stack Trace: ${error.stackTrace}`
+
+            if (error.innerException) {
+                writtenError += `\n\nInner Exception:\n${writeError(error.innerException)}`
+            }
+
+            return writtenError;
+        }
+        actionsList.innerHTML =
+            `${errorCase}
+${writeError(error.exception)}
+`;
+    }
+
+    const writeSteps = (value) => {
+        const pagesUntilValue = scrutinizedStates.steps.slice(0, value + 1);
+        pagesUntilValue.forEach((v, i) => {
+            const span = document.createElement("span");
+
+            span.innerHTML = i > 0 ? ` --> ${v.pageState.name}` : v.pageState.name;
+            stepsDiv.appendChild(span);
+        });
+    }
+
+    const renderOutput = (value) => {
+        drawGraph(value);
+        writeSteps(value);
+        actionsPerformed(value);
+        showError(value);
     }
 
     slider.oninput = (e) => {
         stepsDiv.innerHTML = "<span>Steps:&nbsp;</span>";
         const value = parseInt(e.target.value, 10);
 
-        const pagesUntilValue = scrutinizedStates.steps.slice(0, value);
-        pagesUntilValue.forEach((v, i) => {
-            if (i === 0) { return; }
-            const previous = scrutinizedStates.steps[i - 1];
-            const span = document.createElement("span");
-            span.innerHTML = `${previous.pageState.name} --> ${v.pageState.name},&nbsp;`;
-            stepsDiv.appendChild(span);
-        });
-
-        drawGraph(value);
-        actionsPerformed(value);
-        showError(value);
+        renderOutput(value);
     };
 
-    drawGraph(0);
+    renderOutput(0);
 
     const graphSvg = document.querySelector('#graph>svg');
     slider.style.width = `${graphSvg.width.baseVal.value + 40}px`;
