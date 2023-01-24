@@ -20,14 +20,6 @@ module Scrutiny =
 
         raise <| exn
 
-    let private printPath logger path =
-        logger
-        <| sprintf
-            "path: %s"
-            (path
-             |> List.map (fun p -> p.Name)
-             |> String.concat " --> ")
-
     let private buildActionName (ci: CallerInformation) (actionName: string) =
         match ci.LineNumber > 0 with
         | true -> $"Action: %s{actionName}, Member: %s{ci.MemberName}, Line #: %i{ci.LineNumber}, File: %s{ci.FilePath}"

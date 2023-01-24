@@ -3,7 +3,7 @@ namespace Scrutiny
 open System
 open System.Threading.Tasks
 
-module Utilities =
+module internal Utilities =
     let simpleTraverse (tasks: (unit -> Task<unit>) list) : unit -> Task<unit> =
         match tasks with
         | [] -> fun () -> Task.FromResult(())

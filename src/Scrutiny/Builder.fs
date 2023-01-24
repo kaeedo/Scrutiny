@@ -4,7 +4,7 @@ open System
 open System.Runtime.CompilerServices
 open System.Threading.Tasks
 
-type TransitionBuilder() =
+type TransitionBuilder internal () =
     member _.Yield(()) =
         { Transition.DependantActions = []
           ViaFn = fun _ -> Task.FromResult()
@@ -26,7 +26,7 @@ type TransitionBuilder() =
     member _.Destination(previous, destinationState) =
         { previous with Destination = destinationState }
 
-type ActionBuilder() =
+type ActionBuilder internal () =
     member _.Yield(()) =
         { StateAction.CallerInformation =
             { CallerInformation.MemberName = String.Empty
@@ -102,7 +102,7 @@ type PageStateProperties<'a> =
     | Transition of Transition<'a>
     | Action of StateAction
 
-type PageBuilder() =
+type PageBuilder internal () =
     member _.Yield(()) = PageStateProperties.Extras []
 
     member _.Yield(transition: Transition<'a>) =
