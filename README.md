@@ -40,12 +40,10 @@ Define one `page` object for each state in your UI. A state can be anything from
 The possible custom operations are:
 
 - `name`: Name of the state. Required
-- `localState`: A type to store some local state. Will be recreated everytime this page object is entered 
 - `onEnter`: Function to run when entering this page. Only one allowed
 - `onExit`: Function to run when exiting this page. Only one allowed
 - `transition`: Possible transition. Define how to transition to the next state, as well as which state to navigate to. Any number of transitions allowed
 - `action`: Possible action. Define function to run while in this page state. Any number of actions allowed
-- `exitAction`: After scrutiny traverses the graph of possible states, will pick a single exit action defined in any state to navigate to and finish the test with
 
 A `page` looks like this:
 
@@ -53,12 +51,8 @@ A `page` looks like this:
         page {
             name "Logged In Comment"
 
-            localState (LoggedInComment())
-
             onEnter (fun ls ->
                 printfn "Checking on page comment"
-                // Do something with LocalState e.g. set the HomeLink property
-                ls.HomeLink <- "#home"
                 "#header" == "Comments"
             )
 
@@ -66,24 +60,64 @@ A `page` looks like this:
                 printfn "Exiting comment"
             )
 
-            transition ((fun ls -> click ls.HomeLink) ==> home)
-            transition ((fun _ -> click "#signin") ==> signIn)
+            transition {
+                via (fun ls -> click ls.HomeLink)
+                destination home
+            }
+            transition {
+                via (fun _ -> click "#signin")
+                destination signIn
+            }
 
-            action (fun _ -> () /*do something on the page*/)
-            action (fun _ -> () /*do something else on the page*/)
-
-            exitAction (fun _ -> () /*final action to perform before exiting the test*/)
+            action {
+                fn (fun _ -> () (*do something on the page*))
+            }
+            action {
+                fn (fun _ -> () (*do something else on the page*))
+            }
+            action {
+                isExit
+                fn (fun _ -> () (*final action to perform before exiting the test*))
+            }
         }
 
 The `name` must be unique. Any number of `transition`s and any number of `action`s can be defined.
-The `exitAction` is optional, and multiple `page`s can have an `exitAction`. If multiple are defined, Scrutiny will randomly choose one to perform.
-
+Any `action` can be be marked as `isExit`, and multiple `page`s can have an `action` that is the exit action. If multiple are defined, Scrutiny will randomly choose one to perform.
 The `GlobalState` in the example is any type defined in your test that you can use to pass data between states, e.g. `Username` or `IsLoggedIn`
 
-The `LocalState` is specific to a state, and is constructed each time that state is visited. It's optional, but when set, all functions will have access to the local state via the function parameter. In the above example, `localState` is defined as:
+`action`s are defined as follow within a page CE:
 
-    type LoggedInComment() =
-        member val Comment = String.Empty with get, set
+    page {
+        name "something"
+
+        action {
+            name "Name of action"
+            dependantActions [ "Other action" ]
+            isExit
+            fn (fun _ -> (*This is the function that gets run*))
+        }
+    }
+
+The `name` defines a name for this `action`. Optional. This is how this action is reffered to when another action or transition depends on it
+The `dependantActions` list defines any actions that will be run before this action is run. Optional
+The `isExit` marks this action as a potential exit action. Optional
+The `fn` is the actual function to run as this action. Required
+
+`transition`s are defined as follows within a page CE:
+
+    page {
+        name "something"
+
+        transition {
+            dependantActions [ "Other action" ]
+            via (fun _ -> (*how to transition to the next page/state*))
+            destination otherPage
+        }
+    }
+
+The `dependantActions` list defines any actions that will be run before this action is run. Optional
+The `via` function is executed that will actually transition the state machine to the next state. Required
+The `destionation` is the page/state that will be transitioned to. Required
 
 
 ### Configuration
@@ -158,13 +192,19 @@ e.g.:
         let firstPage = fun (globalState: GlobalState) ->
             page {
                 name "First Page"
-                transition ((fun () -> click "#second") ==> secondPage)
+                transition {
+                    via (fun _ -> click "#second")
+                    destination secondPage
+                }
             }
 
         let secondPage = fun (globalState: GlobalState) ->
             page {
                 name "Second Page"
-                transition ((fun () -> click "#first") ==> firstPage)
+                transition {
+                    via (fun _ -> click "#first")
+                    destination firstPage
+                }
             }
 
 </details>
@@ -181,7 +221,6 @@ The possible attributes are:
 - `OnExit`: Function to run when exiting this page. Only one allowed
 - `TransitionTo`: Possible transition. Define how to transition to the next state, as well as which state to navigate to. Any number of transitions allowed
 - `Action`: Possible action. Define function to run while in this page state. Any number of actions allowed
-- `ExitAction`: After scrutiny traverses the graph of possible states, will pick a single exit action defined in any state to navigate to and finish the test with
 
 A `PageState` could look like this:
 
@@ -191,7 +230,6 @@ A `PageState` could look like this:
     public class LoggedInComment
     {
         private readonly GlobalState globalState;
-        private string localComment = string.Empty;
 
         public LoggedInComment(GlobalState globalState)
         {
