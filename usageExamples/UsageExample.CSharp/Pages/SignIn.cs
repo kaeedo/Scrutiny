@@ -38,6 +38,8 @@ public class SignIn
     }
 
     [TransitionTo(nameof(LoggedInHome))]
+    [DependantAction(nameof(FillInUsername))]
+    [DependantAction(nameof(FillInNumber))]
     public async Task LogInAndTransitionToHome()
     {
         _globalState.Username = "kaeedo";

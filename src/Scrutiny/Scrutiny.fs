@@ -53,9 +53,16 @@ module Scrutiny =
                         |> List.map (fun da ->
                             let action =
                                 state.Actions
-                                |> List.find (fun sa -> sa.Name = da)
+                                |> List.tryFind (fun sa -> sa.Name = da)
 
-                            runTheActions reporter config state [ action ])
+                            match action with
+                            | Some a -> runTheActions reporter config state [ a ]
+                            | None ->
+                                raise
+                                <| ScrutinyException(
+                                    $"Couldn't find action with name '{da}' among the actions of state '{state.Name}'",
+                                    null
+                                ))
                         |> simpleTraverse
 
                     do! runDependantActions ()
@@ -75,7 +82,6 @@ module Scrutiny =
 
             let amount =
                 random.Next(
-                    // TODO get rid of 'if'. What happens when no actions anyways?
                     if state.Actions.Length > 1 then
                         state.Actions.Length
                     else
@@ -108,7 +114,10 @@ module Scrutiny =
         task {
             try
                 do! current.OnEnter()
-                do! runActions reporter config current
+
+                if current.Actions |> List.isEmpty |> not then
+                    do! runActions reporter config current
+
                 do! current.OnExit()
             with exn ->
                 handleError exn (State(current.Name, convertException exn)) reporter config current
@@ -128,8 +137,18 @@ module Scrutiny =
                 let dependantActions =
                     transition.DependantActions
                     |> List.map (fun da ->
-                        current.Actions
-                        |> List.find (fun sa -> sa.Name = da))
+                        let action =
+                            current.Actions
+                            |> List.tryFind (fun sa -> sa.Name = da)
+
+                        match action with
+                        | Some a -> a
+                        | None ->
+                            raise
+                            <| ScrutinyException(
+                                $"Couldn't find action with name '{da}' among the actions of state '{current.Name}'",
+                                null
+                            ))
                     |> runTheActions reporter config current
 
                 do! dependantActions ()
@@ -224,6 +243,25 @@ module Scrutiny =
                     |> Option.map (fun ea ->
                         task {
                             try
+                                let runDependantActions =
+                                    ea.DependantActions
+                                    |> List.map (fun da ->
+                                        let action =
+                                            exitNode.Actions
+                                            |> List.tryFind (fun sa -> sa.Name = da)
+
+                                        match action with
+                                        | Some a -> runTheActions reporter config exitNode [ a ]
+                                        | None ->
+                                            raise
+                                            <| ScrutinyException(
+                                                $"Couldn't find action with name '{da}' among the actions of state '{exitNode.Name}'",
+                                                null
+                                            ))
+                                    |> simpleTraverse
+
+                                do! runDependantActions ()
+
                                 do! ea.ActionFn()
                             with exn ->
                                 handleError exn (State(exitNode.Name, convertException exn)) reporter config exitNode

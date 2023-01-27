@@ -24,7 +24,16 @@ public class Comment
         Assert.Equal("Comments", headerText);
     }
 
+    [Action]
+    public void FindText()
+    {
+        var text = _globalState.Page.GetByText("Sign in to comment");
+
+        Assert.NotNull(text);
+    }
+
     [Action(IsExit = true)]
+    [DependantAction(nameof(FindText))]
     public async Task ExitAction()
     {
         _globalState.Logger.WriteLine("Exiting!");

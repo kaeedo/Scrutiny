@@ -211,14 +211,23 @@ module rec ScrutinyStateMachine =
                 }
 
                 action {
+                    name "Check Welcome"
+
+                    fn (fun _ ->
+                        task {
+                            let! welcomeText = globalState.Page.QuerySelectorAsync("id=welcomeText")
+                            Assert.NotNull(welcomeText)
+                        })
+                }
+
+                action {
                     isExit
+
+                    dependantActions [ "Check Welcome" ]
 
                     fn (fun _ ->
                         task {
                             globalState.Logger "Exiting!"
-                            let! welcomeText = globalState.Page.QuerySelectorAsync("id=welcomeText")
-                            Assert.NotNull(welcomeText)
-
                             do! globalState.Page.ClickAsync("id=logout")
                         })
                 }
