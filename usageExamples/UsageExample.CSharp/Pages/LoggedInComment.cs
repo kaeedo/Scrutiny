@@ -1,70 +1,68 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Scrutiny.CSharp;
 using Xunit;
 
-namespace UsageExample.CSharp.Pages
+namespace UsageExample.CSharp.Pages;
+
+[PageState]
+public class LoggedInComment
 {
-    [PageState]
-    public class LoggedInComment
+    private readonly GlobalState _globalState;
+    private string _localComment = string.Empty;
+
+    public LoggedInComment(GlobalState globalState)
     {
-        private readonly GlobalState globalState;
-        private string localComment = string.Empty;
+        _globalState = globalState;
+        globalState.Logger.WriteLine($"Constructing {nameof(LoggedInComment)}");
+    }
 
-        public LoggedInComment(GlobalState globalState)
-        {
-            this.globalState = globalState;
-            globalState.Logger.WriteLine($"Constructing {nameof(LoggedInComment)}");
-        }
+    [OnEnter]
+    public async Task OnEnter()
+    {
+        _globalState.Logger.WriteLine("Checking comment is logged in");
+        var modal = await _globalState.Page.QuerySelectorAsync("id=openModal");
 
-        [OnEnter]
-        public async Task OnEnter()
-        {
-            globalState.Logger.WriteLine("Checking comment is logged in");
-            var modal = await globalState.Page.QuerySelectorAsync("#openModal");
+        Assert.NotNull(modal);
 
-            Assert.NotNull(modal);
+        var displayState = await modal.EvaluateAsync("e => e.style.display");
 
-            var displayState = await modal.EvaluateAsync("e => e.style.display");
+        Assert.False(displayState.ToString() == "none");
+    }
 
-            Assert.False(displayState.ToString() == "none");
-        }
+    [Action]
+    public async Task WriteComment()
+    {
+        await _globalState.Page.ClickAsync("id=openModal");
+        _localComment = "This is my super comment";
 
-        [Action]
-        public async Task WriteComment()
-        {
-            await globalState.Page.ClickAsync("#openModal");
-            localComment = "This is my super comment";
+        await _globalState.Page.FillAsync("id=comment", _localComment);
 
-            await globalState.Page.FillAsync("#comment", localComment);
+        await _globalState.Page.ClickAsync("id=modalFooterSave");
+    }
 
-            await globalState.Page.ClickAsync("#modalFooterSave");
-        }
+    [OnExit]
+    public async Task OnExit()
+    {
+        var comments = await _globalState.Page.QuerySelectorAllAsync("#commentsUl > li");
+        var commentTexts = await Task.WhenAll(comments.Select(async c => await c.InnerTextAsync()));
+        var hasNewComment = commentTexts.Any(c => c == $"{_globalState.Username} wrote:\n{_localComment}");
 
-        [OnExit]
-        public async Task OnExit()
-        {
-            var comments = await globalState.Page.QuerySelectorAllAsync("#commentsUl > li");
-            var commentTexts = await Task.WhenAll(comments.Select(async c => await c.InnerTextAsync()));
-            var hasNewComment = commentTexts.Any(c => c == $"{globalState.Username} wrote:\n{localComment}");
-
-            Assert.True(hasNewComment);
-            globalState.Logger.WriteLine("Exiting comment logged in");
-        }
+        Assert.True(hasNewComment);
+        _globalState.Logger.WriteLine("Exiting comment logged in");
+    }
 
 
-        [ExitAction]
-        public async Task ExitAction()
-        {
-            globalState.Logger.WriteLine("Exiting!");
-            await globalState.Page.CloseAsync();
-        }
+    [Action(IsExit = true)]
+    public async Task ExitAction()
+    {
+        _globalState.Logger.WriteLine("Exiting!");
+        await _globalState.Page.CloseAsync();
+    }
 
-        [TransitionTo(nameof(LoggedInHome))]
-        public async Task ClickOnHome()
-        {
-            await globalState.Page.ClickAsync("#home");
-        }
+    [TransitionTo(nameof(LoggedInHome))]
+    public async Task ClickOnHome()
+    {
+        await _globalState.Page.ClickAsync("id=home");
     }
 }

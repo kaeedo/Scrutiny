@@ -1,0 +1,77 @@
+# top-most EditorConfig file
+root = true
+
+# Default settings
+[*]
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+
+[*.{xml, csproj, fsproj}]
+indent_size = 2
+# These rules are IntelliJ-specific
+ij_xml_align_attributes = true
+ij_xml_align_text = false
+ij_xml_attribute_wrap = normal
+ij_xml_block_comment_at_first_column = true
+ij_xml_keep_blank_lines = 2
+ij_xml_keep_indents_on_empty_lines = false
+ij_xml_keep_line_breaks = true
+ij_xml_keep_line_breaks_in_text = true
+ij_xml_keep_whitespaces = false
+ij_xml_keep_whitespaces_around_cdata = preserve
+ij_xml_keep_whitespaces_inside_cdata = false
+ij_xml_line_comment_at_first_column = true
+ij_xml_space_after_tag_name = false
+ij_xml_space_around_equals_in_attribute = false
+ij_xml_space_inside_empty_tag = false
+ij_xml_text_wrap = normal
+
+[*.json]
+indent_size = 2
+
+[*.{cmd, bat}]
+end_of_line = crlf
+
+[*.cs]
+indent_size = 4
+
+[*.fs]
+fsharp_align_function_signature_to_indentation = false
+fsharp_alternative_long_member_definitions = false
+fsharp_array_or_list_multiline_formatter = character_width
+fsharp_bar_before_discriminated_union_declaration = false
+fsharp_blank_lines_around_nested_multiline_expressions = true
+fsharp_experimental_keep_indent_in_branch = false
+fsharp_experimental_stroustrup_style = false
+fsharp_keep_max_number_of_blank_lines = 100
+fsharp_max_array_or_list_number_of_items = 1
+fsharp_max_array_or_list_width = 40
+fsharp_max_dot_get_expression_width = 50
+fsharp_max_function_binding_width = 40
+fsharp_max_if_then_else_short_width = 50
+fsharp_max_if_then_short_width = 0
+fsharp_max_infix_operator_expression = 50
+fsharp_max_newline_infix_operator_expression_number_of_items = 1
+fsharp_max_record_number_of_items = 1
+fsharp_max_record_width = 40
+fsharp_max_value_binding_width = 80
+fsharp_multi_line_lambda_closing_newline = false
+fsharp_multiline_block_brackets_on_same_column = false
+fsharp_multiline_infix_multiline_formatter = character_width
+fsharp_newline_between_type_definition_and_members = true
+fsharp_record_multiline_formatter = character_width
+fsharp_semicolon_at_end_of_line = false
+fsharp_space_after_comma = true
+fsharp_space_after_semicolon = true
+fsharp_space_around_delimiter = true
+fsharp_space_before_class_constructor = false
+fsharp_space_before_colon = false
+fsharp_space_before_lowercase_invocation = true
+fsharp_space_before_member = false
+fsharp_space_before_parameter = true
+fsharp_space_before_semicolon = false
+fsharp_space_before_uppercase_invocation = false
+fsharp_strict_mode = false
+indent_size = 4
+max_line_length = 120

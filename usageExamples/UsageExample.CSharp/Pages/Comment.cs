@@ -2,51 +2,59 @@
 using Scrutiny.CSharp;
 using Xunit;
 
-namespace UsageExample.CSharp.Pages
+namespace UsageExample.CSharp.Pages;
+
+[PageState]
+public class Comment
 {
-    [PageState]
-    public class Comment
+    private readonly GlobalState _globalState;
+
+    public Comment(GlobalState globalState)
     {
-        private readonly GlobalState globalState;
+        _globalState = globalState;
+        globalState.Logger.WriteLine($"Constructing {nameof(Comment)}");
+    }
 
-        public Comment(GlobalState globalState)
-        {
-            this.globalState = globalState;
-            globalState.Logger.WriteLine($"Constructing {nameof(Comment)}");
-        }
+    [OnEnter]
+    public async Task OnEnter()
+    {
+        _globalState.Logger.WriteLine("Checking on page comment");
+        var headerText = await _globalState.Page.InnerTextAsync("id=header");
 
-        [OnEnter]
-        public async Task OnEnter()
-        {
-            globalState.Logger.WriteLine("Checking on page comment");
-            var headerText = await globalState.Page.InnerTextAsync("#header");
+        Assert.Equal("Comments", headerText);
+    }
 
-            Assert.Equal("Comments", headerText);
-        }
+    [Action]
+    public void FindText()
+    {
+        var text = _globalState.Page.GetByText("Sign in to comment");
 
-        [ExitAction]
-        public async Task ExitAction()
-        {
-            globalState.Logger.WriteLine("Exiting!");
-            await globalState.Page.CloseAsync();
-        }
+        Assert.NotNull(text);
+    }
 
-        [OnExit]
-        public void OnExit()
-        {
-            globalState.Logger.WriteLine("Exiting comment");
-        }
+    [Action(IsExit = true)]
+    [DependantAction(nameof(FindText))]
+    public async Task ExitAction()
+    {
+        _globalState.Logger.WriteLine("Exiting!");
+        await _globalState.Page.CloseAsync();
+    }
 
-        [TransitionTo(nameof(SignIn))]
-        public async Task ClickOnSignIn()
-        {
-            await globalState.Page.ClickAsync("#signin");
-        }
+    [OnExit]
+    public void OnExit()
+    {
+        _globalState.Logger.WriteLine("Exiting comment");
+    }
 
-        [TransitionTo(nameof(Home))]
-        public async Task ClickOnHome()
-        {
-            await globalState.Page.ClickAsync("#home");
-        }
+    [TransitionTo(nameof(SignIn))]
+    public async Task ClickOnSignIn()
+    {
+        await _globalState.Page.ClickAsync("id=signin");
+    }
+
+    [TransitionTo(nameof(Home))]
+    public async Task ClickOnHome()
+    {
+        await _globalState.Page.ClickAsync("id=home");
     }
 }

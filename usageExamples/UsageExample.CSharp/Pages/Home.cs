@@ -1,52 +1,51 @@
-﻿using Scrutiny.CSharp;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using Scrutiny.CSharp;
 using Xunit;
 
-namespace UsageExample.CSharp.Pages
+namespace UsageExample.CSharp.Pages;
+
+[PageState]
+public class Home
 {
-    [PageState]
-    public class Home
+    private readonly GlobalState _globalState;
+
+    public Home(GlobalState globalState)
     {
-        private readonly GlobalState globalState;
+        _globalState = globalState;
+        globalState.Logger.WriteLine($"Constructing {nameof(Home)}");
+    }
 
-        public Home(GlobalState globalState)
-        {
-            this.globalState = globalState;
-            globalState.Logger.WriteLine($"Constructing {nameof(Home)}");
-        }
+    [OnEnter]
+    public async Task OnEnter()
+    {
+        _globalState.Logger.WriteLine("Checking on page home");
+        var headerText = await _globalState.Page.InnerTextAsync("id=header");
 
-        [OnEnter]
-        public async Task OnEnter()
-        {
-            globalState.Logger.WriteLine("Checking on page home");
-            var headerText = await globalState.Page.InnerTextAsync("#header");
+        Assert.Equal("Home", headerText);
+    }
 
-            Assert.Equal("Home", headerText);
-        }
+    [OnExit]
+    public void OnExit()
+    {
+        _globalState.Logger.WriteLine("Exiting home");
+    }
 
-        [OnExit]
-        public void OnExit()
-        {
-            globalState.Logger.WriteLine("Exiting home");
-        }
+    [Action(IsExit = true)]
+    public async Task ExitAction()
+    {
+        _globalState.Logger.WriteLine("Exiting!");
+        await _globalState.Page.CloseAsync();
+    }
 
-        [ExitAction]
-        public async Task ExitAction()
-        {
-            globalState.Logger.WriteLine("Exiting!");
-            await globalState.Page.CloseAsync();
-        }
+    [TransitionTo(nameof(SignIn))]
+    public async Task ClickOnSignIn()
+    {
+        await _globalState.Page.ClickAsync("id=signin");
+    }
 
-        [TransitionTo(nameof(SignIn))]
-        public async Task ClickOnSignIn()
-        {
-            await globalState.Page.ClickAsync("#signin");
-        }
-
-        [TransitionTo(nameof(Comment))]
-        public async Task ClickOnComment()
-        {
-            await globalState.Page.ClickAsync("#comment");
-        }
+    [TransitionTo(nameof(Comment))]
+    public async Task ClickOnComment()
+    {
+        await _globalState.Page.ClickAsync("id=comment");
     }
 }

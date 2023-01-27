@@ -2,19 +2,15 @@
 
 open System
 open System.IO
+open System.Threading.Tasks
 
 type internal ScrutinyException(message, innerException: Exception) =
     inherit Exception(message, innerException)
 
 //http://www.fssnip.net/av/title/NinetyNine-F-Problems-Problems-80-89-Graphs
-
-type internal Edge<'a> = 'a * 'a
-
-type internal Graph<'a> = 'a list * Edge<'a> list
-
 type internal Node<'a> = 'a * 'a list
 
-type internal AdjacencyGraph<'a> = 'a Node list
+type internal AdjacencyGraph<'a> = Node<'a> list
 
 type ScrutinyConfig =
     { Seed: int
@@ -22,14 +18,16 @@ type ScrutinyConfig =
       ComprehensiveActions: bool
       ComprehensiveStates: bool
       ScrutinyResultFilePath: string
-      Logger: string -> unit}
+      Logger: string -> unit }
 
-      static member Default =
+    static member Default =
         { ScrutinyConfig.Seed = Environment.TickCount
           MapOnly = false
           ComprehensiveActions = true
           ComprehensiveStates = true
-          ScrutinyResultFilePath = Directory.GetCurrentDirectory() + "/ScrutinyResult.html"
+          ScrutinyResultFilePath =
+            Directory.GetCurrentDirectory()
+            + "/ScrutinyResult.html"
           Logger = printfn "%s" }
 
 type CallerInformation =
@@ -37,38 +35,42 @@ type CallerInformation =
       LineNumber: int
       FilePath: string }
 
-type Transition<'a, 'b> =
-    { TransitionFn: 'b -> unit
-      ToState: 'a -> PageState<'a, 'b> }
+type StateAction =
+    { CallerInformation: CallerInformation
+      Name: string
+      DependantActions: string list
+      IsExit: bool
+      ActionFn: unit -> Task<unit> }
 
-and [<CustomComparison; CustomEquality>] PageState<'a, 'b> =
+type Transition<'a> =
+    { DependantActions: string list
+      ViaFn: unit -> Task<unit>
+      Destination: 'a -> PageState<'a> }
+
+and [<CustomComparison; CustomEquality>] PageState<'a> =
     { Name: string
-      LocalState: 'b
-      OnEnter: 'b -> unit
-      OnExit: 'b -> unit
-      // TODO can we make this not mutable?
-      // It's required right now because of the C# builder
-      mutable Transitions: Transition<'a, 'b> list
-      Actions: (CallerInformation * ('b -> unit)) list
       // OnAction?
-      ExitActions: ('b -> unit) list }
+      OnEnter: unit -> Task<unit>
+      OnExit: unit -> Task<unit>
+      mutable Transitions: (Transition<'a>) list
+      Actions: StateAction list }
 
-    interface IComparable<PageState<'a, 'b>> with
+    interface IComparable<PageState<'a>> with
         member this.CompareTo other = compare this.Name other.Name
 
     interface IComparable with
         member this.CompareTo obj =
             match obj with
             | null -> 1
-            | :? PageState<'a, 'b> as other -> (this :> IComparable<_>).CompareTo other
+            | :? PageState<'a> as other -> (this :> IComparable<_>).CompareTo other
             | _ -> invalidArg "obj" "not a PageState"
 
-    interface IEquatable<PageState<'a, 'b>> with
+    interface IEquatable<PageState<'a>> with
         member this.Equals other = this.Name = other.Name
 
     override this.Equals obj =
         match obj with
-        | :? PageState<'a, 'b> as other -> (this :> IEquatable<_>).Equals other
+        | :? PageState<'a> as other -> (this :> IEquatable<_>).Equals other
         | _ -> false
 
     override this.GetHashCode() = hash this.Name
@@ -80,14 +82,14 @@ type SerializableException =
       InnerException: SerializableException option }
 
 type ErrorLocation =
-| State of string * SerializableException
-| Transition of string * string * SerializableException
+    | State of string * SerializableException
+    | Transition of string * string * SerializableException
 
-type Step<'a, 'b> =
-    { PageState: PageState<'a, 'b>
-      Actions: string seq
+type Step<'a> =
+    { PageState: PageState<'a>
+      Actions: string list
       Error: ErrorLocation option }
 
-type ScrutinizedStates<'a, 'b> =
-    { Graph: AdjacencyGraph<PageState<'a, 'b>>
-      Steps: Step<'a, 'b> seq }
+type ScrutinizedStates<'a> =
+    { Graph: AdjacencyGraph<PageState<'a>>
+      Steps: Step<'a> list }

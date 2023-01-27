@@ -1,32 +1,45 @@
 ![Header](header.svg)
 
-F# and C# library for testing state machines by randomly choosing available states and valid transitions. Designed for usage with UI tests
+F# and C# library for testing state machines by randomly choosing available states and valid transitions. Designed for
+usage with UI tests
 
 [![Nuget](https://img.shields.io/nuget/vpre/scrutiny?color=blue&style=for-the-badge)](https://www.nuget.org/packages/Scrutiny/) ![Build](https://github.com/kaeedo/Scrutiny/workflows/Build/badge.svg?branch=master)
 
 ## Description
-Describe your UI as a state machine, and then use Scrutiny to simulate a "User" that randomly clicks around on your site.
-Scrutiny will attempt to create a Directed Adjacency Graph of your states, and then randomly choose an unvisited state to navigate to.
+
+Describe your UI as a state machine, and then use Scrutiny to simulate a "User" that randomly clicks around on your
+site.
+Scrutiny will attempt to create a Directed Adjacency Graph of your states, and then randomly choose an unvisited state
+to navigate to.
 It will repeat this process until all states have been visited.
 During each state, Scrutiny will attempt to run any defined actions within that state.
 Once all states have been visited, if an exit action has been defined it will then navigate there and quit.
 Scrutiny will then also generate an HTML file which visualizes the State Machine as a graph.
 
-Scrutiny was designed to run UI tests, but using e.g. CanopyUI or Selenium is only an implementation detail. In theory, any state machine can be tested with Scrutiny.
+Scrutiny was designed to run UI tests, but using e.g. CanopyUI or Selenium is only an implementation detail. In theory,
+any state machine can be tested with Scrutiny.
 
 ---
 
-There are several usage example projects in the `usageExamples` directory, implemented using different technologies. The first two are implemented in F#, and the third one in C#.
+There are several usage example projects in the `usageExamples` directory, implemented using different technologies. The
+first two are implemented in F#, and the third one in C#.
 
-* [Canopy UsageExample](usageExamples/UsageExample.Canopy) for a sample test implemented with [CanopyUI](https://github.com/lefthandedgoat/canopy)
-* [Playwright UsageExample](usageExamples/UsageExample.Playwright) for a sample test implemented with [PlaywrightSharp](https://github.com/microsoft/playwright-sharp)
-* [C# UsageExample](usageExamples/UsageExample.CSharp) for a sample test implementation also using Playwright, but this time with C#
+* [Canopy UsageExample](usageExamples/UsageExample.Canopy) for a sample test implemented
+  with [CanopyUI](https://github.com/lefthandedgoat/canopy)
+* [Playwright UsageExample](usageExamples/UsageExample.Playwright) for a sample test implemented
+  with [PlaywrightSharp](https://github.com/microsoft/playwright-sharp)
+* [C# UsageExample](usageExamples/UsageExample.CSharp) for a sample test implementation also using Playwright, but this
+  time with C#
 
-A tiny sample site exists in the [Usage Example directory](usageExamples/Web). This is the website that the usage examples are testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a comment if they are signed in.
-The usage examples showcase a certain approach a developer can take as to how to model their web site as a state machine. In this case, the home and comment page are each listed twice, once as logged out, and once as logged in.
+A tiny sample site exists in the [Usage Example directory](usageExamples/Web). This is the website that the usage
+examples are testing. It features three pages, a home page, comment page, and a sign in page. A user can only leave a
+comment if they are signed in.
+The usage examples showcase a certain approach a developer can take as to how to model their web site as a state
+machine. In this case, the home and comment page are each listed twice, once as logged out, and once as logged in.
 This is only one way to handle this case, and the developer could choose to model it in any other way.
 
-Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s. The [Sample Web site](usageExamples/Web) looks like this:
+Scrutiny will also draw a diagram representing the system under test as has been modeled by the various `page`s.
+The [Sample Web site](usageExamples/Web) looks like this:
 
 ![SUT sample report](images/scrutinyDemo.gif)
 
@@ -35,17 +48,17 @@ Scrutiny will also draw a diagram representing the system under test as has been
 <details>
   <summary><i>Click</i> for F# documentation</summary>
 
-Define one `page` object for each st ate in your UI. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
+Define one `page` object for each state in your UI. A state can be anything from a page, or an individual modal, or the
+same page as a different state, but altered, for example a logged in user.
 
 The possible custom operations are:
 
 - `name`: Name of the state. Required
-- `localState`: A type to store some local state. Will be recreated everytime this page object is entered 
 - `onEnter`: Function to run when entering this page. Only one allowed
 - `onExit`: Function to run when exiting this page. Only one allowed
-- `transition`: Possible transition. Define how to transition to the next state, as well as which state to navigate to. Any number of transitions allowed
+- `transition`: Possible transition. Define how to transition to the next state, as well as which state to navigate to.
+  Any number of transitions allowed
 - `action`: Possible action. Define function to run while in this page state. Any number of actions allowed
-- `exitAction`: After scrutiny traverses the graph of possible states, will pick a single exit action defined in any state to navigate to and finish the test with
 
 A `page` looks like this:
 
@@ -53,12 +66,8 @@ A `page` looks like this:
         page {
             name "Logged In Comment"
 
-            localState (LoggedInComment())
-
             onEnter (fun ls ->
                 printfn "Checking on page comment"
-                // Do something with LocalState e.g. set the HomeLink property
-                ls.HomeLink <- "#home"
                 "#header" == "Comments"
             )
 
@@ -66,27 +75,70 @@ A `page` looks like this:
                 printfn "Exiting comment"
             )
 
-            transition ((fun ls -> click ls.HomeLink) ==> home)
-            transition ((fun _ -> click "#signin") ==> signIn)
+            transition {
+                via (fun ls -> click ls.HomeLink)
+                destination home
+            }
+            transition {
+                via (fun _ -> click "#signin")
+                destination signIn
+            }
 
-            action (fun _ -> () /*do something on the page*/)
-            action (fun _ -> () /*do something else on the page*/)
-
-            exitAction (fun _ -> () /*final action to perform before exiting the test*/)
+            action {
+                fn (fun _ -> () (*do something on the page*))
+            }
+            action {
+                fn (fun _ -> () (*do something else on the page*))
+            }
+            action {
+                isExit
+                fn (fun _ -> () (*final action to perform before exiting the test*))
+            }
         }
 
 The `name` must be unique. Any number of `transition`s and any number of `action`s can be defined.
-The `exitAction` is optional, and multiple `page`s can have an `exitAction`. If multiple are defined, Scrutiny will randomly choose one to perform.
+Any `action` can be be marked as `isExit`, and multiple `page`s can have an `action` that is the exit action. If
+multiple are defined, Scrutiny will randomly choose one to perform.
+The `GlobalState` in the example is any type defined in your test that you can use to pass data between states,
+e.g. `Username` or `IsLoggedIn`
 
-The `GlobalState` in the example is any type defined in your test that you can use to pass data between states, e.g. `Username` or `IsLoggedIn`
+`action`s are defined as follow within a page CE:
 
-The `LocalState` is specific to a state, and is constructed each time that state is visited. It's optional, but when set, all functions will have access to the local state via the function parameter. In the above example, `localState` is defined as:
+    page {
+        name "something"
 
-    type LoggedInComment() =
-        member val Comment = String.Empty with get, set
+        action {
+            name "Name of action"
+            dependantActions [ "Other action" ]
+            isExit
+            fn (fun _ -> (*This is the function that gets run*))
+        }
+    }
 
+The `name` defines a name for this `action`. Optional. This is how this action is reffered to when another action or
+transition depends on it
+The `dependantActions` list defines any actions that will be run before this action is run. Optional
+The `isExit` marks this action as a potential exit action. Optional
+The `fn` is the actual function to run as this action. Required
+
+`transition`s are defined as follows within a page CE:
+
+    page {
+        name "something"
+
+        transition {
+            dependantActions [ "Other action" ]
+            via (fun _ -> (*how to transition to the next page/state*))
+            destination otherPage
+        }
+    }
+
+The `dependantActions` list defines any actions that will be run before this action is run. Optional
+The `via` function is executed that will actually transition the state machine to the next state. Required
+The `destionation` is the page/state that will be transitioned to. Required
 
 ### Configuration
+
 Some things can be configured via `ScrutinyConfig`. The default config is:
 
     { ScrutinyConfig.Seed = Environment.TickCount
@@ -98,10 +150,14 @@ Some things can be configured via `ScrutinyConfig`. The default config is:
 
 `Seed` is printed during each test to be able to recreate a specific test run.
 `MapOnly` won't run the test at all, but only generate the HTML Graph report.
-`ComprehensiveActions` will run ALL defined actions anytime it enters a state with actions defined. If false, it will run a random subset of actions.
-`ComprehensiveStates` will visit ALL states in the state machine. If this is false, then it will visit at least half of all states before randomly quitting.
+`ComprehensiveActions` will run ALL defined actions anytime it enters a state with actions defined. If false, it will
+run a random subset of actions.
+`ComprehensiveStates` will visit ALL states in the state machine. If this is false, then it will visit at least half of
+all states before randomly quitting.
 `ScrutinyResultFilePath` is the directory and specified file name that the generated HTML report will be saved in
-`Logger` is how individual messages from scrutiny will be logged. The signature is `string -> unit`. This is useful for things like XUnit that bring their own console logging mechanism, or if you wanted to integrate a larger logging framework.
+`Logger` is how individual messages from scrutiny will be logged. The signature is `string -> unit`. This is useful for
+things like XUnit that bring their own console logging mechanism, or if you wanted to integrate a larger logging
+framework.
 
 To actually run the test, call the `scrutinize` function with your entry state, config, and global state object. e.g.
 
@@ -148,23 +204,32 @@ To actually run the test, call the `scrutinize` function with your entry state, 
 
         0
 
-At the end of the run, Scrutiny will return an object which contains the generated adjacency graph, as well as a list of individual steps taken, along with the actions performed in each state.
+At the end of the run, Scrutiny will return an object which contains the generated adjacency graph, as well as a list of
+individual steps taken, along with the actions performed in each state.
 
 #### Important note for F# users
-As the transitions ultimately depict a cyclic graph, it is necessary to declare module or namespace as recursive so that pages defined later can be referenced by pages earlier. Note the usage of the `rec` keyword.
+
+As the transitions ultimately depict a cyclic graph, it is necessary to declare module or namespace as recursive so that
+pages defined later can be referenced by pages earlier. Note the usage of the `rec` keyword.
 e.g.:
 
     module rec MyPages =
         let firstPage = fun (globalState: GlobalState) ->
             page {
                 name "First Page"
-                transition ((fun () -> click "#second") ==> secondPage)
+                transition {
+                    via (fun _ -> click "#second")
+                    destination secondPage
+                }
             }
 
         let secondPage = fun (globalState: GlobalState) ->
             page {
                 name "Second Page"
-                transition ((fun () -> click "#first") ==> firstPage)
+                transition {
+                    via (fun _ -> click "#first")
+                    destination firstPage
+                }
             }
 
 </details>
@@ -172,16 +237,20 @@ e.g.:
 <details>
   <summary><i>Click</i> for C# documentation</summary>
 
-Define one class for each state in your UI, and decorate it with the `PageState` attribute. A state can be anything from a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
+Define one class for each state in your UI, and decorate it with the `PageState` attribute. A state can be anything from
+a page, or an individual modal, or the same page as a different state, but altered, for example a logged in user.
 
 The possible attributes are:
 
 - `PageState`: Define a class as a Page state.
 - `OnEnter`: Function to run when entering this page. Only one allowed
 - `OnExit`: Function to run when exiting this page. Only one allowed
-- `TransitionTo`: Possible transition. Define how to transition to the next state, as well as which state to navigate to. Any number of transitions allowed
-- `Action`: Possible action. Define function to run while in this page state. Any number of actions allowed
-- `ExitAction`: After scrutiny traverses the graph of possible states, will pick a single exit action defined in any state to navigate to and finish the test with
+- `TransitionTo`: Possible transition. Define how to transition to the next state, as well as which state to navigate
+  to. Any number of transitions allowed
+- `Action`: Possible action. Define function to run while in this page state. Any number of actions allowed. Optionally
+  can be configured to be an exit action via the property `IsExit`
+- `DependantAction`: Takes a string as a parameter. Only valid on Transitions and Actions. References an action that
+  should be run before this action/transition. Multiple dependant actions can be referenced per action/transition
 
 A `PageState` could look like this:
 
@@ -191,7 +260,6 @@ A `PageState` could look like this:
     public class LoggedInComment
     {
         private readonly GlobalState globalState;
-        private string localComment = string.Empty;
 
         public LoggedInComment(GlobalState globalState)
         {
@@ -215,6 +283,12 @@ A `PageState` could look like this:
             // Define any number of these
         }
 
+        [Action(IsExit = true)]
+        public async Task ExitAction()
+        {
+            // Something to exit the state, and end the scrutinization
+        }
+
         [OnExit]
         public void OnExit()
         {
@@ -232,6 +306,7 @@ A `PageState` could look like this:
         }
 
         [TransitionTo(nameof(AnotherState))]
+        [DependantAction(nameof(WriteComments))] // Optioanlly run the WriteComments action before executing this transition
         public void TransitionToAnotherState()
         {
             // Code to perform state transition
@@ -240,15 +315,8 @@ A `PageState` could look like this:
         }
     }
 
-Available attriutes are:
-`PageState` This decorates the class. Scrutiny will search for all `PageState`s within an assembly.
-`OnEnter` Only one allowed per class. This method will be run anytime Scrutiny enters this state.
-`OnExit` Only one allowed per class. This method will be run anytime Scrutiny exits this state.
-`ExitAction` Once Scrutiny is done navigating through the states and actions, it will randomly choose a single exit action out of all defined exit actions to exit the state machine.
-`Action` These are any actions that are performed within a state, and then stay in the same state.
-`TransitionTo(string)` These are any methods that perform state transitions. Pass the name of another `PageState` to tell Scrutiny where the transition goes to.
-
 ### Configuration
+
 Some things can be configured via the `Scrutiny.CSharp.Configuration.Configuration` POCO. The default config is:
 
     Seed = Environment.TickCount
@@ -260,12 +328,16 @@ Some things can be configured via the `Scrutiny.CSharp.Configuration.Configurati
 
 `Seed` is printed during each test to be able to recreate a specific test run.
 `MapOnly` won't run the test at all, but only generate the HTML Graph report.
-`ComprehensiveActions` will run ALL defined actions anytime it enters a state with actions defined. If false, it will run a random subset of actions.
-`ComprehensiveStates` will visit ALL states in the state machine. If this is false, then it will visit at least half of all states before randomly quitting.
+`ComprehensiveActions` will run ALL defined actions anytime it enters a state with actions defined. If false, it will
+run a random subset of actions.
+`ComprehensiveStates` will visit ALL states in the state machine. If this is false, then it will visit at least half of
+all states before randomly quitting.
 `ScrutinyResultFilePath` is the directory and specified file name that the generated HTML report will be saved in
-`Logger` is how individual messages from scrutiny will be logged. This is useful for things like XUnit that bring their own console logging mechanism, or if you wanted to integrate a larger logging framework.
+`Logger` is how individual messages from scrutiny will be logged. This is useful for things like XUnit that bring their
+own console logging mechanism, or if you wanted to integrate a larger logging framework.
 
-To actually run the test, call the `Scrutiny.CSharp.Scrutinize.Start<Home>(gs, config)` method. It takes your entry state as a generic type argument, and a constructed global state object as well as your config as parameters.
+To actually run the test, call the `Scrutiny.CSharp.Scrutinize.Start<Home>(gs, config)` method. It takes your entry
+state as a generic type argument, and a constructed global state object as well as your config as parameters.
 
     using Scrutiny.CSharp;
 
@@ -293,60 +365,41 @@ To actually run the test, call the `Scrutiny.CSharp.Scrutinize.Start<Home>(gs, c
         Assert.Equal(5, result.Graph.Count());
     }
 
-The global state can be any class you want it to be. Scrutiny will pass the instance that is passed into the start around to each `PageState` it visits.
-At the end of the run, Scrutiny will return an object which contains the generated adjacency graph, as well as a list of individual steps taken, along with the actions performed in each state.
+The global state can be any class you want it to be. Scrutiny will pass the instance that is passed into the start
+around to each `PageState` it visits.
+At the end of the run, Scrutiny will return an object which contains the generated adjacency graph, as well as a list of
+individual steps taken, along with the actions performed in each state.
 
 
 </details>
 
 ## Development
+
 To run the usage examples, you must start the [web project](usageExamples/Web).
 
 The HTML report is a single file with all javascript written inline
 
-## TODO for Beta release
-- [x] Finish initial HTML report
-- [x] Create and publish NuGet package
-- [x] Documentation
+---
 
-## TODO for initial release
-- [x] Documentation
-- [x] Detailed result report. Color coded states and transitions showcasing which parts succeeded and failed
-- [x] Write unit tests
-- [x] Documentation
-- [x] Setup proper build scripts
+## Sponsor
 
-## TODO General
-- [x] More code examples
-- [x] Bring your own logger
-- [x] Create nice interface for usage from C#
-- [x] Show performed actions in HTML report
-- [x] Documentation
-- [x] Return data about test run at end
-- [x] More unit/integration tests
-- [ ] Allow returning Async/Task from state machine functions
-- [ ] Investigate using [microsoft/automatic-graph-layout](https://github.com/microsoft/automatic-graph-layout)
-- [ ] Implement some kind of Conversion flow
-- [ ] Implement some kind of parameterised input data
-- [ ] Add a concept of Personas
-- [ ] Use Fable to create a javascript release and npm package for usage from Node.js (maybe)
-- [ ] Documentation
-- [ ] Make pretty report page
-- [ ] Bring your own reporter
-- [ ] Page State collection
-- [ ] Make better logo
+Thank you to [Valora](https://valora.digital) for sponsoring this project:
+
+![valora_logo](./valora_rgb.jpg)
 
 ---
 
 ### Donations
 
-Donations are greatly appreciated, but not needed at all. Please only donate if you are in a position to be able to afford it, and only if you truly believe in the gift of giving.
+Donations are greatly appreciated, but not needed at all. Please only donate if you are in a position to be able to
+afford it, and only if you truly believe in the gift of giving.
 
 Liberapay: [![Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/kaeedo)
 <details>
   <summary><i>Click</i> for cryptocurrency links</summary>
 
 Ethereum: `0x05f231D19c19A2111fe03c923F26813Bad43B57f`
+
 Cardano ADA: `addr1qx35nmy62dfp3n5tqgga92gxcnq5vkvflw963yg7fm5e5my68x9frc2qq0r8nstjtnjcrcnpmtpzwvp0sqz46y4ykrmqrd4dg9`
 </details>
 

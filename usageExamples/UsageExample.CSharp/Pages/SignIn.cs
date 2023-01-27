@@ -2,107 +2,108 @@
 using Scrutiny.CSharp;
 using Xunit;
 
-namespace UsageExample.CSharp.Pages
+namespace UsageExample.CSharp.Pages;
+
+[PageState]
+public class SignIn
 {
-    [PageState]
-    public class SignIn
+    private readonly GlobalState _globalState;
+
+    public SignIn(GlobalState globalState)
     {
-        private readonly GlobalState globalState;
+        _globalState = globalState;
+        globalState.Logger.WriteLine($"Constructing {nameof(SignIn)}");
+    }
 
-        public SignIn(GlobalState globalState)
+    [OnEnter]
+    public async Task OnEnter()
+    {
+        _globalState.Logger.WriteLine("Checking on page sign in");
+
+        var headerText = await _globalState.Page.InnerTextAsync("id=header");
+
+        Assert.Equal("Sign In", headerText);
+    }
+
+    [OnExit]
+    public void OnExit()
+    {
+        _globalState.Logger.WriteLine("Exiting sign in");
+    }
+
+    [TransitionTo(nameof(Home))]
+    public async Task ClickOnHome()
+    {
+        await _globalState.Page.ClickAsync("id=home");
+    }
+
+    [TransitionTo(nameof(LoggedInHome))]
+    [DependantAction(nameof(FillInUsername))]
+    [DependantAction(nameof(FillInNumber))]
+    public async Task LogInAndTransitionToHome()
+    {
+        _globalState.Username = "kaeedo";
+        await _globalState.Page.FillAsync("id=username", _globalState.Username);
+        await _globalState.Page.FillAsync("id=number", _globalState.Number.ToString());
+
+        _globalState.IsSignedIn = true;
+
+        await _globalState.Page.ClickAsync("css=button >> text=Sign In");
+    }
+
+    [Action]
+    public async Task FillInUsername()
+    {
+        _globalState.Logger.WriteLine("Sign in: filling username");
+        await _globalState.Page.FillAsync("id=username", "MyUsername");
+
+        var username = await _globalState.GetInputValueAsync("id=username");
+
+        Assert.Equal("MyUsername", username);
+    }
+
+    [Action]
+    public async Task FillInNumber()
+    {
+        _globalState.Logger.WriteLine("Sign in: filling number");
+        await _globalState.Page.FillAsync("id=number", "42");
+
+        var number = await _globalState.GetInputValueAsync("id=number");
+
+        Assert.Equal("42", number);
+    }
+
+    [Action(IsExit = true)]
+    public async Task ExitAction()
+    {
+        _globalState.Logger.WriteLine("Exiting!");
+        await _globalState.Page.CloseAsync();
+    }
+
+    [Action]
+    public async Task ForceInvalidForm()
+    {
+        var username = await _globalState.GetInputValueAsync("id=username");
+        var number = await _globalState.GetInputValueAsync("id=number");
+
+        var signInButtonSelector = "css=button >> text=Sign In";
+
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(number))
         {
-            this.globalState = globalState;
-            globalState.Logger.WriteLine($"Constructing {nameof(SignIn)}");
+            await _globalState.Page.ClickAsync(signInButtonSelector);
+        }
+        else
+        {
+            await _globalState.Page.FillAsync("id=username", string.Empty);
+            await _globalState.Page.ClickAsync(signInButtonSelector);
         }
 
-        [OnEnter]
-        public async Task OnEnter()
-        {
-            globalState.Logger.WriteLine("Checking on page sign in");
+        var errorMessage = await _globalState.Page.QuerySelectorAsync("id=ErrorMessage");
 
-            var headerText = await globalState.Page.InnerTextAsync("#header");
+        Assert.NotNull(errorMessage);
 
-            Assert.Equal("Sign In", headerText);
-        }
+        var displayState = await errorMessage.EvaluateAsync<string>("e => e.style.display");
 
-        [OnExit]
-        public void OnExit()
-        {
-            globalState.Logger.WriteLine("Exiting sign in");
-        }
-
-        [TransitionTo(nameof(Home))]
-        public async Task ClickOnHome()
-        {
-            await globalState.Page.ClickAsync("#home");
-        }
-
-        [TransitionTo(nameof(LoggedInHome))]
-        public async Task LogInAndTransitionToHome()
-        {
-            globalState.Username = "kaeedo";
-            await globalState.Page.FillAsync("#username", globalState.Username);
-            await globalState.Page.FillAsync("#number", globalState.Number.ToString());
-
-            globalState.IsSignedIn = true;
-
-            await globalState.Page.ClickAsync("css=button >> text=Sign In");
-        }
-
-        [Action]
-        public async Task FillInUsername()
-        {
-            globalState.Logger.WriteLine("Sign in: filling username");
-            await globalState.Page.FillAsync("#username", "MyUsername");
-
-            var username = await globalState.GetInputValueAsync("#username");
-
-            Assert.Equal("MyUsername", username);
-        }
-
-        [Action]
-        public async Task FillInNumber()
-        {
-            globalState.Logger.WriteLine("Sign in: filling number");
-            await globalState.Page.FillAsync("#number", "42");
-
-            var number = await globalState.GetInputValueAsync("#number");
-
-            Assert.Equal("42", number);
-        }
-
-        [ExitAction]
-        public async Task ExitAction()
-        {
-            globalState.Logger.WriteLine("Exiting!");
-            await globalState.Page.CloseAsync();
-        }
-
-        [Action]
-        public async Task ForceInvalidForm()
-        {
-            var username = await globalState.GetInputValueAsync("#username");
-            var number = await globalState.GetInputValueAsync("#number");
-
-            var signInButtonSelector = "css=button >> text=Sign In";
-
-            if(string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(number))
-            {
-                await globalState.Page.ClickAsync(signInButtonSelector);
-            }
-            else
-            {
-                await globalState.Page.FillAsync("#username", string.Empty);
-                await globalState.Page.ClickAsync(signInButtonSelector);
-            }
-
-            var errorMessage = await globalState.Page.QuerySelectorAsync("#ErrorMessage");
-
-            Assert.NotNull(errorMessage);
-
-            var displayState = await errorMessage.EvaluateAsync<string>("e => e.style.display");
-
-            Assert.NotEqual("none", displayState);
-        }
+        Assert.NotEqual("none", displayState);
     }
 }

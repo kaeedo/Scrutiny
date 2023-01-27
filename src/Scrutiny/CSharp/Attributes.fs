@@ -10,7 +10,7 @@ type PageStateAttribute() =
 type TransitionToAttribute(name: string) =
     inherit Attribute()
 
-    member val Name = name with get 
+    member val Name = name
 
 [<AttributeUsage(AttributeTargets.Method)>]
 type OnEnterAttribute() =
@@ -24,6 +24,10 @@ type OnExitAttribute() =
 type ActionAttribute() =
     inherit Attribute()
 
-[<AttributeUsage(AttributeTargets.Method)>]
-type ExitActionAttribute() =
+    member val IsExit = false with get, set
+
+[<AttributeUsage(AttributeTargets.Method, AllowMultiple = true)>]
+type DependantActionAttribute(name: string) =
     inherit Attribute()
+
+    member val Name = name

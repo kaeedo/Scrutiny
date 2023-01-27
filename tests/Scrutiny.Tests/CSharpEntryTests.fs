@@ -8,44 +8,44 @@ open System.Threading.Tasks
 
 [<PageState>]
 type ValidPageState(gs: obj) =
-    [<OnEnter>] 
-    member __.OnEnter() = ()
+    [<OnEnter>]
+    member _.OnEnter() = ()
 
-    [<TransitionTo("AnotherValidPageState")>] 
-    member __.MoveToAnother() = ()
+    [<TransitionTo("AnotherValidPageState")>]
+    member _.MoveToAnother() = ()
 
 [<PageState>]
 type AnotherValidPageState(gs: obj) =
-    [<OnExit>] 
-    member __.OnEnter() = ()
+    [<OnExit>]
+    member _.OnEnter() = ()
 
-    [<TransitionTo("ValidPageState")>] 
-    member __.MoveToValid() = ()
+    [<TransitionTo("ValidPageState")>]
+    member _.MoveToValid() = ()
 
 [<PageState>]
 type AsyncPageState(gs: obj) =
     [<Action>]
-    member __.DoSOmething() = 
+    member _.DoSomething() =
         Task.FromResult(gs.ToString() |> ignore)
 
     [<TransitionTo("AnotherValidPageState")>]
-    member __.MoveToAnotherValid() = Task.FromResult(())
+    member _.MoveToAnotherValid() = Task.FromResult(())
 
     [<TransitionTo("ValidPageState")>]
-    member __.MoveToValid() = Task.FromResult(())
+    member _.MoveToValid() = Task.FromResult(())
 
 [<Tests>]
-let csharpEntryTests = 
-    testList "C# Entry Tests" [
-        Tests.test "Should construct page state definitions" {
-            let definitions = ScrutinyCSharp.buildPageStateDefinitions (obj()) typeof<ValidPageState>
-            let transitions = 
-                definitions 
-                |> List.collect (fun d ->
-                    d.Transitions
-                )
+let csharpEntryTests =
+    testList
+        "C# Entry Tests"
+        [ Tests.test "Should construct page state definitions" {
+              let definitions =
+                  ScrutinyCSharp.buildPageStateDefinitions (obj ()) typeof<ValidPageState>
 
-            test <@ definitions.Length = 3 @>
-            test <@ transitions.Length = 4 @>
-        }
-    ]
+              let transitions =
+                  definitions
+                  |> List.collect (fun d -> d.Transitions)
+
+              test <@ definitions.Length = 3 @>
+              test <@ transitions.Length = 4 @>
+          } ]

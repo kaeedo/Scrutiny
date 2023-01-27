@@ -4,94 +4,119 @@ open Scrutiny
 open System
 open System.Threading.Tasks
 open System.Reflection
-open System.Runtime.CompilerServices;
+open System.Runtime.CompilerServices
 
 module internal ScrutinyCSharp =
     [<assembly: InternalsVisibleTo("Scrutiny.Tests")>]
-    do()
+    do ()
 
     let private constructPageState<'globalState> (gs: 'globalState) (psType: Type) =
-        let constructed = 
+        let constructed =
             psType.GetConstructors()
-            |> Seq.tryFind (fun ctor ->
-                ctor.GetParameters() |> Array.isEmpty |> not
-            )
+            |> Seq.tryFind (fun ctor -> ctor.GetParameters() |> Array.isEmpty |> not)
             |> function
-               | Some ctor -> ctor.Invoke([|gs|])
-               | None -> psType.GetConstructor([||]).Invoke([||])
+                | Some ctor -> ctor.Invoke([| gs |])
+                | None -> psType.GetConstructor([||]).Invoke([||])
 
         let invalidMethods =
-            constructed.GetType().GetTypeInfo().DeclaredMethods
+            constructed.GetType().GetTypeInfo()
+                .DeclaredMethods
             |> Seq.filter (fun m ->
-                let hasTransitions = m.GetCustomAttributes<TransitionToAttribute>(true) |> Seq.isEmpty |> not
-                let hasOnEnters = m.GetCustomAttributes<OnEnterAttribute>(true) |> Seq.isEmpty |> not
-                let hasOnExits = m.GetCustomAttributes<OnExitAttribute>(true) |> Seq.isEmpty |> not
-                let hasActions = m.GetCustomAttributes<ActionAttribute>(true) |> Seq.isEmpty |> not
-                let hasExitActions = m.GetCustomAttributes<ExitActionAttribute>(true) |> Seq.isEmpty |> not
+                let hasTransitions =
+                    m.GetCustomAttributes<TransitionToAttribute>(true)
+                    |> Seq.isEmpty
+                    |> not
 
-                hasTransitions || hasOnEnters || hasOnExits || hasActions || hasExitActions
-            )
-            |> Seq.filter (fun m ->
-                m.GetParameters() |> Array.length > 0
-            )
+                let hasOnEnters =
+                    m.GetCustomAttributes<OnEnterAttribute>(true)
+                    |> Seq.isEmpty
+                    |> not
+
+                let hasOnExits =
+                    m.GetCustomAttributes<OnExitAttribute>(true)
+                    |> Seq.isEmpty
+                    |> not
+
+                let hasActions =
+                    m.GetCustomAttributes<ActionAttribute>(true)
+                    |> Seq.isEmpty
+                    |> not
+
+                hasTransitions
+                || hasOnEnters
+                || hasOnExits
+                || hasActions)
+            |> Seq.filter (fun m -> m.GetParameters() |> Array.length > 0)
 
         constructed, invalidMethods
 
-    let private getMethodsWithAttribute attr constructedPageState  =
+    let private getMethodsWithAttribute attr constructedPageState =
         constructedPageState.GetType().GetMethods()
         |> Seq.toList
-        |> List.filter (fun method ->
-            method.GetCustomAttributes(attr, true).Length > 0
-        )
+        |> List.filter (fun method -> method.GetCustomAttributes(attr, true).Length > 0)
 
     let private buildMethod (m: MethodInfo) constructed =
-        if m.ReturnType = typeof<Task>
-        then (fun _ -> 
-            (m.Invoke(constructed, [||]) :?> Task 
-             |> Async.AwaitTask 
-             |> Async.RunSynchronously)
-        )
-        else fun _ -> (m.Invoke(constructed, [||]) |> ignore)
+        fun _ ->
+            task {
+                if m.ReturnType = typeof<Task> then
+                    do! m.Invoke(constructed, [||]) :?> Task
+                else
+                    do m.Invoke(constructed, [||])
+            }
 
     let private buildTransition constructedPageState defs =
         getMethodsWithAttribute typeof<TransitionToAttribute> constructedPageState
         |> List.map (fun method ->
-            let transitionToAttr =
-                method.GetCustomAttribute<TransitionToAttribute>(true)
+            let transitionToAttr = method.GetCustomAttribute<TransitionToAttribute>(true)
 
             let toState =
                 defs
-                |> Seq.find (fun (ps, _) ->
-                    ps.Name = transitionToAttr.Name
-                )
+                |> Seq.find (fun (ps, _) -> ps.Name = transitionToAttr.Name)
                 |> fst
 
-            { Transition.TransitionFn = buildMethod method constructedPageState
-              ToState = fun _ -> toState }
-        )
+            let dependantActions =
+                method.GetCustomAttributes<DependantActionAttribute>(true)
+                |> Seq.map (fun da -> da.Name)
+                |> Seq.toList
+
+            { Transition.DependantActions = dependantActions
+              ViaFn = buildMethod method constructedPageState
+              Destination = fun _ -> toState })
 
     let private buildMethodWithAttribute attr constructedPageState =
-        if getMethodsWithAttribute attr constructedPageState |> Seq.length > 1
-        then raise <| ScrutinyException($"Only one \"{attr.Name}\" per PageState. Check \"{constructedPageState.GetType().Name}\" for duplicate attribute usage.", null)
+        if
+            getMethodsWithAttribute attr constructedPageState
+            |> Seq.length > 1
+        then
+            raise
+            <| ScrutinyException(
+                $"Only one \"{attr.Name}\" per PageState. Check \"{constructedPageState.GetType().Name}\" for duplicate attribute usage.",
+                null
+            )
 
-        match getMethodsWithAttribute attr constructedPageState |> Seq.tryHead with
-        | None -> ignore
+        match
+            getMethodsWithAttribute attr constructedPageState
+            |> Seq.tryHead
+        with
+        | None -> fun _ -> Task.FromResult()
         | Some m -> buildMethod m constructedPageState
 
     let internal buildPageStateDefinitions gs (t: Type) =
-        let pageStatesTypes = 
+        let pageStatesTypes =
             seq {
                 for t in t.Assembly.GetTypes() do
-                    if t.GetCustomAttributes<PageStateAttribute>(true) |> Seq.isEmpty |> not then
+                    if
+                        t.GetCustomAttributes<PageStateAttribute>(true)
+                        |> Seq.isEmpty
+                        |> not
+                    then
                         yield t
             }
             |> Seq.toList
 
-        let defs =
-            pageStatesTypes
-            |> Seq.map (constructPageState gs)
+        let defs = pageStatesTypes |> Seq.map (constructPageState gs)
 
-        let invalidMethods = 
+        let invalidMethods =
             defs
             |> Seq.filter (snd >> Seq.isEmpty >> not)
             |> Seq.map (snd)
@@ -100,68 +125,89 @@ module internal ScrutinyCSharp =
 
         match invalidMethods with
         | [] -> ()
-        | [m] ->
+        | [ m ] ->
             let containingClass = m.ReflectedType.Name
-            raise <| ScrutinyException($"\"{containingClass}.{m.Name}\" is not allowed to have any parameters.", null)
+
+            raise
+            <| ScrutinyException($"\"{containingClass}.{m.Name}\" is not allowed to have any parameters.", null)
         | m ->
-            let methods = 
-                m 
-                |> List.map (fun m -> 
+            let methods =
+                m
+                |> List.map (fun m ->
                     let containingClass = m.ReflectedType.Name
-                    $"{containingClass}.{m.Name}"
-                )
+                    $"{containingClass}.{m.Name}")
+
             let methods = String.Join("\n", methods)
-            raise <| ScrutinyException($"Methods with scrutiny attributes are not allowed to have parameters. Following methods are invalid: {methods}", null)
+
+            raise
+            <| ScrutinyException(
+                $"Methods with scrutiny attributes are not allowed to have parameters. Following methods are invalid: {methods}",
+                null
+            )
 
         let defs =
             defs
             |> Seq.map (fst)
             |> Seq.map (fun constructed ->
-                let ps = 
+                let ps =
                     { PageState.Name = constructed.GetType().Name
-                      LocalState = obj()
                       OnEnter = buildMethodWithAttribute typeof<OnEnterAttribute> constructed
                       OnExit = buildMethodWithAttribute typeof<OnExitAttribute> constructed
-                      ExitActions = getMethodsWithAttribute typeof<ExitActionAttribute> constructed |> List.map (fun m -> buildMethod m constructed)
-                      Actions = getMethodsWithAttribute typeof<ActionAttribute> constructed |> List.map (
-                                    fun m -> 
-                                        let callerInfo = 
-                                            { CallerInformation.MemberName = m.Name
-                                              LineNumber = -1
-                                              FilePath = m.ReflectedType.Name }
-                                        callerInfo, buildMethod m constructed
-                      )
+                      Actions =
+                        getMethodsWithAttribute typeof<ActionAttribute> constructed
+                        |> List.map (fun m ->
+                            let callerInfo =
+                                { CallerInformation.MemberName = m.Name
+                                  LineNumber = -1
+                                  FilePath = m.ReflectedType.Name }
+
+                            let builtMethod = buildMethod m constructed
+
+                            let isExit = m.GetCustomAttribute<ActionAttribute>(true).IsExit
+
+                            let dependantActions =
+                                m.GetCustomAttributes<DependantActionAttribute>(true)
+                                |> Seq.map (fun da -> da.Name)
+                                |> Seq.toList
+
+                            let stateAction: StateAction =
+                                { CallerInformation = callerInfo
+                                  Name = m.Name
+                                  DependantActions = dependantActions
+                                  IsExit = isExit
+                                  ActionFn = builtMethod }
+
+                            stateAction)
                       Transitions = [] }
-                ps, constructed
-            )
+
+                ps, constructed)
             |> List.ofSeq
 
-        defs 
+        defs
         |> List.map (fun (ps, constructed) ->
             let transitionsForPageState = buildTransition constructed defs
 
             ps.Transitions <- transitionsForPageState
-            ps
-        )
+            ps)
 
-    let start<'startState> gs (config: Configuration): ScrutinizedStates = 
-        let config = config.ToScrutiynConfig()
-        
-        let t = typeof<'startState> 
-        let defs = buildPageStateDefinitions gs t
 
-        let starting =
-            defs
-            |> List.find (fun d -> d.Name = t.Name)
-        
-        let result = Scrutiny.scrutinize config (obj()) (fun _ -> starting)
-        
-        ScrutinizedStates(result.Graph, result.Steps)
+    let start<'startState> gs (config: Configuration) : Task<ScrutinizedStates> =
+        task {
+            let config = config.ToScrutinyConfig()
+
+            let t = typeof<'startState>
+            let defs = buildPageStateDefinitions gs t
+
+            let starting = defs |> List.find (fun d -> d.Name = t.Name)
+
+            let! result = Scrutiny.scrutinize config (obj ()) (fun _ -> starting)
+            return ScrutinizedStates(result.Graph, result.Steps)
+        }
 
 [<AbstractClass; Sealed>]
 type Scrutinize private () =
-    static member Start<'startState> (globalState) = 
+    static member Start<'startState>(globalState) =
         ScrutinyCSharp.start<'startState> globalState (Configuration.FromScrutinyConfig(ScrutinyConfig.Default))
 
-    static member Start<'startState> (globalState, configuration) = 
+    static member Start<'startState>(globalState, configuration) =
         ScrutinyCSharp.start<'startState> globalState configuration
