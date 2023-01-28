@@ -96,7 +96,9 @@ A `page` looks like this:
             }
         }
 
-The `name` must be unique. Any number of `transition`s and any number of `action`s can be defined.
+The `name` must be unique. Any number of `transition`s and any number of `action`s can be defined. The `onEnter` function will be executed everytime scrutiny transitions to this state, and `onExit` will execute everytime scrutiny leaves this state. `name`, `onEnter`, and `onExit` must be defined before any `transition`s and `action`s.
+
+
 Any `action` can be be marked as `isExit`, and multiple `page`s can have an `action` that is the exit action. If
 multiple are defined, Scrutiny will randomly choose one to perform.
 The `GlobalState` in the example is any type defined in your test that you can use to pass data between states,
@@ -128,14 +130,14 @@ The `fn` is the actual function to run as this action. Required
 
         transition {
             dependantActions [ "Other action" ]
-            via (fun _ -> (*how to transition to the next page/state*))
+            via (fun _ -> (*how to transition to the next state*))
             destination otherPage
         }
     }
 
 The `dependantActions` list defines any actions that will be run before this action is run. Optional
 The `via` function is executed that will actually transition the state machine to the next state. Required
-The `destionation` is the page/state that will be transitioned to. Required
+The `destination` is the state that will be transitioned to. Required
 
 ### Configuration
 
