@@ -402,7 +402,7 @@ individual steps taken, along with the actions performed in each state.
 <details>
   <summary>Migration v1 to v2</summary>
 
-  * `[ExitAction]` attribute removed. Set the `IsExit` proeprty on an `Action` isntead"
+  * `[ExitAction]` attribute removed. Set the `IsExit` property on an `Action` isntead"
     * Before:
         ```
         [ExitAction]
