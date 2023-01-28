@@ -43,7 +43,7 @@ The [Sample Web site](usageExamples/Web) looks like this:
 
 ![SUT sample report](images/scrutinyDemo.gif)
 
-# Usage
+# Documentation
 
 <details>
   <summary><i>Click</i> for F# documentation</summary>
@@ -234,7 +234,42 @@ e.g.:
                 }
             }
 
+<details>
+  <summary>Migration v1 to v2</summary>
+
+  * Within a `page` computation expression, ensure that `name` is first, and that any `onEnter` and `onExit` functions are defined before any `transition`s and `action`s.
+  * `transition`s are now defined using a `transition` computation expression:
+    * Before: `transition ((fun _ -> click "#signin") ==> signIn)`
+    * After:
+        ```
+        transition {
+            via (fun _ -> click "#signin")
+            destination signIn
+        }
+        ```
+  * `action`s are now defined using an `action` computation expression:
+    * Before: `action (fun _ -> () /*do something on the page*/)`
+    * After:
+        ```
+        action {
+            fn (fun _ -> () /*do something on the page*/)
+        }
+        ```
+  * `exitAction`s are now defined as a regular action, but with the `isExit` property set:
+    * Before: `exitAction (fun _ -> () /*final action to perform before exiting the test*/)`
+    * After:
+        ```
+        action {
+            isExit
+            fn (fun _ -> () /*final action to perform before exiting the test*/)
+        }
+        ```
+
 </details>
+
+</details>
+
+---
 
 <details>
   <summary><i>Click</i> for C# documentation</summary>
@@ -288,23 +323,15 @@ A `PageState` could look like this:
         [Action(IsExit = true)]
         public async Task ExitAction()
         {
-            // Something to exit the state, and end the scrutinization
-        }
-
-        [OnExit]
-        public void OnExit()
-        {
-            // Do something when scrutiny exits this state
-            // Can optionally be async/await
-            // Can only define one
+            // One exit actions amongst all page states is chosen
+            // Define any number of these
+            // Can optionally be non-async
         }
 
         [ExitAction]
         public async Task ExitAction()
         {
-            // One exit actions amongst all page states is chosen
-            // Define any number of these
-            // Can optionally be non-async
+
         }
 
         [TransitionTo(nameof(AnotherState))]
@@ -372,8 +399,26 @@ around to each `PageState` it visits.
 At the end of the run, Scrutiny will return an object which contains the generated adjacency graph, as well as a list of
 individual steps taken, along with the actions performed in each state.
 
+<details>
+  <summary>Migration v1 to v2</summary>
+
+  * `[ExitAction]` attribute removed. Set the `IsExit` proeprty on an `Action` isntead"
+    * Before:
+        ```
+        [ExitAction]
+        public async Task ExitAction()
+        ```
+    * After:
+        ```
+        [Action(IsExit = true)]
+        public async Task ExitAction()
+        ```
 
 </details>
+
+</details>
+
+---
 
 ## Development
 
