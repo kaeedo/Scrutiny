@@ -25,7 +25,7 @@ module internal Navigator =
             |> List.except (final |> List.map fst)
             |> List.iter (fun n -> nodes2Visit.Enqueue(n))
 
-        final
+        final |> List.distinctBy (fst)
 
     let shortestPathFunction (graph: AdjacencyGraph<'a>) (start: 'a) =
         let previous = new Dictionary<'a, 'a>()

@@ -44,7 +44,7 @@ public class Tests : IDisposable
         var context = await browser.NewContextAsync(new BrowserNewContextOptions {IgnoreHTTPSErrors = true});
         var page = await context.NewPageAsync();
 
-        await page.GotoAsync("https://127.0.0.1:5001/home");
+        await page.GotoAsync("http://127.0.0.1:5000/home");
 
         var config = new Configuration
         {

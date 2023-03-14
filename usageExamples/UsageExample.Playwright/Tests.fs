@@ -29,7 +29,7 @@ type PlaywrightTests(outputHelper: ITestOutputHelper) =
 
             let! page = context.NewPageAsync()
 
-            let! _ = page.GotoAsync("https://127.0.0.1:5001/home")
+            let! _ = page.GotoAsync("http://127.0.0.1:5000/home")
 
             let config =
                 { ScrutinyConfig.Default with

@@ -7,12 +7,14 @@ open Scrutiny.Utilities
 
 [<AutoOpen>]
 module Scrutiny =
-    let private handleError exn errorLocation (reporter: IReporter<_>) config current =
+    let private handleError exn errorLocation (reporter: IReporter<_>) (config: ScrutinyConfig) current =
         let message =
             $"System under test failed scrutiny.
+            The error occurred in state: '%s{current.Name}'
+        The error that occurred is of type: '%A{exn}%s{Environment.NewLine}'
+        You can view the current report at '%s{config.ScrutinyResultFilePath}'
         To re-run this exact test, specify the seed in the config with the value: '%i{config.Seed}'.
-        The error occurred in state: '%s{current.Name}'
-        The error that occurred is of type: '%A{exn}%s{Environment.NewLine}'"
+        "
 
         let exn = ScrutinyException(message, exn)
 
@@ -166,7 +168,7 @@ module Scrutiny =
 
         let exitNode =
             allStates
-            |> Seq.filter (fun (node, _) -> (exitActions node) |> Seq.isEmpty |> not)
+            |> Seq.filter (fun (node, _) -> (exitActions node) |> (not << Seq.isEmpty))
             |> Seq.sortBy (fun _ -> random.Next())
             |> Seq.tryHead
 
