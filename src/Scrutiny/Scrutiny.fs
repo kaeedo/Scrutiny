@@ -168,7 +168,7 @@ module Scrutiny =
 
         let exitNode =
             allStates
-            |> Seq.filter (fun (node, _) -> (exitActions node) |> Seq.isEmpty |> not)
+            |> Seq.filter (fun (node, _) -> (exitActions node) |> (not << Seq.isEmpty))
             |> Seq.sortBy (fun _ -> random.Next())
             |> Seq.tryHead
 
